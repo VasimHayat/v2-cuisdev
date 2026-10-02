@@ -272,7 +272,7 @@ Every template must hit the targets below on a throttled mobile profile in Light
 | Interaction to Next Paint | under 150 ms | Heavy work in Web Workers and WASM, never on the main thread |
 | Cumulative Layout Shift | under 0.05 | Fixed-height tool container, reserved ad slots, font metrics matched with fallback |
 | Time to First Byte | under 200 ms globally | Hostinger CDN cache, immutable asset hashes, long cache headers in .htaccess |
-| JavaScript per tool page | under 80 KB gzipped (editor tools under 150 KB) | Preact islands, CodeMirror 6 tree-shaken, lazy-load WASM on first use |
+| JavaScript per tool page | under 80 KB gzipped (JSON editor pages: about 325 KB, the vanilla-jsoneditor engine) | Preact islands, CodeMirror 6 tree-shaken, lazy-load WASM on first use |
 | CSS per page | under 15 KB | Tailwind purged at build, tokens in one stylesheet |
 | Lighthouse Performance, SEO, Accessibility, Best Practices | 95 or higher each | Enforced in CI on home, hub, tool and article templates |
 
@@ -330,3 +330,10 @@ The first week is about fixing what hurts today and getting a deployable Astro s
 - [ ] Relaunch at the end of week 3, then start wave 1 of the tool catalogue
 
 Decided 2 Oct 2026: Hostinger for hosting, GA4 for analytics. Still open: whether to open-source the tool code from day one.
+
+
+## Progress log
+
+| Date | Done | Next |
+| --- | --- | --- |
+| 2 Oct 2026 | Astro 5 foundation, SEO layer, 20 pages, GA4 wired (G-TZH65SMVNE), Hostinger deploy workflow, 55-tool registry, JSON Editor rebuilt as a two-panel workspace on vanilla-jsoneditor (text/tree/table, copy/transform/compare, local documents in the URL). 6 local commits on main, nothing pushed. | Add FTP secrets and push for the first deploy; then wave 1: Code Formatter and Text Diff Checker (logic exists in G:\HW_RESOURCES\Github\cusidev to port). |
