@@ -234,3 +234,27 @@
 .dark .cm-editor .tok-number { color: oklch(0.8 0.15 70); }
 .cm-editor .tok-bool, .cm-editor .tok-null, .cm-editor .tok-keyword { color: oklch(0.55 0.2 320); }
 .dark .cm-editor .tok-bool, .dark .cm-editor .tok-null, .dark .cm-editor .tok-keyword { color: oklch(0.78 0.16 320); }
+
+/* JSON token colours shared by the tree view (CodeMirror uses the same hues above) */
+.tok-key { color: var(--color-brand-600); }
+.dark .tok-key { color: var(--color-brand-400); }
+.tok-string { color: oklch(0.55 0.15 150); }
+.dark .tok-string { color: oklch(0.78 0.14 150); }
+.tok-number { color: oklch(0.55 0.17 50); }
+.dark .tok-number { color: oklch(0.8 0.15 70); }
+.tok-boolean { color: oklch(0.55 0.2 320); }
+.dark .tok-boolean { color: oklch(0.78 0.16 320); }
+.tok-null { color: var(--color-ink-3); font-style: italic; }
+.tok-object, .tok-array { color: var(--color-ink-3); }
+
+/* CodeMirror search panel follows the design tokens */
+.cm-editor .cm-panel.cm-search { font-family: var(--font-sans); font-size: 12px; padding: 6px 8px; }
+.cm-editor .cm-panel.cm-search input, .cm-editor .cm-panel.cm-search button {
+  border: 1px solid var(--color-line-strong); background: var(--color-surface); color: var(--color-ink);
+  border-radius: 6px; padding: 2px 6px; font-size: 12px;
+}
+.cm-editor .cm-panel.cm-search button:hover { background: var(--color-surface-3); }
+.cm-editor .cm-panel.cm-search label { color: var(--color-ink-2); }
+.cm-editor .cm-foldPlaceholder { background: var(--color-surface-3); border-color: var(--color-line-strong); color: var(--color-ink-2); }
+.cm-editor .cm-matchingBracket { background: color-mix(in oklch, var(--color-brand-500) 20%, transparent); outline: none; }
+.cm-editor .cm-lint-marker-error { content: ''; }

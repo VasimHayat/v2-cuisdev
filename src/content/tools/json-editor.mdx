@@ -2,53 +2,65 @@
 slug: json-editor
 updated: 2026-10-02
 howTo:
-  - Paste your JSON into the editor, or drag and drop a .json file anywhere on the page.
-  - Errors are underlined as you type. Click the red status message to jump straight to the problem line.
-  - Press Format (or Ctrl+Enter) to pretty print with 2 spaces, 4 spaces or tabs. Tick "Sort keys" to order object keys alphabetically.
-  - Press Minify to strip all whitespace for production use. The status bar shows the size saved.
-  - Copy the result with one click, or download it as a .json file.
+  - Paste JSON, drop a .json file anywhere on the editor, or use Open and From URL to load a document. Your work is saved in this browser automatically.
+  - Watch the status bar. A green dot means valid JSON. A red banner shows the line, column and cause of the first error; click it to jump there, or press Fix to repair comments, quotes and trailing commas in one go.
+  - Switch views with Code, Tree, Split or Output. In the tree, double-click any value to edit it, press Del to remove a node, and use the filter box to find keys and values in large documents.
+  - Use Format, Compact or Sort to reshape the document, choosing 2 spaces, 4 spaces or tabs. Undo and Redo cover every change.
+  - Save as .json, Copy to the clipboard, or press Share to copy a link that carries the JSON itself, so nothing is stored on a server.
+  - Optional - open AI assist, add your own free Gemini key, and generate JSON from a description, transform the current document, fix a broken one or ask for a plain-English explanation.
 features:
-  - Live validation with the exact line and column of every syntax error and a plain-English fix
-  - Format with 2 spaces, 4 spaces or tabs, with optional alphabetical key sorting
-  - One-click minify with the before and after byte size
-  - Syntax highlighting, code folding, bracket matching and search (Ctrl+F)
-  - Drag and drop files up to 25 MB, processed entirely in your browser
-  - Full-screen mode and keyboard shortcuts for a distraction-free workflow
-  - Your draft is kept in this tab if you refresh, and discarded when you close it
-  - Dark mode that follows your system or your choice
+  - Code, Tree, Split and Output views in one workspace, with full-screen mode
+  - Interactive tree with type colouring, item counts, inline value editing, node deletion and copy path or value
+  - Live validation with exact line and column, a plain-English hint and one-click Fix for comments, single quotes, unquoted keys and trailing commas
+  - Format, Compact and Sort keys at every level, with 2-space, 4-space or tab indentation
+  - Open from disk or any CORS-enabled URL, save as .json, copy, and share by link with the data compressed into the URL
+  - Full undo and redo, find and replace, code folding, bracket matching, multiple cursors and line wrapping
+  - Autosaved draft and remembered preferences, kept only in your browser
+  - Optional AI assist with your own Gemini key - generate, transform, fix and explain, sent straight from your browser to Google
+  - Handles files up to 25 MB and trees of thousands of nodes without freezing
 faq:
   - q: Is my JSON uploaded to a server?
-    a: No. The editor runs completely in your browser using JavaScript. Nothing you paste or drop is transmitted anywhere, which makes it safe for API keys, customer records and other sensitive data.
+    a: No. The editor runs completely in your browser. Nothing you paste, drop or load is transmitted to Cuisdev. The only exceptions are the ones you trigger yourself - opening a URL fetches that URL, and AI assist sends your text directly to Google using your own key.
+  - q: How do share links work without a server?
+    a: The document is compressed and placed in the part of the URL after the # symbol, which browsers never send to any server. Whoever opens the link gets the JSON decoded in their own browser. Links hold about 12 KB of compressed data; download larger documents instead.
+  - q: What does Fix actually change?
+    a: It strips comments, converts single quotes to double quotes, quotes bare keys, removes trailing commas, replaces NaN, Infinity and undefined with null and straightens smart quotes. It never changes anything inside a valid double-quoted string, and you can undo it with Ctrl+Z.
+  - q: Can I edit values in the tree view?
+    a: Yes. Double-click a value, type the new one and press Enter. Numbers, booleans, null, arrays and objects typed as JSON are stored with the right type; anything else becomes a string. Press Del on a selected node to remove it.
+  - q: Do I need an API key for the AI features?
+    a: Yes, your own Gemini key from Google AI Studio, which has a free tier. The key is stored only in your browser and requests go from your browser to Google. Everything else in the editor works without a key.
   - q: What is the maximum file size?
-    a: The editor accepts files up to 25 MB by drag and drop. Larger documents work too if your device has enough memory, but the browser may become slow to respond.
-  - q: Why does the editor say my JSON is invalid when it looks fine?
-    a: The most common causes are a trailing comma after the last item, single quotes instead of double quotes, unquoted property names, or comments. The status bar names the exact problem and the line it is on.
+    a: Files up to 25 MB can be opened by drag and drop or the Open button. The tree view shows the first 5,000 nodes and the filter box reaches the rest; the Code view always shows the whole document.
   - q: Does it support JSON5, JSONC or comments?
-    a: Not yet. The editor validates strict JSON as defined by RFC 8259, which is what APIs and most config files expect. A JSON5 mode is on the roadmap.
+    a: Not as a format. Strict JSON (RFC 8259) is what APIs and config parsers expect. Paste JSONC or JSON5 and press Fix to convert it to strict JSON.
   - q: Can I use it offline?
-    a: Yes. Once this page has loaded, the editor keeps working without an internet connection. You can also install Cuisdev as an app from your browser menu.
-  - q: Is the JSON Editor free for commercial use?
-    a: Yes. All Cuisdev tools are free for personal and commercial use with no limits and no account.
+    a: Yes. Once this page has loaded, everything except Open from URL and AI assist keeps working without a connection.
 ---
 
-## What this JSON editor does
+## A JSON editor built like a desktop tool
 
-JSON (JavaScript Object Notation) is the format behind almost every web API, config file and data export you will touch as a developer. It is simple to read, but one missing comma or stray quote breaks the whole document, and the error messages browsers and servers give you are rarely helpful.
+Most online JSON editors are a text box with a Format button. This one is a workspace. The code pane is a full editor with folding, search and replace, multiple cursors and live error underlining. The tree pane is interactive: expand and collapse, filter by key or value, edit a value in place, delete a node, copy its path. Split view shows both at once and keeps them in sync, and the Output view gives you a read-only formatted or compacted copy ready to copy or download.
 
-This editor fixes that. As you type or paste, it parses the document and underlines the first problem. The status bar tells you the line, the column, what went wrong and, for the common mistakes, how to fix it. Once the document is valid you can format it for reading, minify it for shipping, sort keys for clean diffs, and copy or download the result.
+Everything runs in your browser. That is why there is no upload progress bar, no file size plan and no waiting.
+
+## Finding and fixing errors
+
+JSON has a small, strict grammar and a single stray character breaks the whole document. The editor parses as you type and shows the first problem as a red banner with the line, the column, what went wrong and, for the common mistakes, how to fix it. Click the banner to jump to the character.
+
+For the usual culprits there is a one-click Fix. It removes comments, swaps single quotes for double quotes, quotes bare keys, removes trailing commas and replaces JavaScript-only values such as `undefined` with `null`. It is conservative and never touches text inside a valid string, so it is safe to run on real data. If a document is too broken for a mechanical fix, Fix with AI sends it to Gemini with your own key and asks for the minimal correction.
 
 ## Common JSON errors and what they mean
 
-- **Unexpected token } or ]** usually means a trailing comma after the last property or item. JSON does not allow it.
-- **Unexpected token '** means single quotes. JSON strings and property names must use double quotes.
-- **Unexpected token in property name** means an unquoted key, such as `{name: "x"}` instead of `{"name": "x"}`.
+- **Unexpected token } or ]** usually means a trailing comma after the last property or item.
+- **Unexpected token '** means single quotes. JSON strings and keys must use double quotes.
+- **Expected a quoted property name** means an unquoted key, such as `{name: "x"}`.
 - **Unexpected end of input** means the document stops early. A closing `}` or `]` is missing.
-- **Unexpected token /** means a comment. Strict JSON has no comments. Remove them or use a JSONC-aware tool.
+- **Unexpected token /** means a comment. Strict JSON has no comments.
 
-## Formatting options explained
+## Working with large documents
 
-Two-space indentation is the default used by most JavaScript projects, Prettier and GitHub. Four spaces is common in Python and Java codebases. Tabs let every reader choose their own width. Sorting keys alphabetically makes two versions of the same document easy to compare in a diff tool, which is why many teams sort configuration files before committing them.
+Drop a 20 MB export onto the editor and it opens in a moment. The code pane virtualises rendering so scrolling stays smooth, and folding lets you collapse the parts you are not looking at. The tree pane renders the first 5,000 nodes, and the filter box narrows thousands of records to the ones that contain a term. Expand all and Collapse all work on whatever is visible.
 
-## When to minify
+## Sharing and saving
 
-Minifying removes every space, tab and newline that is not inside a string. The result is identical data that is typically 20 to 40 percent smaller. Use it for API responses, bundled config, and anything stored in a size-limited field. Keep the formatted version in your repository where humans read it.
+Share copies a link with the document compressed into the URL fragment. Browsers never send the fragment to a server, so the data travels only between you and the person you send it to. Links are limited to roughly 12 KB of compressed JSON; for anything bigger, Save downloads a .json file. Your current draft is also kept in this browser's local storage so a refresh or an accidental tab close costs nothing.

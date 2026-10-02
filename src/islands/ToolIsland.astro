@@ -14,4 +14,4 @@ interface Props {
 const { island, props = {} } = Astro.props;
 ---
 
-{island === 'json-editor' && <JsonEditor client:visible {...props} />}
+{island === 'json-editor' && <JsonEditor client:load {...props} />}
