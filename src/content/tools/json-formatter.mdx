@@ -1,0 +1,42 @@
+---
+slug: json-formatter
+updated: 2026-10-02
+howTo:
+  - Paste minified or messy JSON into the left pane, or drop a .json file onto the page.
+  - The formatted version appears instantly in the right pane. Choose 2 spaces, 4 spaces or tabs from the Indent menu.
+  - Tick "Sort keys" if you want object keys in alphabetical order for cleaner diffs.
+  - Click Copy to put the formatted JSON on your clipboard, or Download to save it as a file.
+features:
+  - Instant pretty printing as you type, no button to press
+  - 2 spaces, 4 spaces or tab indentation
+  - Optional alphabetical key sorting at every nesting level
+  - Pinpoints syntax errors by line and column if the input is not valid
+  - Handles files up to 25 MB entirely in your browser
+  - Copy or download the output with one click
+  - Works offline after the first load
+faq:
+  - q: What is the difference between a JSON formatter and a JSON beautifier?
+    a: Nothing. Both terms describe the same operation of adding consistent indentation and line breaks to JSON so humans can read it. "Pretty print" is a third name for the same thing.
+  - q: Will formatting change my data?
+    a: No. Formatting only changes whitespace outside of strings. Values, key order (unless you tick Sort keys) and types are preserved exactly.
+  - q: Why is the output pane empty?
+    a: The input is not valid JSON yet. Look at the status bar under the editor for the line and the reason, fix it, and the output appears immediately.
+  - q: Which indentation should I use?
+    a: Two spaces is the most common choice in JavaScript projects and the default for tools like Prettier. Four spaces is typical in Python and Java teams. Use whatever your project already uses.
+  - q: Is my JSON sent to a server?
+    a: No. Formatting happens in your browser. Nothing is uploaded, logged or stored.
+---
+
+## Why format JSON
+
+Minified JSON is perfect for machines and useless for people. A single 40 KB line from an API response is impossible to scan for the field you need. Formatting adds line breaks and indentation so the structure becomes visible: which keys belong to which object, how deep the nesting goes, where an array starts and ends.
+
+This formatter does it live. Paste on the left, read on the right. There is no submit button and no page reload.
+
+## Formatting and version control
+
+Teams that commit JSON files (package manifests, translations, fixtures, infrastructure config) benefit from a consistent style. A formatter with key sorting produces the same output for the same data every time, so a diff shows only the real change instead of a reshuffled file. Many teams run a formatter as a pre-commit hook for exactly this reason.
+
+## Related tasks
+
+If you only need to check whether a document is valid, the [JSON Validator](/tools/developer/json-validator/) gives a clearer error report. To go the other way and shrink JSON for production, use the [JSON Minifier](/tools/developer/json-minifier/). For editing values in place with folding and search, open the full [JSON Editor](/tools/developer/json-editor/).

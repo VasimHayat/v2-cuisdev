@@ -1,0 +1,43 @@
+{
+  "name": "cuisdev",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cuisdev - free, private, browser-based tools for developers and professionals",
+  "scripts": {
+    "dev": "astro dev",
+    "prebuild": "node scripts/og.mjs",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "og": "node scripts/og.mjs",
+    "lint": "astro check && tsc --noEmit",
+    "lighthouse": "lhci autorun"
+  },
+  "dependencies": {
+    "@astrojs/mdx": "^4.0.0",
+    "@astrojs/preact": "^4.0.0",
+    "@astrojs/rss": "^4.0.0",
+    "@astrojs/sitemap": "^3.2.0",
+    "@codemirror/commands": "^6.7.0",
+    "@codemirror/lang-json": "^6.0.1",
+    "@codemirror/language": "^6.10.0",
+    "@codemirror/lint": "^6.8.0",
+    "@codemirror/search": "^6.5.0",
+    "@codemirror/state": "^6.5.0",
+    "@codemirror/view": "^6.35.0",
+    "@tailwindcss/vite": "^4.0.0",
+    "astro": "^5.0.0",
+    "preact": "^10.25.0",
+    "sharp": "^0.33.5",
+    "tailwindcss": "^4.0.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@lhci/cli": "^0.14.0",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

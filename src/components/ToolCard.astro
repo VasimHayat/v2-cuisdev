@@ -1,0 +1,41 @@
+---
+import Icon from './Icon.astro';
+import type { Tool } from '@/data/tools';
+import { toolPath } from '@/data/tools';
+
+interface Props {
+  tool: Tool;
+  compact?: boolean;
+}
+const { tool, compact = false } = Astro.props;
+const soon = tool.status === 'soon';
+const Tag = soon ? 'div' : 'a';
+---
+
+<Tag
+  href={soon ? undefined : toolPath(tool)}
+  class:list={[
+    'group relative flex gap-3.5 p-4',
+    soon ? 'card opacity-70' : 'card-hover',
+    compact ? 'items-center' : 'items-start',
+  ]}
+  aria-disabled={soon ? 'true' : undefined}
+>
+  <span
+    class:list={[
+      'flex shrink-0 items-center justify-center rounded-md transition-colors',
+      compact ? 'h-9 w-9' : 'h-10 w-10',
+      'bg-brand-50 text-brand-600 group-hover:bg-brand-600 group-hover:text-white dark:bg-brand-900/40 dark:text-brand-300 dark:group-hover:bg-brand-600 dark:group-hover:text-white',
+    ]}
+  >
+    <Icon name={tool.icon} size={compact ? 17 : 20} />
+  </span>
+  <span class="min-w-0 flex-1">
+    <span class="flex items-center gap-2">
+      <span class="truncate text-[15px] font-semibold text-ink">{tool.name}</span>
+      {soon && <span class="badge border-line-strong bg-surface-2 text-ink-3">Coming soon</span>}
+    </span>
+    {!compact && <span class="mt-1 line-clamp-2 block text-sm leading-5 text-ink-2">{tool.tagline}</span>}
+  </span>
+  {!soon && <Icon name="arrow-right" size={16} class="mt-0.5 shrink-0 text-ink-3 opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" />}
+</Tag>

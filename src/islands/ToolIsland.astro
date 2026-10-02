@@ -1,0 +1,17 @@
+---
+/**
+ * Renders the interactive island for a tool. Astro can only hydrate components that are
+ * imported statically in the .astro file, so every island is imported here and chosen
+ * with a conditional. Add one import + one line per new island, and add its key to
+ * ISLAND_KEYS in registry.ts so the build can verify the registry.
+ */
+import JsonEditor from './json-editor/JsonEditor';
+
+interface Props {
+  island: string;
+  props?: Record<string, unknown>;
+}
+const { island, props = {} } = Astro.props;
+---
+
+{island === 'json-editor' && <JsonEditor client:visible {...props} />}

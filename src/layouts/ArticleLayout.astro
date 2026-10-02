@@ -1,0 +1,79 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+import RelatedTools from '@/components/RelatedTools.astro';
+import { getTool, type Tool } from '@/data/tools';
+import { graph, organizationLd, websiteLd, breadcrumbLd, articleLd, type Crumb } from '@/lib/seo';
+import { SITE } from '@/lib/site';
+
+interface Props {
+  id: string;
+  title: string;
+  description: string;
+  publishDate: Date;
+  updatedDate?: Date;
+  author: string;
+  tags: string[];
+  tools: string[];
+  image?: string;
+}
+const { id, title, description, publishDate, updatedDate, author, tags, tools, image } = Astro.props;
+const url = `/blog/${id}/`;
+const ogImage = image ?? `/og/blog-${id}.png`;
+const crumbs: Crumb[] = [
+  { name: 'Home', href: '/' },
+  { name: 'Blog', href: '/blog/' },
+  { name: title, href: url },
+];
+const linked = tools.map(getTool).filter((t): t is Tool => !!t && t.status === 'live');
+const fmt = (d: Date) => d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+const jsonLd = graph(
+  organizationLd(),
+  websiteLd(),
+  breadcrumbLd(crumbs),
+  articleLd({ title, description, url, image: ogImage, datePublished: publishDate.toISOString(), dateModified: updatedDate?.toISOString(), author }),
+);
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+  canonical={url}
+  image={ogImage}
+  type="article"
+  jsonLd={jsonLd}
+  publishedTime={publishDate.toISOString()}
+  modifiedTime={updatedDate?.toISOString()}
+>
+  <div class="container-x pt-5">
+    <Breadcrumbs crumbs={crumbs} />
+    <div class="mt-8 grid gap-12 lg:grid-cols-12">
+      <article class="lg:col-span-8">
+        <header>
+          <div class="flex flex-wrap gap-2">
+            {tags.map((t) => <span class="badge border-line bg-surface-2 text-ink-2">{t}</span>)}
+          </div>
+          <h1 class="mt-4 text-3xl font-bold leading-tight sm:text-4xl">{title}</h1>
+          <p class="mt-4 text-lg text-ink-2">{description}</p>
+          <p class="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-3">
+            <span class="font-medium text-ink-2">{author}</span>
+            <span aria-hidden="true">·</span>
+            <time datetime={publishDate.toISOString()}>{fmt(publishDate)}</time>
+            {updatedDate && (<><span aria-hidden="true">·</span><span>Updated <time datetime={updatedDate.toISOString()}>{fmt(updatedDate)}</time></span></>)}
+          </p>
+        </header>
+        <div class="prose-cuis mt-10 max-w-none text-[16px]">
+          <slot />
+        </div>
+        <footer class="mt-12 border-t border-line pt-6 text-sm text-ink-3">
+          Written by the {SITE.name} team. Found a mistake? <a href="/contact/" class="text-brand-600 underline">Tell us</a>.
+        </footer>
+      </article>
+      <aside class="lg:col-span-4">
+        <div class="lg:sticky lg:top-20">
+          <RelatedTools tools={linked} title="Tools mentioned" />
+        </div>
+      </aside>
+    </div>
+  </div>
+</BaseLayout>

@@ -1,0 +1,55 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+import Icon from '@/components/Icon.astro';
+import { SITE } from '@/lib/site';
+import { liveTools } from '@/data/tools';
+import { graph, organizationLd, websiteLd, breadcrumbLd, type Crumb } from '@/lib/seo';
+
+const crumbs: Crumb[] = [
+  { name: 'Home', href: '/' },
+  { name: 'About', href: '/about/' },
+];
+const jsonLd = graph(organizationLd(), websiteLd(), breadcrumbLd(crumbs), { '@type': 'AboutPage', name: 'About Cuisdev', url: `${SITE.url}/about/` });
+const live = liveTools().length;
+---
+
+<BaseLayout
+  title="About Cuisdev"
+  description="Cuisdev builds free, privacy-first online tools that run entirely in your browser. Learn who we are, why nothing is uploaded, and how we decide what to build next."
+  canonical="/about/"
+  jsonLd={jsonLd}
+>
+  <div class="container-x max-w-3xl pt-5">
+    <Breadcrumbs crumbs={crumbs} />
+    <h1 class="mt-4 text-3xl font-bold sm:text-4xl">About Cuisdev</h1>
+    <div class="prose-cuis mt-6 text-[16px]">
+      <p>
+        Cuisdev is a collection of free online tools for developers and professionals, built on one rule: your data never leaves your browser. There are {live} tools live today and more ship every week.
+      </p>
+      <h2>Why we built it</h2>
+      <p>
+        Most "free online tools" upload your file to a server you know nothing about, show ads on top of the tool, and ask for an email before giving you the result. We wanted the opposite: tools that open instantly, do one job well, and treat the data you paste as none of our business.
+      </p>
+      <h2>How the privacy promise works</h2>
+      <p>
+        Every tool is written in JavaScript and WebAssembly and runs on your device. When you drop a file or paste text, it is processed in your browser's memory and discarded when you close the tab. There is no upload endpoint to send it to. The only data we collect is anonymous page analytics, described in our <a href="/privacy/">privacy policy</a>.
+      </p>
+      <h2>How we decide what to build</h2>
+      <p>
+        We build tools people search for and cannot find a clean version of. Requests through the <a href="/contact/">contact page</a> are counted, and the most requested tools ship first. Each tool launches with a guide, a FAQ and the common mistakes it catches, because a tool you do not understand is only half a tool.
+      </p>
+      <h2>Standards we hold ourselves to</h2>
+      <ul>
+        <li>No upload of user data, ever. If a feature needs a server, it is a separate paid product, not a free tool.</li>
+        <li>No ads above the tool, no email gates, no dark patterns.</li>
+        <li>Every page loads in under two seconds on a mid-range phone.</li>
+        <li>Every tool is accessible by keyboard and screen reader.</li>
+      </ul>
+    </div>
+    <div class="card mt-10 flex items-center gap-4 p-5">
+      <Icon name="mail" size={22} class="text-brand-600" />
+      <p class="text-sm text-ink-2">Questions, partnership ideas or a bug report? Write to <a href={`mailto:${SITE.email}`} class="font-medium text-brand-600 underline">{SITE.email}</a>.</p>
+    </div>
+  </div>
+</BaseLayout>

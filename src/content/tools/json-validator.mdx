@@ -1,0 +1,46 @@
+---
+slug: json-validator
+updated: 2026-10-02
+howTo:
+  - Paste the JSON you want to check into the editor, or drop a file onto the page.
+  - The validator runs as you type. A green dot in the status bar means the document is valid.
+  - If there is a problem, the red status message gives the line, the column and a plain-English explanation. Click it to jump to the spot.
+  - Fix the error and the status turns green. Press Validate at any time for a confirmation message.
+features:
+  - Validates against strict JSON (RFC 8259), the format APIs and config parsers expect
+  - Reports the exact line and column of the first error
+  - Explains the most common mistakes in plain English, with the fix
+  - Click-to-jump from the error message to the problem character
+  - Syntax highlighting and bracket matching make unbalanced braces obvious
+  - Runs entirely in your browser, so sensitive data is safe
+  - Format or minify the document once it passes
+faq:
+  - q: What does "Unexpected token" mean?
+    a: The parser met a character it did not expect at that position. The validator translates the most common cases, such as a trailing comma, single quotes or an unquoted key, into a specific hint under the status bar.
+  - q: My JSON works in JavaScript but fails here. Why?
+    a: JavaScript object literals are more permissive than JSON. They allow single quotes, unquoted keys, trailing commas and comments. Strict JSON allows none of those, and that is what this validator checks, because it is what servers and APIs enforce.
+  - q: Does it validate against a JSON Schema?
+    a: Not yet. This tool checks syntax only. Schema validation, which checks that the data has the right fields and types, is on the roadmap.
+  - q: Can it check very large files?
+    a: Yes. Files up to 25 MB can be dropped onto the page, and larger documents work if your device has the memory. Everything runs locally.
+  - q: Is my data private?
+    a: Completely. The validator never sends your JSON anywhere. It is safe for API keys, tokens and personal data.
+---
+
+## What makes JSON invalid
+
+JSON has a deliberately tiny grammar: objects, arrays, strings, numbers, true, false and null. Everything else is an error. The strictness is what makes JSON portable across every language, but it also means a document that looks fine to a human can still be rejected by a server.
+
+The validator parses your text with the same rules a browser or API uses and shows you the first problem it meets. Fix it and run again; most documents have only one or two issues.
+
+## The five mistakes that cause most errors
+
+1. **Trailing commas.** `{"a": 1,}` is invalid. Remove the comma after the last item.
+2. **Single quotes.** `{'a': 1}` is invalid. Use double quotes for keys and string values.
+3. **Unquoted keys.** `{a: 1}` is invalid. Keys must be strings in double quotes.
+4. **Comments.** `// note` and `/* note */` are not allowed. Strip them before sending.
+5. **Special values.** `undefined`, `NaN` and `Infinity` are not JSON. Use `null` or a number.
+
+## Validate before you ship
+
+Invalid JSON in a config file can take down a deploy; in an API response it breaks every client at once. Pasting the document here before committing or publishing takes a few seconds and removes an entire category of production incidents. When the document passes, the [JSON Formatter](/tools/developer/json-formatter/) will make it readable and the [JSON Minifier](/tools/developer/json-minifier/) will make it small.

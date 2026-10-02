@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /_astro/
+
+Sitemap: https://cuisdev.com/sitemap-index.xml

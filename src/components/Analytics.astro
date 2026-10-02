@@ -1,0 +1,49 @@
+---
+/**
+ * Google Analytics 4. Loaded only in production builds and only after
+ * the page is idle, so it never competes with the tool for the main thread.
+ * Consent Mode v2 defaults are set to "denied" for ad storage; analytics storage is
+ * granted because the site shows no ads yet. Adjust in the consent block when ads ship.
+ */
+import { GA_ID } from '@/lib/site';
+const enabled = import.meta.env.PROD && !!GA_ID;
+---
+
+{
+  enabled && (
+    <script is:inline define:vars={{ GA_ID }}>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { dataLayer.push(arguments); }
+      window.gtag = gtag;
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'granted',
+      });
+      gtag('js', new Date());
+      gtag('config', GA_ID, { anonymize_ip: true, send_page_view: true });
+
+      function loadGA() {
+        var s = document.createElement('script');
+        s.async = true;
+        s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+        document.head.appendChild(s);
+      }
+      if ('requestIdleCallback' in window) requestIdleCallback(loadGA, { timeout: 4000 });
+      else setTimeout(loadGA, 2500);
+
+      // Page views on client-side View Transitions.
+      document.addEventListener('astro:page-load', function () {
+        if (!window.__gaFirstLoad) { window.__gaFirstLoad = true; return; }
+        gtag('event', 'page_view', { page_location: location.href, page_title: document.title });
+      });
+
+      // Tool usage events bubbled from islands: window.dispatchEvent(new CustomEvent('cuis:track', {detail:{name, params}}))
+      window.addEventListener('cuis:track', function (e) {
+        var d = (e && e.detail) || {};
+        if (d.name) gtag('event', d.name, d.params || {});
+      });
+    </script>
+  )
+}

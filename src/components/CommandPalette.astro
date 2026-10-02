@@ -1,0 +1,121 @@
+---
+/**
+ * Ctrl+K palette: searches the tool registry client-side. The registry is small so it is
+ * inlined as JSON; swap for a Pagefind index once the catalogue passes ~150 entries.
+ */
+import Icon from './Icon.astro';
+import { TOOLS, toolPath, getCategory } from '@/data/tools';
+
+const index = TOOLS.filter((t) => t.status === 'live').map((t) => ({
+  n: t.name,
+  d: t.tagline,
+  c: getCategory(t.category)?.name ?? '',
+  k: t.keywords.join(' '),
+  h: toolPath(t),
+}));
+---
+
+<div id="palette" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-label="Search tools">
+  <div class="absolute inset-0 bg-black/40 backdrop-blur-[2px]" data-palette-close></div>
+  <div class="relative mx-auto mt-[10vh] w-[min(640px,92vw)] overflow-hidden rounded-xl border border-line-strong bg-surface shadow-float">
+    <div class="flex items-center gap-3 border-b border-line px-4">
+      <Icon name="search" size={18} class="text-ink-3" />
+      <input
+        id="palette-input"
+        type="search"
+        class="h-13 w-full bg-transparent py-4 text-base text-ink outline-none placeholder:text-ink-3"
+        placeholder="Search tools, e.g. json, base64, resize image"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <span class="kbd">Esc</span>
+    </div>
+    <ul id="palette-results" class="max-h-[50vh] overflow-y-auto p-2 scrollbar-thin" role="listbox"></ul>
+    <div class="flex items-center justify-between border-t border-line px-4 py-2 text-xs text-ink-3">
+      <span>Jump to any tool</span>
+      <span class="flex gap-3"><span><span class="kbd">↑</span> <span class="kbd">↓</span> navigate</span><span><span class="kbd">↵</span> open</span></span>
+    </div>
+  </div>
+</div>
+
+<script is:inline define:vars={{ index }}>
+  window.__cuisToolIndex = index;
+</script>
+<script>
+  type Row = { n: string; d: string; c: string; k: string; h: string };
+  function initPalette() {
+    const root = document.getElementById('palette');
+    const input = document.getElementById('palette-input') as HTMLInputElement | null;
+    const list = document.getElementById('palette-results');
+    if (!root || !input || !list) return;
+    const rows: Row[] = (window as any).__cuisToolIndex ?? [];
+    let active = 0;
+    let shown: Row[] = [];
+
+    const render = (q: string) => {
+      const needle = q.trim().toLowerCase();
+      shown = !needle
+        ? rows.slice(0, 8)
+        : rows
+            .map((r) => {
+              const hay = `${r.n} ${r.d} ${r.k} ${r.c}`.toLowerCase();
+              let s = 0;
+              if (r.n.toLowerCase().startsWith(needle)) s += 6;
+              if (r.n.toLowerCase().includes(needle)) s += 3;
+              if (hay.includes(needle)) s += 1;
+              return [s, r] as const;
+            })
+            .filter(([s]) => s > 0)
+            .sort((a, b) => b[0] - a[0])
+            .slice(0, 10)
+            .map(([, r]) => r);
+      active = 0;
+      list.innerHTML = shown.length
+        ? shown
+            .map(
+              (r, i) => `<li role="option" aria-selected="${i === active}" data-i="${i}">
+              <a href="${r.h}" class="flex items-center justify-between gap-3 rounded-md px-3 py-2.5 text-sm ${i === active ? 'bg-surface-3' : 'hover:bg-surface-3'}">
+                <span class="min-w-0"><span class="block font-medium text-ink">${r.n}</span><span class="block truncate text-xs text-ink-3">${r.d}</span></span>
+                <span class="shrink-0 text-xs text-ink-3">${r.c}</span>
+              </a></li>`,
+            )
+            .join('')
+        : `<li class="px-3 py-6 text-center text-sm text-ink-3">No tools match "${q.replace(/</g, '&lt;')}". <a class="text-brand-600 underline" href="/contact/">Request it</a>.</li>`;
+    };
+    const open = () => {
+      root.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      input.value = '';
+      render('');
+      requestAnimationFrame(() => input.focus());
+    };
+    const close = () => {
+      root.classList.add('hidden');
+      document.body.style.overflow = '';
+    };
+    const highlight = () => {
+      list.querySelectorAll<HTMLElement>('li[role=option]').forEach((li, i) => {
+        li.setAttribute('aria-selected', String(i === active));
+        li.querySelector('a')?.classList.toggle('bg-surface-3', i === active);
+      });
+      list.querySelector<HTMLElement>(`li[data-i="${active}"]`)?.scrollIntoView({ block: 'nearest' });
+    };
+
+    document.querySelectorAll('[data-open-palette]').forEach((b) => b.addEventListener('click', open));
+    root.querySelector('[data-palette-close]')?.addEventListener('click', close);
+    input.addEventListener('input', () => render(input.value));
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        root.classList.contains('hidden') ? open() : close();
+      } else if (e.key === 'Escape' && !root.classList.contains('hidden')) close();
+    });
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowDown') { e.preventDefault(); active = Math.min(active + 1, shown.length - 1); highlight(); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); active = Math.max(active - 1, 0); highlight(); }
+      else if (e.key === 'Enter' && shown[active]) { location.href = shown[active].h; }
+    });
+  }
+  initPalette();
+  document.addEventListener('astro:after-swap', initPalette);
+</script>

@@ -1,0 +1,55 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+import { SITE } from '@/lib/site';
+import { graph, organizationLd, websiteLd, breadcrumbLd, type Crumb } from '@/lib/seo';
+
+const crumbs: Crumb[] = [
+  { name: 'Home', href: '/' },
+  { name: 'Terms of service', href: '/terms/' },
+];
+const jsonLd = graph(organizationLd(), websiteLd(), breadcrumbLd(crumbs));
+---
+
+<BaseLayout
+  title="Terms of Service"
+  description="The terms for using Cuisdev's free online tools: free for personal and commercial use, provided as-is, with no warranty. Read the full terms."
+  canonical="/terms/"
+  jsonLd={jsonLd}
+>
+  <div class="container-x max-w-3xl pt-5">
+    <Breadcrumbs crumbs={crumbs} />
+    <h1 class="mt-4 text-3xl font-bold sm:text-4xl">Terms of service</h1>
+    <p class="mt-2 text-sm text-ink-3">Last updated <time datetime="2026-10-02">2 October 2026</time></p>
+    <div class="prose-cuis mt-6 text-[16px]">
+      <h2>Use of the tools</h2>
+      <p>
+        The tools on {SITE.name} are free to use for personal and commercial purposes. You may not use them to break the law, to attack other systems, or to scrape, mirror or resell the site itself.
+      </p>
+      <h2>No warranty</h2>
+      <p>
+        The tools are provided "as is" without warranty of any kind. We work hard to make them correct, but you are responsible for checking results before relying on them, especially for financial calculations and anything that goes to production.
+      </p>
+      <h2>Limitation of liability</h2>
+      <p>
+        To the extent permitted by law, {SITE.name} is not liable for any loss or damage arising from use of the site or its tools, including data loss, lost profits or business interruption.
+      </p>
+      <h2>Your content</h2>
+      <p>
+        Because the tools run in your browser, we never receive your content and claim no rights over it. You are responsible for having the right to process any data you use with the tools.
+      </p>
+      <h2>Finance tools</h2>
+      <p>
+        Calculators and the stock analyzer are for information only. They are not financial, tax or investment advice. Market data may be delayed or incomplete.
+      </p>
+      <h2>Intellectual property</h2>
+      <p>
+        The site design, text and code are owned by {SITE.name} unless stated otherwise. Open-source components are used under their respective licences.
+      </p>
+      <h2>Changes</h2>
+      <p>We may update these terms. Continued use after a change means you accept the new terms.</p>
+      <h2>Contact</h2>
+      <p><a href={`mailto:${SITE.email}`}>{SITE.email}</a></p>
+    </div>
+  </div>
+</BaseLayout>

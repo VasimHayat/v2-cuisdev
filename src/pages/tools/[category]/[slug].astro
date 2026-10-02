@@ -1,0 +1,38 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import ToolLayout from '@/layouts/ToolLayout.astro';
+import ToolIsland from '@/islands/ToolIsland.astro';
+import { TOOLS, getCategory, type Tool } from '@/data/tools';
+import { hasIsland } from '@/islands/registry';
+
+export async function getStaticPaths() {
+  const docs = await getCollection('tools');
+  const bySlug = new Map(docs.map((d) => [d.data.slug, d]));
+  return TOOLS.filter((t) => t.status === 'live').map((tool) => {
+    const doc = bySlug.get(tool.slug);
+    if (!doc) throw new Error(`Live tool "${tool.slug}" has no MDX file in src/content/tools/`);
+    if (!hasIsland(tool.island)) throw new Error(`Live tool "${tool.slug}" has no registered island (got "${tool.island}")`);
+    return { params: { category: tool.category, slug: tool.slug }, props: { tool, doc } };
+  });
+}
+
+interface Props {
+  tool: Tool;
+  doc: CollectionEntry<'tools'>;
+}
+const { tool, doc } = Astro.props;
+const category = getCategory(tool.category)!;
+const { Content } = await render(doc);
+---
+
+<ToolLayout
+  tool={tool}
+  category={category}
+  howTo={doc.data.howTo}
+  features={doc.data.features}
+  faq={doc.data.faq}
+  updated={doc.data.updated}
+>
+  <ToolIsland slot="tool" island={tool.island!} props={tool.islandProps} />
+  <Content />
+</ToolLayout>

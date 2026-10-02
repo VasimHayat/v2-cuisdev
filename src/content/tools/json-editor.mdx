@@ -1,0 +1,54 @@
+---
+slug: json-editor
+updated: 2026-10-02
+howTo:
+  - Paste your JSON into the editor, or drag and drop a .json file anywhere on the page.
+  - Errors are underlined as you type. Click the red status message to jump straight to the problem line.
+  - Press Format (or Ctrl+Enter) to pretty print with 2 spaces, 4 spaces or tabs. Tick "Sort keys" to order object keys alphabetically.
+  - Press Minify to strip all whitespace for production use. The status bar shows the size saved.
+  - Copy the result with one click, or download it as a .json file.
+features:
+  - Live validation with the exact line and column of every syntax error and a plain-English fix
+  - Format with 2 spaces, 4 spaces or tabs, with optional alphabetical key sorting
+  - One-click minify with the before and after byte size
+  - Syntax highlighting, code folding, bracket matching and search (Ctrl+F)
+  - Drag and drop files up to 25 MB, processed entirely in your browser
+  - Full-screen mode and keyboard shortcuts for a distraction-free workflow
+  - Your draft is kept in this tab if you refresh, and discarded when you close it
+  - Dark mode that follows your system or your choice
+faq:
+  - q: Is my JSON uploaded to a server?
+    a: No. The editor runs completely in your browser using JavaScript. Nothing you paste or drop is transmitted anywhere, which makes it safe for API keys, customer records and other sensitive data.
+  - q: What is the maximum file size?
+    a: The editor accepts files up to 25 MB by drag and drop. Larger documents work too if your device has enough memory, but the browser may become slow to respond.
+  - q: Why does the editor say my JSON is invalid when it looks fine?
+    a: The most common causes are a trailing comma after the last item, single quotes instead of double quotes, unquoted property names, or comments. The status bar names the exact problem and the line it is on.
+  - q: Does it support JSON5, JSONC or comments?
+    a: Not yet. The editor validates strict JSON as defined by RFC 8259, which is what APIs and most config files expect. A JSON5 mode is on the roadmap.
+  - q: Can I use it offline?
+    a: Yes. Once this page has loaded, the editor keeps working without an internet connection. You can also install Cuisdev as an app from your browser menu.
+  - q: Is the JSON Editor free for commercial use?
+    a: Yes. All Cuisdev tools are free for personal and commercial use with no limits and no account.
+---
+
+## What this JSON editor does
+
+JSON (JavaScript Object Notation) is the format behind almost every web API, config file and data export you will touch as a developer. It is simple to read, but one missing comma or stray quote breaks the whole document, and the error messages browsers and servers give you are rarely helpful.
+
+This editor fixes that. As you type or paste, it parses the document and underlines the first problem. The status bar tells you the line, the column, what went wrong and, for the common mistakes, how to fix it. Once the document is valid you can format it for reading, minify it for shipping, sort keys for clean diffs, and copy or download the result.
+
+## Common JSON errors and what they mean
+
+- **Unexpected token } or ]** usually means a trailing comma after the last property or item. JSON does not allow it.
+- **Unexpected token '** means single quotes. JSON strings and property names must use double quotes.
+- **Unexpected token in property name** means an unquoted key, such as `{name: "x"}` instead of `{"name": "x"}`.
+- **Unexpected end of input** means the document stops early. A closing `}` or `]` is missing.
+- **Unexpected token /** means a comment. Strict JSON has no comments. Remove them or use a JSONC-aware tool.
+
+## Formatting options explained
+
+Two-space indentation is the default used by most JavaScript projects, Prettier and GitHub. Four spaces is common in Python and Java codebases. Tabs let every reader choose their own width. Sorting keys alphabetically makes two versions of the same document easy to compare in a diff tool, which is why many teams sort configuration files before committing them.
+
+## When to minify
+
+Minifying removes every space, tab and newline that is not inside a string. The result is identical data that is typically 20 to 40 percent smaller. Use it for API responses, bundled config, and anything stored in a size-limited field. Keep the formatted version in your repository where humans read it.

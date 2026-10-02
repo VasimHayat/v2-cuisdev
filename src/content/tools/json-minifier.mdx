@@ -1,0 +1,38 @@
+---
+slug: json-minifier
+updated: 2026-10-02
+howTo:
+  - Paste formatted JSON into the left pane, or drop a .json file onto the page.
+  - The minified version appears instantly on the right, with the size saved shown in the status bar.
+  - Click Copy to put the compact JSON on your clipboard, or Download to save it as data.min.json.
+features:
+  - Removes every space, tab and newline outside of strings
+  - Shows input size, output size and the percentage saved
+  - Validates first, so you never ship a broken document
+  - Handles files up to 25 MB locally in your browser
+  - Copy or download the result in one click
+  - Works offline after the first load
+faq:
+  - q: Does minifying change the data?
+    a: No. Only whitespace outside of string values is removed. Every key, value and type is preserved and the result parses to exactly the same object.
+  - q: How much smaller will my JSON be?
+    a: Typically 20 to 40 percent for formatted documents, depending on indentation depth and how long the strings are. The status bar shows the exact figure for your input.
+  - q: Should I minify JSON in my repository?
+    a: Usually not. Keep the formatted version where humans read and review it, and minify at build or response time. Minify in the repo only for files that are never hand-edited.
+  - q: Is gzip better than minifying?
+    a: They stack. Gzip or Brotli compression on your server handles repeated text well, but minifying first still saves bytes and reduces parse time on the client. Do both.
+  - q: Is my data uploaded?
+    a: No. The minifier runs in your browser and nothing is transmitted.
+---
+
+## When minified JSON matters
+
+Every byte an API returns is a byte the client has to download and parse. Formatted JSON carries indentation and newlines that machines do not need. Minifying removes them, which cuts transfer size, speeds up parsing on slow devices and keeps you under size limits in places like HTTP headers, local storage and message queues.
+
+## Minify versus compress
+
+Minification and compression solve different problems. Minification deletes characters that carry no information. Compression (gzip, Brotli) encodes repeated patterns more efficiently. A minified document compresses better than a formatted one, so the right answer is almost always to do both: minify at build time, compress at the server.
+
+## Going back
+
+Minified JSON is hard to read. If you need to inspect a compact document, paste it into the [JSON Formatter](/tools/developer/json-formatter/) and it becomes readable instantly. The [JSON Editor](/tools/developer/json-editor/) does both in one place.

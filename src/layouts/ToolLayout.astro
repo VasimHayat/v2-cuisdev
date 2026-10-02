@@ -1,0 +1,139 @@
+---
+/**
+ * The template every tool page renders through. Structure is fixed on purpose: this is
+ * the shape that ranks. Tool above the fold, then How to use, Features, explainer, FAQ,
+ * Related tools.
+ */
+import BaseLayout from './BaseLayout.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+import Icon from '@/components/Icon.astro';
+import FAQ from '@/components/FAQ.astro';
+import RelatedTools from '@/components/RelatedTools.astro';
+import type { Tool, Category } from '@/data/tools';
+import { relatedTools, toolPath, categoryPath } from '@/data/tools';
+import { graph, organizationLd, websiteLd, breadcrumbLd, faqLd, softwareApplicationLd, howToLd, type Crumb } from '@/lib/seo';
+
+interface Props {
+  tool: Tool;
+  category: Category;
+  howTo: string[];
+  features: string[];
+  faq: { q: string; a: string }[];
+  updated: Date;
+}
+const { tool, category, howTo, features, faq, updated } = Astro.props;
+
+const crumbs: Crumb[] = [
+  { name: 'Home', href: '/' },
+  { name: 'Tools', href: '/tools/' },
+  { name: category.name, href: categoryPath(category.slug) },
+  { name: tool.name, href: toolPath(tool) },
+];
+const related = relatedTools(tool);
+const updatedIso = updated.toISOString().slice(0, 10);
+
+const jsonLd = graph(
+  organizationLd(),
+  websiteLd(),
+  breadcrumbLd(crumbs),
+  softwareApplicationLd(tool, { features, dateModified: updatedIso }),
+  howToLd(tool, howTo),
+  faqLd(faq),
+);
+---
+
+<BaseLayout
+  title={tool.title}
+  description={tool.description}
+  canonical={toolPath(tool)}
+  image={`/og/${tool.slug}.png`}
+  jsonLd={jsonLd}
+  modifiedTime={updatedIso}
+>
+  <div class="container-x pt-5">
+    <Breadcrumbs crumbs={crumbs} />
+
+    <header class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div class="flex items-start gap-3.5">
+        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600 dark:bg-brand-900/40 dark:text-brand-300">
+          <Icon name={tool.icon} size={22} />
+        </span>
+        <div>
+          <h1 class="text-2xl font-bold sm:text-3xl">{tool.name}</h1>
+          <p class="mt-1 text-[15px] text-ink-2">{tool.tagline}</p>
+        </div>
+      </div>
+      <ul class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-3">
+        <li class="flex items-center gap-1.5"><Icon name="shield-check" size={13} class="text-success" /> Runs in your browser</li>
+        <li class="flex items-center gap-1.5"><Icon name="zap" size={13} class="text-warning" /> No sign-up</li>
+        <li class="flex items-center gap-1.5"><Icon name="gift" size={13} class="text-brand-500" /> Free forever</li>
+      </ul>
+    </header>
+
+    <div class="mt-5">
+      <slot name="tool" />
+    </div>
+  </div>
+
+  <div class="container-x mt-14 grid gap-14 lg:grid-cols-12">
+    <article class="lg:col-span-8">
+      <section aria-labelledby="howto-heading">
+        <h2 id="howto-heading" class="text-2xl font-bold">How to use the {tool.name}</h2>
+        <ol class="mt-5 space-y-3">
+          {
+            howTo.map((step, i) => (
+              <li class="flex gap-3.5">
+                <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-semibold text-white">{i + 1}</span>
+                <p class="pt-0.5 text-[15px] leading-6 text-ink-2">{step}</p>
+              </li>
+            ))
+          }
+        </ol>
+      </section>
+
+      <section class="mt-12" aria-labelledby="features-heading">
+        <h2 id="features-heading" class="text-2xl font-bold">Features</h2>
+        <ul class="mt-5 grid gap-3 sm:grid-cols-2">
+          {
+            features.map((f) => (
+              <li class="flex items-start gap-2.5 text-[15px] leading-6 text-ink-2">
+                <Icon name="check-circle" size={18} class="mt-1 shrink-0 text-success" />
+                <span>{f}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <section class="prose-cuis mt-12 max-w-none">
+        <slot />
+      </section>
+
+      <div class="mt-12">
+        <FAQ items={faq} />
+      </div>
+
+      <p class="mt-8 text-xs text-ink-3">Last updated <time datetime={updatedIso}>{updated.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</time>.</p>
+    </article>
+
+    <aside class="lg:col-span-4">
+      <div class="lg:sticky lg:top-20">
+        <div class="card p-5">
+          <h2 class="text-sm font-semibold">Why {tool.name} on Cuisdev</h2>
+          <ul class="mt-3 space-y-2.5 text-sm text-ink-2">
+            <li class="flex gap-2"><Icon name="lock" size={16} class="mt-0.5 shrink-0 text-ink-3" /> Your data is processed locally and never uploaded.</li>
+            <li class="flex gap-2"><Icon name="wifi-off" size={16} class="mt-0.5 shrink-0 text-ink-3" /> Keeps working offline once the page has loaded.</li>
+            <li class="flex gap-2"><Icon name="smartphone" size={16} class="mt-0.5 shrink-0 text-ink-3" /> Works on phones and tablets.</li>
+          </ul>
+        </div>
+        <div class="mt-6">
+          <RelatedTools tools={related} />
+        </div>
+        <a href={categoryPath(category.slug)} class="btn-secondary mt-6 w-full justify-between">
+          All {category.name.toLowerCase()}
+          <Icon name="arrow-right" size={16} />
+        </a>
+      </div>
+    </aside>
+  </div>
+</BaseLayout>

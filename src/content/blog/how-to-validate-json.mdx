@@ -1,0 +1,74 @@
+---
+title: How to validate JSON and fix the five most common errors
+description: A practical guide to checking JSON syntax, reading parser error messages and fixing trailing commas, single quotes, unquoted keys, comments and invalid values.
+publishDate: 2026-10-02
+author: Cuisdev Team
+tags: [JSON, Developer]
+tools: [json-validator, json-formatter, json-editor]
+---
+
+JSON is simple until it is not. A document that looks right to you can still be rejected by a server with a message like `Unexpected token } in JSON at position 212`, and that position number is the only clue you get. This guide shows how to validate JSON quickly and what the common errors actually mean.
+
+## The fastest way to validate JSON
+
+Paste the document into the [JSON Validator](/tools/developer/json-validator/). It parses with the same rules browsers and servers use and reports the first problem by line and column, with a plain-English hint for the usual mistakes. Nothing is uploaded, so it is safe for tokens and customer data.
+
+If you prefer the command line, Node and Python both have one-liners:
+
+```bash
+node -e "JSON.parse(require('fs').readFileSync('data.json','utf8'))"
+python -m json.tool data.json > /dev/null
+```
+
+Both print an error with a position if the file is invalid and nothing if it is fine.
+
+## Error 1: trailing commas
+
+```json
+{ "name": "Ada", "role": "engineer", }
+```
+
+JavaScript allows a comma after the last property. JSON does not. Delete it. This single mistake causes more failed deploys than any other, especially in hand-edited config files.
+
+## Error 2: single quotes
+
+```json
+{ 'name': 'Ada' }
+```
+
+Keys and string values must use double quotes. Most editors can fix this with a find-and-replace, but be careful with apostrophes inside strings.
+
+## Error 3: unquoted keys
+
+```json
+{ name: "Ada" }
+```
+
+Again, this is valid JavaScript and invalid JSON. Every key is a string and must be quoted.
+
+## Error 4: comments
+
+```json
+{
+  // the user's display name
+  "name": "Ada"
+}
+```
+
+Strict JSON has no comment syntax. If you need comments in configuration, use a format that supports them such as JSONC, YAML or TOML, and convert to JSON at build time.
+
+## Error 5: undefined, NaN and Infinity
+
+```json
+{ "score": NaN, "limit": Infinity, "note": undefined }
+```
+
+None of these exist in JSON. Use `null` for missing values and a real number for limits. When you serialise from JavaScript, `JSON.stringify` silently turns `NaN` and `Infinity` into `null` and drops `undefined` properties, which can hide bugs.
+
+## Reading "position 212"
+
+The position is a zero-based character offset from the start of the file, counting newlines. It is accurate but useless without a tool to translate it. The validator converts it to a line and column and highlights the character. If you are stuck with the raw number, open the file in an editor that shows the cursor offset, or paste it into the [JSON Editor](/tools/developer/json-editor/) and click the error.
+
+## After it passes
+
+Valid JSON is not necessarily readable JSON. Run it through the [JSON Formatter](/tools/developer/json-formatter/) before committing so reviewers can read the diff, and sort keys if the file is generated from a tool that reorders them.

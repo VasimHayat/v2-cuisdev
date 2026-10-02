@@ -1,0 +1,161 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Icon from '@/components/Icon.astro';
+import ToolCard from '@/components/ToolCard.astro';
+import { graph, organizationLd, websiteLd } from '@/lib/seo';
+import { CATEGORIES, liveTools, soonTools, featuredTools, toolsInCategory, categoryPath } from '@/data/tools';
+import { getCollection } from 'astro:content';
+
+const live = liveTools();
+const featured = featuredTools();
+const soon = soonTools().slice(0, 6);
+const posts = (await getCollection('blog', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf())
+  .slice(0, 3);
+
+const jsonLd = graph(organizationLd(), websiteLd());
+
+const VALUES = [
+  { icon: 'shield-check', title: 'Private by design', text: 'Every tool runs in your browser. Nothing you paste or drop is uploaded, logged or stored.' },
+  { icon: 'zap', title: 'Instant', text: 'No page reloads, no queues, no waiting for a server. Results appear as you type.' },
+  { icon: 'gift', title: 'Free, no sign-up', text: 'No account, no trial, no limits. Open a tool and use it.' },
+  { icon: 'wifi-off', title: 'Works offline', text: 'Once a tool has loaded it keeps working without a connection. Install Cuisdev as an app.' },
+  { icon: 'smartphone', title: 'Mobile friendly', text: 'Every tool is designed for a phone screen as carefully as for a desktop.' },
+  { icon: 'book-open', title: 'Open and documented', text: 'Each tool explains what it does, how to use it and the mistakes it catches.' },
+];
+---
+
+<BaseLayout jsonLd={jsonLd}>
+  <!-- Hero -->
+  <section class="relative overflow-hidden">
+    <div class="grid-fade pointer-events-none absolute inset-0 -z-10 opacity-60"></div>
+    <div class="container-x pb-14 pt-16 text-center sm:pt-24">
+      <span class="badge border-brand-200 bg-brand-50 text-brand-700 dark:border-brand-800 dark:bg-brand-900/40 dark:text-brand-300">
+        {live.length} tools live, more every week
+      </span>
+      <h1 class="mx-auto mt-5 max-w-3xl text-4xl font-extrabold leading-[1.1] sm:text-6xl">
+        Professional online tools that never see your data
+      </h1>
+      <p class="mx-auto mt-5 max-w-2xl text-lg text-ink-2">
+        Format JSON, convert files, edit images and more. Every tool runs in your browser, so your data stays on your device. Free, fast, no sign-up.
+      </p>
+      <div class="mx-auto mt-8 flex max-w-xl items-center gap-2">
+        <button type="button" class="input flex h-12 flex-1 items-center gap-3 text-left text-ink-3 hover:border-brand-400" data-open-palette>
+          <Icon name="search" size={18} />
+          <span class="flex-1">Search tools, e.g. json, base64, resize image</span>
+          <span class="kbd hidden sm:inline-flex">Ctrl K</span>
+        </button>
+        <a href="/tools/" class="btn-primary h-12 px-5">Browse all</a>
+      </div>
+      <div class="mt-6 flex flex-wrap items-center justify-center gap-2 text-sm">
+        <span class="text-ink-3">Popular:</span>
+        {featured.map((t) => <a href={`/tools/${t.category}/${t.slug}/`} class="rounded-full border border-line bg-surface px-3 py-1 text-ink-2 hover:border-brand-400 hover:text-ink">{t.name}</a>)}
+      </div>
+    </div>
+  </section>
+
+  <!-- Categories -->
+  <section class="container-x" aria-labelledby="cats-heading">
+    <div class="flex items-end justify-between">
+      <div>
+        <h2 id="cats-heading" class="text-2xl font-bold sm:text-3xl">Browse by category</h2>
+        <p class="mt-1.5 text-ink-2">Pick a category, then pick a tool. Each one has its own page you can bookmark.</p>
+      </div>
+      <a href="/tools/" class="btn-ghost hidden sm:inline-flex">All tools <Icon name="arrow-right" size={16} /></a>
+    </div>
+    <div class="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {
+        CATEGORIES.map((c) => {
+          const n = toolsInCategory(c.slug).filter((t) => t.status === 'live').length;
+          const total = toolsInCategory(c.slug).length;
+          return (
+            <a href={categoryPath(c.slug)} class="card-hover group flex flex-col p-5">
+              <span class="flex h-10 w-10 items-center justify-center rounded-md bg-brand-50 text-brand-600 transition-colors group-hover:bg-brand-600 group-hover:text-white dark:bg-brand-900/40 dark:text-brand-300">
+                <Icon name={c.icon} size={20} />
+              </span>
+              <span class="mt-4 text-[15px] font-semibold">{c.name}</span>
+              <span class="mt-1 text-sm text-ink-2">{c.tagline}</span>
+              <span class="mt-4 text-xs text-ink-3">{n > 0 ? `${n} live` : 'Coming soon'}{total > n ? ` · ${total - n} planned` : ''}</span>
+            </a>
+          );
+        })
+      }
+    </div>
+  </section>
+
+  <!-- Live tools -->
+  <section class="container-x mt-20" aria-labelledby="live-heading">
+    <h2 id="live-heading" class="text-2xl font-bold sm:text-3xl">Ready to use now</h2>
+    <p class="mt-1.5 text-ink-2">Each tool is free, runs locally and has a guide underneath it.</p>
+    <div class="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {live.map((t) => <ToolCard tool={t} />)}
+    </div>
+    {
+      soon.length > 0 && (
+        <>
+          <h3 class="mt-12 text-lg font-semibold text-ink-2">Shipping next</h3>
+          <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {soon.map((t) => <ToolCard tool={t} compact />)}
+          </div>
+        </>
+      )
+    }
+  </section>
+
+  <!-- Values -->
+  <section class="mt-24 border-y border-line bg-surface-2" aria-labelledby="values-heading">
+    <div class="container-x py-16">
+      <h2 id="values-heading" class="text-center text-2xl font-bold sm:text-3xl">Built the way a tool site should be</h2>
+      <p class="mx-auto mt-2 max-w-xl text-center text-ink-2">No upload forms, no email gates, no ads on top of the tool. Just the tool.</p>
+      <div class="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        {
+          VALUES.map((v) => (
+            <div class="flex gap-4">
+              <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-line bg-surface text-brand-600 dark:text-brand-300">
+                <Icon name={v.icon} size={20} />
+              </span>
+              <div>
+                <h3 class="font-semibold">{v.title}</h3>
+                <p class="mt-1 text-sm leading-6 text-ink-2">{v.text}</p>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Blog -->
+  {
+    posts.length > 0 && (
+      <section class="container-x mt-20" aria-labelledby="blog-heading">
+        <div class="flex items-end justify-between">
+          <h2 id="blog-heading" class="text-2xl font-bold sm:text-3xl">From the blog</h2>
+          <a href="/blog/" class="btn-ghost hidden sm:inline-flex">All articles <Icon name="arrow-right" size={16} /></a>
+        </div>
+        <div class="mt-7 grid gap-4 md:grid-cols-3">
+          {posts.map((p) => (
+            <a href={`/blog/${p.id}/`} class="card-hover flex flex-col p-5">
+              <time class="text-xs text-ink-3" datetime={p.data.publishDate.toISOString()}>
+                {p.data.publishDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+              </time>
+              <span class="mt-2 text-[15px] font-semibold leading-snug">{p.data.title}</span>
+              <span class="mt-2 line-clamp-3 text-sm leading-6 text-ink-2">{p.data.description}</span>
+            </a>
+          ))}
+        </div>
+      </section>
+    )
+  }
+
+  <!-- CTA -->
+  <section class="container-x mt-20">
+    <div class="card flex flex-col items-start justify-between gap-6 bg-brand-600 p-8 text-white dark:bg-brand-700 sm:flex-row sm:items-center sm:p-10">
+      <div>
+        <h2 class="text-2xl font-bold text-white">Missing a tool you need?</h2>
+        <p class="mt-1.5 text-white/85">Tell us what would save you time. The most requested tools ship first.</p>
+      </div>
+      <a href="/contact/" class="btn h-11 border-white bg-white px-5 text-brand-700 hover:bg-brand-50">Request a tool</a>
+    </div>
+  </section>
+</BaseLayout>

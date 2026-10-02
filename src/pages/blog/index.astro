@@ -1,0 +1,47 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+import { graph, organizationLd, websiteLd, breadcrumbLd, type Crumb } from '@/lib/seo';
+
+const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf(),
+);
+const crumbs: Crumb[] = [
+  { name: 'Home', href: '/' },
+  { name: 'Blog', href: '/blog/' },
+];
+const jsonLd = graph(organizationLd(), websiteLd(), breadcrumbLd(crumbs));
+---
+
+<BaseLayout
+  title="Blog - Guides for Developers and Power Users"
+  description="Practical guides on JSON, data formats, images, PDFs and the everyday tasks our tools solve. Written by the Cuisdev team, updated as the tools evolve."
+  canonical="/blog/"
+  jsonLd={jsonLd}
+>
+  <div class="container-x pt-5">
+    <Breadcrumbs crumbs={crumbs} />
+    <h1 class="mt-4 text-3xl font-bold sm:text-4xl">Blog</h1>
+    <p class="mt-2 max-w-2xl text-ink-2">Short, practical guides on the problems our tools solve. Each one links to the tool that does the job.</p>
+
+    {
+      posts.length === 0 ? (
+        <div class="card mt-10 p-8 text-center text-ink-2">First articles are on the way.</div>
+      ) : (
+        <div class="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {posts.map((p) => (
+            <a href={`/blog/${p.id}/`} class="card-hover flex flex-col p-5">
+              <div class="flex flex-wrap gap-1.5">{p.data.tags.slice(0, 2).map((t) => <span class="badge border-line bg-surface-2 text-ink-3">{t}</span>)}</div>
+              <h2 class="mt-3 text-[17px] font-semibold leading-snug">{p.data.title}</h2>
+              <p class="mt-2 line-clamp-3 flex-1 text-sm leading-6 text-ink-2">{p.data.description}</p>
+              <time class="mt-4 text-xs text-ink-3" datetime={p.data.publishDate.toISOString()}>
+                {p.data.publishDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+              </time>
+            </a>
+          ))}
+        </div>
+      )
+    }
+  </div>
+</BaseLayout>

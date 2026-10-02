@@ -1,0 +1,128 @@
+---
+import Icon from './Icon.astro';
+import Logo from './Logo.astro';
+import { NAV } from '@/lib/site';
+import { activeCategories, categoryPath } from '@/data/tools';
+
+const path = Astro.url.pathname;
+const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWith(href));
+const categories = activeCategories();
+---
+
+<header class="sticky top-0 z-40 border-b border-line bg-surface/85 backdrop-blur supports-[backdrop-filter]:bg-surface/70">
+  <div class="container-x flex h-14 items-center justify-between gap-4">
+    <a href="/" class="flex items-center gap-2.5 rounded-md" aria-label="Cuisdev home">
+      <Logo size={28} />
+      <span class="font-display text-lg font-bold tracking-tight">Cuisdev</span>
+    </a>
+
+    <nav class="hidden items-center gap-1 md:flex" aria-label="Primary">
+      <div class="group relative">
+        <a
+          href="/tools/"
+          class:list={['btn-ghost btn-sm', isActive('/tools/') && 'text-ink bg-surface-3']}
+          aria-haspopup="true"
+        >
+          Tools
+          <Icon name="chevron-right" size={14} class="rotate-90 opacity-60" />
+        </a>
+        <div
+          class="invisible absolute left-0 top-full z-50 w-[520px] translate-y-1 pt-2 opacity-0 transition-all duration-150 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100"
+        >
+          <div class="card grid grid-cols-2 gap-1 p-2 shadow-float">
+            {
+              categories.map((c) => (
+                <a href={categoryPath(c.slug)} class="flex items-start gap-3 rounded-md p-2.5 hover:bg-surface-3">
+                  <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-brand-50 text-brand-600 dark:bg-brand-900/40 dark:text-brand-300">
+                    <Icon name={c.icon} size={16} />
+                  </span>
+                  <span>
+                    <span class="block text-sm font-medium text-ink">{c.name}</span>
+                    <span class="block text-xs text-ink-3">{c.tagline}</span>
+                  </span>
+                </a>
+              ))
+            }
+            <a href="/tools/" class="col-span-2 mt-1 flex items-center justify-between rounded-md border-t border-line px-2.5 py-2 text-sm font-medium text-brand-600 hover:bg-surface-3 dark:text-brand-400">
+              Browse all tools
+              <Icon name="arrow-right" size={14} />
+            </a>
+          </div>
+        </div>
+      </div>
+      {
+        NAV.filter((n) => n.href !== '/tools/').map((n) => (
+          <a href={n.href} class:list={['btn-ghost btn-sm', isActive(n.href) && 'text-ink bg-surface-3']}>
+            {n.label}
+          </a>
+        ))
+      }
+    </nav>
+
+    <div class="flex items-center gap-1.5">
+      <button
+        type="button"
+        class="btn-secondary btn-sm hidden items-center gap-2 text-ink-3 sm:inline-flex"
+        data-open-palette
+        aria-label="Search tools"
+      >
+        <Icon name="search" size={14} />
+        <span class="text-[13px]">Search tools</span>
+        <span class="kbd ml-1">Ctrl K</span>
+      </button>
+      <button type="button" class="btn-ghost btn-icon sm:hidden" data-open-palette aria-label="Search tools">
+        <Icon name="search" size={18} />
+      </button>
+      <button type="button" class="btn-ghost btn-icon" data-theme-toggle aria-label="Toggle dark mode">
+        <Icon name="sun" size={18} class="hidden dark:block" />
+        <Icon name="moon" size={18} class="dark:hidden" />
+      </button>
+      <button type="button" class="btn-ghost btn-icon md:hidden" data-menu-toggle aria-label="Open menu" aria-expanded="false" aria-controls="mobile-nav">
+        <Icon name="menu" size={20} />
+      </button>
+    </div>
+  </div>
+
+  <nav id="mobile-nav" class="hidden border-t border-line bg-surface md:hidden" aria-label="Mobile">
+    <div class="container-x grid gap-1 py-3">
+      {
+        NAV.map((n) => (
+          <a href={n.href} class:list={['rounded-md px-3 py-2 text-sm font-medium hover:bg-surface-3', isActive(n.href) && 'bg-surface-3']}>
+            {n.label}
+          </a>
+        ))
+      }
+      <div class="mt-2 border-t border-line pt-2">
+        {
+          categories.map((c) => (
+            <a href={categoryPath(c.slug)} class="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-ink-2 hover:bg-surface-3">
+              <Icon name={c.icon} size={15} />
+              {c.name}
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </nav>
+</header>
+
+<script>
+  function initHeader() {
+    const toggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+    const nav = document.getElementById('mobile-nav');
+    toggle?.addEventListener('click', () => {
+      const open = nav?.classList.toggle('hidden') === false;
+      toggle.setAttribute('aria-expanded', String(open));
+    });
+    document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const dark = document.documentElement.classList.toggle('dark');
+        try {
+          localStorage.setItem('cuis-theme', dark ? 'dark' : 'light');
+        } catch {}
+      }),
+    );
+  }
+  initHeader();
+  document.addEventListener('astro:after-swap', initHeader);
+</script>

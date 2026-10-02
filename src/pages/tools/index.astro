@@ -1,0 +1,73 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+import ToolCard from '@/components/ToolCard.astro';
+import Icon from '@/components/Icon.astro';
+import { CATEGORIES, TOOLS, toolsInCategory, categoryPath, liveTools } from '@/data/tools';
+import { graph, organizationLd, websiteLd, breadcrumbLd, type Crumb } from '@/lib/seo';
+import { absoluteUrl } from '@/lib/site';
+
+const crumbs: Crumb[] = [
+  { name: 'Home', href: '/' },
+  { name: 'Tools', href: '/tools/' },
+];
+const live = liveTools();
+const jsonLd = graph(organizationLd(), websiteLd(), breadcrumbLd(crumbs), {
+  '@type': 'CollectionPage',
+  name: 'All free online tools',
+  url: absoluteUrl('/tools/'),
+  mainEntity: {
+    '@type': 'ItemList',
+    numberOfItems: live.length,
+    itemListElement: live.map((t, i) => ({ '@type': 'ListItem', position: i + 1, name: t.name, url: absoluteUrl(`/tools/${t.category}/${t.slug}/`) })),
+  },
+});
+---
+
+<BaseLayout
+  title="All Free Online Tools"
+  description={`Browse all ${live.length} free online tools on Cuisdev: JSON tools, text utilities, image and PDF tools, converters and calculators. Fast, private, no sign-up.`}
+  canonical="/tools/"
+  jsonLd={jsonLd}
+>
+  <div class="container-x pt-5">
+    <Breadcrumbs crumbs={crumbs} />
+    <div class="mt-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <h1 class="text-3xl font-bold sm:text-4xl">All tools</h1>
+        <p class="mt-2 max-w-2xl text-ink-2">{live.length} tools live and {TOOLS.length - live.length} in development. Every one is free, runs in your browser and has a guide beneath it.</p>
+      </div>
+      <button type="button" class="btn-secondary h-11 gap-3 text-ink-3" data-open-palette>
+        <Icon name="search" size={16} /> Search tools <span class="kbd">Ctrl K</span>
+      </button>
+    </div>
+
+    <nav class="mt-8 flex flex-wrap gap-2" aria-label="Categories">
+      {CATEGORIES.map((c) => <a href={`#${c.slug}`} class="rounded-full border border-line bg-surface px-3 py-1 text-sm text-ink-2 hover:border-brand-400 hover:text-ink">{c.name}</a>)}
+    </nav>
+
+    {
+      CATEGORIES.map((c) => {
+        const tools = toolsInCategory(c.slug).sort((a, b) => (a.status === b.status ? 0 : a.status === 'live' ? -1 : 1));
+        if (!tools.length) return null;
+        return (
+          <section id={c.slug} class="mt-14 scroll-mt-20" aria-labelledby={`h-${c.slug}`}>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <span class="flex h-9 w-9 items-center justify-center rounded-md bg-brand-50 text-brand-600 dark:bg-brand-900/40 dark:text-brand-300"><Icon name={c.icon} size={18} /></span>
+                <div>
+                  <h2 id={`h-${c.slug}`} class="text-xl font-bold">{c.name}</h2>
+                  <p class="text-sm text-ink-3">{c.tagline}</p>
+                </div>
+              </div>
+              <a href={categoryPath(c.slug)} class="btn-ghost btn-sm">Hub page <Icon name="arrow-right" size={14} /></a>
+            </div>
+            <div class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {tools.map((t) => <ToolCard tool={t} />)}
+            </div>
+          </section>
+        );
+      })
+    }
+  </div>
+</BaseLayout>

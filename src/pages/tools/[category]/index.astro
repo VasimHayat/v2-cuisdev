@@ -1,0 +1,66 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+import ToolCard from '@/components/ToolCard.astro';
+import FAQ from '@/components/FAQ.astro';
+import Icon from '@/components/Icon.astro';
+import { CATEGORIES, toolsInCategory, categoryPath, type Category } from '@/data/tools';
+import { graph, organizationLd, websiteLd, breadcrumbLd, faqLd, collectionPageLd, type Crumb } from '@/lib/seo';
+
+export function getStaticPaths() {
+  return CATEGORIES.map((c) => ({ params: { category: c.slug }, props: { category: c } }));
+}
+interface Props {
+  category: Category;
+}
+const { category } = Astro.props;
+const all = toolsInCategory(category.slug);
+const live = all.filter((t) => t.status === 'live');
+const soon = all.filter((t) => t.status === 'soon');
+
+const crumbs: Crumb[] = [
+  { name: 'Home', href: '/' },
+  { name: 'Tools', href: '/tools/' },
+  { name: category.name, href: categoryPath(category.slug) },
+];
+const jsonLd = graph(organizationLd(), websiteLd(), breadcrumbLd(crumbs), collectionPageLd(category, live), faqLd(category.faq));
+---
+
+<BaseLayout title={category.title} description={category.description} canonical={categoryPath(category.slug)} jsonLd={jsonLd}>
+  <div class="container-x pt-5">
+    <Breadcrumbs crumbs={crumbs} />
+    <header class="mt-4 flex items-start gap-4">
+      <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600 dark:bg-brand-900/40 dark:text-brand-300"><Icon name={category.icon} size={24} /></span>
+      <div>
+        <h1 class="text-3xl font-bold sm:text-4xl">{category.title}</h1>
+        <p class="mt-2 max-w-2xl text-ink-2">{category.description}</p>
+      </div>
+    </header>
+
+    {
+      live.length > 0 ? (
+        <section class="mt-10" aria-labelledby="live-h">
+          <h2 id="live-h" class="text-xl font-bold">Available now</h2>
+          <div class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{live.map((t) => <ToolCard tool={t} />)}</div>
+        </section>
+      ) : (
+        <div class="card mt-10 p-8 text-center">
+          <p class="text-ink-2">The first {category.name.toLowerCase()} are in development. <a href="/contact/" class="text-brand-600 underline">Tell us which one you need first</a>.</p>
+        </div>
+      )
+    }
+
+    {
+      soon.length > 0 && (
+        <section class="mt-12" aria-labelledby="soon-h">
+          <h2 id="soon-h" class="text-xl font-bold text-ink-2">In development</h2>
+          <div class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{soon.map((t) => <ToolCard tool={t} compact />)}</div>
+        </section>
+      )
+    }
+
+    <div class="mt-16 max-w-3xl">
+      <FAQ items={category.faq} />
+    </div>
+  </div>
+</BaseLayout>

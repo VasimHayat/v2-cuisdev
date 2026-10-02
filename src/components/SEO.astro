@@ -1,0 +1,66 @@
+---
+/**
+ * Every <head> SEO tag on the site comes from this component.
+ * Pass `jsonLd` as the output of graph() from src/lib/seo.ts.
+ */
+import { SITE, absoluteUrl, GSC_VERIFICATION, BING_VERIFICATION } from '@/lib/site';
+import { pageTitle } from '@/lib/seo';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** Path or absolute URL. Defaults to the current page. */
+  canonical?: string;
+  image?: string;
+  type?: 'website' | 'article';
+  noindex?: boolean;
+  jsonLd?: string;
+  publishedTime?: string;
+  modifiedTime?: string;
+}
+
+const {
+  title,
+  description = SITE.description,
+  canonical,
+  image = SITE.defaultOgImage,
+  type = 'website',
+  noindex = false,
+  jsonLd,
+  publishedTime,
+  modifiedTime,
+} = Astro.props;
+
+const fullTitle = pageTitle(title);
+const canonicalUrl = canonical ? absoluteUrl(canonical) : new URL(Astro.url.pathname, SITE.url).href;
+const imageUrl = absoluteUrl(image);
+---
+
+<title>{fullTitle}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonicalUrl} />
+<meta name="robots" content={noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'} />
+
+<meta property="og:site_name" content={SITE.name} />
+<meta property="og:type" content={type} />
+<meta property="og:url" content={canonicalUrl} />
+<meta property="og:title" content={fullTitle} />
+<meta property="og:description" content={description} />
+<meta property="og:image" content={imageUrl} />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content={title ?? SITE.name} />
+<meta property="og:locale" content={SITE.locale} />
+{publishedTime && <meta property="article:published_time" content={publishedTime} />}
+{modifiedTime && <meta property="article:modified_time" content={modifiedTime} />}
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:site" content={SITE.twitter} />
+<meta name="twitter:title" content={fullTitle} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={imageUrl} />
+
+{GSC_VERIFICATION && <meta name="google-site-verification" content={GSC_VERIFICATION} />}
+{BING_VERIFICATION && <meta name="msvalidate.01" content={BING_VERIFICATION} />}
+
+{jsonLd && <script type="application/ld+json" set:html={jsonLd} />}

@@ -1,0 +1,30 @@
+---
+import Icon from './Icon.astro';
+import type { Crumb } from '@/lib/seo';
+
+interface Props {
+  crumbs: Crumb[];
+  class?: string;
+}
+const { crumbs, class: className = '' } = Astro.props;
+---
+
+<nav aria-label="Breadcrumb" class:list={['text-sm text-ink-3', className]}>
+  <ol class="flex flex-wrap items-center gap-1.5">
+    {
+      crumbs.map((c, i) => {
+        const last = i === crumbs.length - 1;
+        return (
+          <li class="flex items-center gap-1.5">
+            {last ? (
+              <span class="text-ink-2" aria-current="page">{c.name}</span>
+            ) : (
+              <a href={c.href} class="hover:text-ink">{c.name}</a>
+            )}
+            {!last && <Icon name="chevron-right" size={14} class="opacity-60" />}
+          </li>
+        );
+      })
+    }
+  </ol>
+</nav>

@@ -1,0 +1,71 @@
+---
+import Icon from './Icon.astro';
+import Logo from './Logo.astro';
+import { SITE } from '@/lib/site';
+import { activeCategories, categoryPath, liveTools, toolPath } from '@/data/tools';
+
+const year = new Date().getFullYear();
+const categories = activeCategories();
+const popular = liveTools().slice(0, 6);
+---
+
+<footer class="mt-24 border-t border-line bg-surface-2">
+  <div class="container-x grid gap-10 py-14 md:grid-cols-12">
+    <div class="md:col-span-4">
+      <a href="/" class="flex items-center gap-2.5" aria-label="Cuisdev home">
+        <Logo size={28} />
+        <span class="font-display text-lg font-bold tracking-tight">Cuisdev</span>
+      </a>
+      <p class="mt-4 max-w-sm text-sm leading-6 text-ink-2">
+        Free, fast, privacy-first tools for developers and professionals. Everything runs in your browser. Nothing you paste or drop is ever uploaded.
+      </p>
+      <div class="mt-5 flex items-center gap-1">
+        <a href={SITE.social.github} class="btn-ghost btn-icon" aria-label="GitHub" rel="me noopener" target="_blank"><Icon name="github" size={18} /></a>
+        <a href={SITE.social.x} class="btn-ghost btn-icon" aria-label="X (Twitter)" rel="me noopener" target="_blank"><Icon name="twitter" size={18} /></a>
+        <a href={SITE.social.linkedin} class="btn-ghost btn-icon" aria-label="LinkedIn" rel="me noopener" target="_blank"><Icon name="linkedin" size={18} /></a>
+        <a href="/rss.xml" class="btn-ghost btn-icon" aria-label="RSS feed"><Icon name="rss" size={18} /></a>
+      </div>
+    </div>
+
+    <div class="md:col-span-2">
+      <h3 class="text-sm font-semibold">Popular tools</h3>
+      <ul class="mt-4 space-y-2.5 text-sm">
+        {popular.map((t) => <li><a href={toolPath(t)} class="text-ink-2 hover:text-ink">{t.name}</a></li>)}
+        <li><a href="/tools/" class="font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400">All tools</a></li>
+      </ul>
+    </div>
+
+    <div class="md:col-span-2">
+      <h3 class="text-sm font-semibold">Categories</h3>
+      <ul class="mt-4 space-y-2.5 text-sm">
+        {categories.map((c) => <li><a href={categoryPath(c.slug)} class="text-ink-2 hover:text-ink">{c.name}</a></li>)}
+      </ul>
+    </div>
+
+    <div class="md:col-span-2">
+      <h3 class="text-sm font-semibold">Resources</h3>
+      <ul class="mt-4 space-y-2.5 text-sm">
+        <li><a href="/blog/" class="text-ink-2 hover:text-ink">Blog</a></li>
+        <li><a href="/changelog/" class="text-ink-2 hover:text-ink">Changelog</a></li>
+        <li><a href="/contact/" class="text-ink-2 hover:text-ink">Request a tool</a></li>
+      </ul>
+    </div>
+
+    <div class="md:col-span-2">
+      <h3 class="text-sm font-semibold">Company</h3>
+      <ul class="mt-4 space-y-2.5 text-sm">
+        <li><a href="/about/" class="text-ink-2 hover:text-ink">About</a></li>
+        <li><a href="/contact/" class="text-ink-2 hover:text-ink">Contact</a></li>
+        <li><a href="/privacy/" class="text-ink-2 hover:text-ink">Privacy policy</a></li>
+        <li><a href="/terms/" class="text-ink-2 hover:text-ink">Terms of service</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="border-t border-line">
+    <div class="container-x flex flex-col items-start justify-between gap-2 py-5 text-xs text-ink-3 sm:flex-row sm:items-center">
+      <p>&copy; {year} {SITE.name}. All rights reserved.</p>
+      <p class="flex items-center gap-1.5"><Icon name="shield-check" size={13} /> Your data never leaves your browser.</p>
+    </div>
+  </div>
+</footer>

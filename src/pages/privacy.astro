@@ -1,0 +1,68 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+import { SITE } from '@/lib/site';
+import { graph, organizationLd, websiteLd, breadcrumbLd, type Crumb } from '@/lib/seo';
+
+const crumbs: Crumb[] = [
+  { name: 'Home', href: '/' },
+  { name: 'Privacy policy', href: '/privacy/' },
+];
+const updated = '2026-10-02';
+const jsonLd = graph(organizationLd(), websiteLd(), breadcrumbLd(crumbs));
+---
+
+<BaseLayout
+  title="Privacy Policy"
+  description="How Cuisdev handles data: tools run in your browser and never upload your files or text. We collect only anonymous analytics. Read the full policy."
+  canonical="/privacy/"
+  jsonLd={jsonLd}
+>
+  <div class="container-x max-w-3xl pt-5">
+    <Breadcrumbs crumbs={crumbs} />
+    <h1 class="mt-4 text-3xl font-bold sm:text-4xl">Privacy policy</h1>
+    <p class="mt-2 text-sm text-ink-3">Last updated <time datetime={updated}>2 October 2026</time></p>
+    <div class="prose-cuis mt-6 text-[16px]">
+      <h2>The short version</h2>
+      <p>
+        The tools on {SITE.name} run in your browser. The text you paste and the files you drop are processed on your device and are never sent to us or to anyone else. We collect anonymous usage statistics to understand which tools are useful. That is all.
+      </p>
+
+      <h2>Data processed by the tools</h2>
+      <p>
+        Every tool is implemented in client-side JavaScript and WebAssembly. When you use a tool, your input stays in your browser's memory. Some tools keep a draft in your browser's session storage so a page refresh does not lose your work; this storage is local to your device and is cleared when you close the tab. We have no server endpoint that receives tool input, so we cannot see, store or recover it.
+      </p>
+
+      <h2>Analytics</h2>
+      <p>
+        We use Google Analytics 4 to measure page views, the country a visit comes from, the device type and which tool actions (such as "format" or "copy") are used. IP addresses are anonymised. Advertising features, ad personalisation and cross-site tracking are disabled through Google Consent Mode. We do not see what you typed into a tool, only that a button was pressed. You can block analytics with any content blocker and every tool will keep working.
+      </p>
+
+      <h2>Cookies and local storage</h2>
+      <p>
+        We set no cookies ourselves. Google Analytics sets its own cookies to tell returning visitors apart, as described in <a href="https://policies.google.com/technologies/cookies" rel="noopener" target="_blank">Google's cookie policy</a>. We use local storage to remember your theme preference and per-tool settings such as indentation. Nothing in local storage identifies you.
+      </p>
+
+      <h2>Email</h2>
+      <p>
+        If you email us, we keep the message to reply to it and to count tool requests. We do not add you to a mailing list and we do not share your address.
+      </p>
+
+      <h2>Third-party services</h2>
+      <ul>
+        <li>Google Fonts serves the typefaces. Your browser requests the font files from Google, which logs the request as described in <a href="https://developers.google.com/fonts/faq/privacy" rel="noopener" target="_blank">their FAQ</a>.</li>
+        <li>Google Analytics, as described above.</li>
+        <li>Hostinger hosts the site. Standard web server logs (IP address, requested URL, user agent) are kept for security for a short period.</li>
+      </ul>
+
+      <h2>Children</h2>
+      <p>The site is not directed at children under 13 and we do not knowingly collect information from them.</p>
+
+      <h2>Changes</h2>
+      <p>If this policy changes we will update the date above. Material changes will be announced on the <a href="/blog/">blog</a>.</p>
+
+      <h2>Contact</h2>
+      <p>Questions about privacy: <a href={`mailto:${SITE.email}`}>{SITE.email}</a>.</p>
+    </div>
+  </div>
+</BaseLayout>
