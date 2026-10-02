@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import Breadcrumbs from '@/components/Breadcrumbs.astro';
-import { TOOLS, toolPath, getCategory } from '@/data/tools';
+import { TOOLS, WAVES, toolPath, getCategory, toolsInWave, type Wave } from '@/data/tools';
 import { graph, organizationLd, websiteLd, breadcrumbLd, type Crumb } from '@/lib/seo';
 
 const crumbs: Crumb[] = [
@@ -9,7 +9,9 @@ const crumbs: Crumb[] = [
   { name: 'Changelog', href: '/changelog/' },
 ];
 const live = TOOLS.filter((t) => t.status === 'live').sort((a, b) => b.since.localeCompare(a.since));
-const soon = TOOLS.filter((t) => t.status === 'soon').sort((a, b) => a.since.localeCompare(b.since));
+const waves = (Object.keys(WAVES).map(Number) as Wave[])
+  .map((w) => ({ wave: w, ...WAVES[w], tools: toolsInWave(w).filter((t) => t.status === 'soon') }))
+  .filter((w) => w.tools.length);
 const fmt = (iso: string) => new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 const jsonLd = graph(organizationLd(), websiteLd(), breadcrumbLd(crumbs));
 ---
@@ -35,14 +37,24 @@ const jsonLd = graph(organizationLd(), websiteLd(), breadcrumbLd(crumbs));
       ))}
     </ul>
 
-    <h2 class="mt-10 text-xl font-bold text-ink-2">Planned</h2>
-    <ul class="mt-4 divide-y divide-line rounded-lg border border-line">
-      {soon.map((t) => (
-        <li class="flex items-center justify-between gap-4 px-4 py-3 text-sm">
-          <span class="text-ink-2">{t.name}</span>
-          <span class="text-ink-3">{getCategory(t.category)?.name} · target {fmt(t.since)}</span>
-        </li>
-      ))}
-    </ul>
+    <h2 class="mt-10 text-xl font-bold text-ink-2">Planned, by launch wave</h2>
+    <p class="mt-1 text-sm text-ink-3">Waves follow the rebuild plan. Weeks are counted from the project kickoff on 2 October 2026.</p>
+    {
+      waves.map((w) => (
+        <section class="mt-6" aria-labelledby={`wave-${w.wave}`}>
+          <h3 id={`wave-${w.wave}`} class="text-sm font-semibold text-ink-2">
+            Wave {w.wave}: {w.name} <span class="font-normal text-ink-3">· {w.weeks}</span>
+          </h3>
+          <ul class="mt-2 divide-y divide-line rounded-lg border border-line">
+            {w.tools.map((t) => (
+              <li class="flex items-center justify-between gap-4 px-4 py-2.5 text-sm">
+                <span class="text-ink-2">{t.name}</span>
+                <span class="text-ink-3">{getCategory(t.category)?.name} · target {fmt(t.since)}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    }
   </div>
 </BaseLayout>

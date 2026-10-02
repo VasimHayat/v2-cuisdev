@@ -20,7 +20,7 @@ The live site is a single static landing page on Hostinger with one working tool
 
 | Area | Finding | Severity |
 | --- | --- | --- |
-| Tools | Only the JSON Editor at `/jsoneditor/` works. Image Editor, Stock Analyzer, PDF Converter, Code Formatter and Diff Checker are "Coming Soon" | High |
+| Tools | Only the JSON Editor at `/jsoneditor/` works. Image Editor, Stock Analyzer (dropped from the plan on 2 Oct 2026), PDF Converter, Code Formatter and Diff Checker are "Coming Soon" | High |
 | Canonical | JSON Editor canonical points to `https://yourdomain.com/jsoneditor/` (placeholder never replaced). Homepage has no canonical | Critical |
 | Structured data | SoftwareApplication schema names the product "ToolHub", not Cuisdev | High |
 | Sitemap | One URL. Example entries for app2 and app3 are commented out | High |
@@ -214,12 +214,12 @@ Ship the six tools already promised on the homepage first, then expand cluster b
 
 | Wave | Weeks | Category | Tools |
 | --- | --- | --- | --- |
-| 1 Promised | 3 to 5 | Developer, Image, PDF, Finance | JSON Editor (port), JSON Formatter, JSON Validator, Code Formatter (JS, CSS, HTML, SQL), Text Diff Checker, Image Editor (crop, resize, rotate), PDF Converter (image to PDF, merge), Stock Analyzer (v1: price chart + basic ratios) |
+| 1 Promised | 3 to 5 | Developer, Image, PDF | JSON Editor (port), JSON Formatter, JSON Validator, Code Formatter (JS, CSS, HTML, SQL), Text Diff Checker, Image Editor (crop, resize, rotate), PDF Converter (image to PDF, merge) |
 | 2 Developer core | 5 to 7 | Developer | JSON Minifier, JSON to CSV, JSON to YAML, YAML to JSON, XML Formatter, Base64 Encode/Decode, URL Encode/Decode, JWT Decoder, Regex Tester, UUID Generator, Hash Generator (MD5, SHA-1, SHA-256), HTML Entity Encoder, Timestamp Converter, Cron Parser |
 | 3 Text | 7 to 8 | Text | Word Counter, Case Converter, Lorem Ipsum, Markdown Preview, Slug Generator, Remove Duplicate Lines, Sort Lines, Text to Binary, Find and Replace |
 | 4 Image and PDF | 8 to 11 | Image, PDF | Image Compressor, Image Converter (PNG, JPG, WebP, AVIF), Image Resizer, Favicon Generator, Color Picker from Image, PDF Split, PDF Compress, PDF to Image, PDF Page Reorder |
 | 5 Converters and calculators | 11 to 14 | Converters, Calculators | Unit Converter (length, weight, temperature), Percentage Calculator, Loan and EMI Calculator, Age Calculator, Date Difference, BMI Calculator, Tip Calculator, Color Converter (HEX, RGB, HSL), Number Base Converter |
-| 6 Advanced | 14+ | Developer, Finance | SQL Formatter, GraphQL Formatter, Mock JSON Generator, API Request Tester, Password Generator, QR Code Generator, Stock Analyzer v2 (comparisons, export), Compound Interest Calculator |
+| 6 Advanced | 14+ | Developer, Calculators | SQL Formatter, GraphQL Formatter, Mock JSON Generator, API Request Tester, Password Generator, QR Code Generator, Compound Interest Calculator |
 
 Selection rules for anything beyond this list:
 

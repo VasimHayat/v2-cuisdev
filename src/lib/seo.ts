@@ -177,8 +177,6 @@ function categoryToSchema(cat: Tool['category']): string {
     case 'image':
     case 'pdf':
       return 'MultimediaApplication';
-    case 'finance':
-      return 'FinanceApplication';
     default:
       return 'UtilitiesApplication';
   }
