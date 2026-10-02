@@ -2,52 +2,61 @@
 slug: json-editor
 updated: 2026-10-02
 howTo:
-  - Paste JSON, drop a .json file anywhere on the editor, or use Open and From URL to load a document. Your work is saved in this browser automatically.
-  - Watch the status bar. A green dot means valid JSON. A red banner shows the line, column and cause of the first error; click it to jump there, or press Fix to repair comments, quotes and trailing commas in one go.
-  - Switch views with Code, Tree, Split or Output. In the tree, double-click any value to edit it, press Del to remove a node, and use the filter box to find keys and values in large documents.
-  - Use Format, Compact or Sort to reshape the document, choosing 2 spaces, 4 spaces or tabs. Undo and Redo cover every change.
-  - Save as .json, Copy to the clipboard, or press Share to copy a link that carries the JSON itself, so nothing is stored on a server.
-  - Optional - open AI assist, add your own free Gemini key, and generate JSON from a description, transform the current document, fix a broken one or ask for a plain-English explanation.
+  - Paste JSON into the left panel, drop a .json file onto it, or use Open to load from this browser, from disk or from a URL. Documents are saved in your browser as you type and reopen from the link in the address bar.
+  - Switch each panel between text, tree and table with the buttons in its menu bar. Text is a code editor with folding and search, tree lets you expand, edit, drag and right-click nodes, table shows arrays of objects as a grid.
+  - Use the menu bar to format, compact, sort, search, undo and redo. Invalid JSON is underlined with the error, and the editor offers to repair quotes, commas and comments automatically.
+  - Click the arrows between the panels to copy one document into the other, or to transform it with a filter, sort or pick query into the other panel.
+  - Turn on Compare to highlight every added, removed and changed value in tree and table modes, and step through the differences with the arrows.
+  - Save as .json, copy formatted or compact, or copy a share link that carries the document inside the URL. Optional AI assist works with your own Gemini key.
 features:
-  - Code, Tree, Split and Output views in one workspace, with full-screen mode
-  - Interactive tree with type colouring, item counts, inline value editing, node deletion and copy path or value
-  - Live validation with exact line and column, a plain-English hint and one-click Fix for comments, single quotes, unquoted keys and trailing commas
-  - Format, Compact and Sort keys at every level, with 2-space, 4-space or tab indentation
-  - Open from disk or any CORS-enabled URL, save as .json, copy, and share by link with the data compressed into the URL
-  - Full undo and redo, find and replace, code folding, bracket matching, multiple cursors and line wrapping
-  - Autosaved draft and remembered preferences, kept only in your browser
-  - Optional AI assist with your own Gemini key - generate, transform, fix and explain, sent straight from your browser to Google
-  - Handles files up to 25 MB and trees of thousands of nodes without freezing
+  - Two independent documents side by side, each with text, tree and table modes
+  - Copy and transform between panels, with filter, sort and pick queries (JSON Query, JMESPath, JSONPath, Lodash)
+  - Compare documents with highlighted additions, removals and changes, and jump between differences
+  - Format, compact, sort keys, search and replace, undo and redo, code folding
+  - Live validation with automatic repair for comments, single quotes, unquoted keys and trailing commas
+  - Tree mode with inline editing, drag to reorder, duplicate, extract, insert and a right-click context menu
+  - Table mode for arrays of objects with sortable, editable columns
+  - Documents saved in your browser and addressed in the URL, plus open from disk or URL, save and share links
+  - Full screen, dark mode, and optional AI assist with your own Gemini key
+  - Handles documents of hundreds of megabytes in text mode
 faq:
   - q: Is my JSON uploaded to a server?
-    a: No. The editor runs completely in your browser. Nothing you paste, drop or load is transmitted to Cuisdev. The only exceptions are the ones you trigger yourself - opening a URL fetches that URL, and AI assist sends your text directly to Google using your own key.
+    a: No. Both panels run entirely in your browser and documents are saved in this browser's local storage. The only network calls are the ones you trigger yourself, such as opening a URL or using AI assist with your own key.
+  - q: What do the Copy, Transform and Compare arrows do?
+    a: Copy puts the whole document from one panel into the other. Transform opens a query dialog so you can filter, sort or pick fields from one document and write the result into the other panel. Compare highlights every difference between the two documents.
+  - q: Which query languages does Transform support?
+    a: JSON Query (the default, with a wizard for arrays), JMESPath, JSONPath, Lodash and plain JavaScript. The dialog shows a live preview before you apply the result.
   - q: How do share links work without a server?
-    a: The document is compressed and placed in the part of the URL after the # symbol, which browsers never send to any server. Whoever opens the link gets the JSON decoded in their own browser. Links hold about 12 KB of compressed data; download larger documents instead.
-  - q: What does Fix actually change?
-    a: It strips comments, converts single quotes to double quotes, quotes bare keys, removes trailing commas, replaces NaN, Infinity and undefined with null and straightens smart quotes. It never changes anything inside a valid double-quoted string, and you can undo it with Ctrl+Z.
-  - q: Can I edit values in the tree view?
-    a: Yes. Double-click a value, type the new one and press Enter. Numbers, booleans, null, arrays and objects typed as JSON are stored with the right type; anything else becomes a string. Press Del on a selected node to remove it.
-  - q: Do I need an API key for the AI features?
-    a: Yes, your own Gemini key from Google AI Studio, which has a free tier. The key is stored only in your browser and requests go from your browser to Google. Everything else in the editor works without a key.
-  - q: What is the maximum file size?
-    a: Files up to 25 MB can be opened by drag and drop or the Open button. The tree view shows the first 5,000 nodes and the filter box reaches the rest; the Code view always shows the whole document.
-  - q: Does it support JSON5, JSONC or comments?
-    a: Not as a format. Strict JSON (RFC 8259) is what APIs and config parsers expect. Paste JSONC or JSON5 and press Fix to convert it to strict JSON.
+    a: The document is compressed into the part of the URL after the # symbol, which browsers never send to any server. Links hold about 12 KB of compressed data; for larger files use Save to disk.
+  - q: Where are my documents stored and how do I find them again?
+    a: In your browser's local storage. The address bar carries the ids of the two open documents, so a bookmark or a reload reopens them. Open > Local documents lists everything saved on this device, with sizes and dates.
+  - q: Can it repair broken JSON?
+    a: Yes. When a document is not valid JSON the editor shows the error and offers an automatic repair for the common mistakes: comments, single quotes, unquoted keys, trailing commas and JavaScript-only values. AI assist can handle harder cases with your own key.
+  - q: Does it support JSON5 or JSONC?
+    a: Paste it and accept the repair to convert it to strict JSON. Strict JSON (RFC 8259) is what APIs and config parsers expect.
   - q: Can I use it offline?
-    a: Yes. Once this page has loaded, everything except Open from URL and AI assist keeps working without a connection.
+    a: Yes. Once the page has loaded, everything except Open from URL and AI assist keeps working without a connection.
 ---
 
-## A JSON editor built like a desktop tool
+## Two documents, three views, one workspace
 
-Most online JSON editors are a text box with a Format button. This one is a workspace. The code pane is a full editor with folding, search and replace, multiple cursors and live error underlining. The tree pane is interactive: expand and collapse, filter by key or value, edit a value in place, delete a node, copy its path. Split view shows both at once and keeps them in sync, and the Output view gives you a read-only formatted or compacted copy ready to copy or download.
+Most online JSON tools give you a text box and a Format button. This editor gives you two complete documents side by side, and each can be viewed as code, as an expandable tree or as a table. Keep an API response on the left and your edited version on the right. Drop two config files in and compare them. Paste a large array and read it as a spreadsheet.
 
-Everything runs in your browser. That is why there is no upload progress bar, no file size plan and no waiting.
+Everything runs in your browser and your documents are saved locally as you type. The address bar carries the ids of the two open documents, so a reload or a bookmark brings them straight back.
 
-## Finding and fixing errors
+## Text, tree and table
 
-JSON has a small, strict grammar and a single stray character breaks the whole document. The editor parses as you type and shows the first problem as a red banner with the line, the column, what went wrong and, for the common mistakes, how to fix it. Click the banner to jump to the character.
+Text mode is a full code editor: syntax colouring, folding, bracket matching, search and replace, multiple cursors, and live validation that underlines the first error and offers a one-click repair.
 
-For the usual culprits there is a one-click Fix. It removes comments, swaps single quotes for double quotes, quotes bare keys, removes trailing commas and replaces JavaScript-only values such as `undefined` with `null`. It is conservative and never touches text inside a valid string, so it is safe to run on real data. If a document is too broken for a mechanical fix, Fix with AI sends it to Gemini with your own key and asks for the minimal correction.
+Tree mode shows the structure. Expand and collapse branches, click a value to edit it, drag nodes to reorder them, and right-click for the full menu: insert, duplicate, extract, convert between object and array, sort and transform a subtree. A navigation bar at the top shows the path of the selected node.
+
+Table mode lays an array of objects out as a grid with one row per item and one column per field. It is the fastest way to scan hundreds of records, and every cell is editable.
+
+## Copy, transform and compare
+
+The arrows between the panels copy a document from one side to the other, or transform it on the way. Transform opens a query dialog with a live preview: filter items, sort by a field, pick only the fields you need, and write the result into the other panel. JSON Query is the default language and has a point-and-click wizard for arrays; JMESPath, JSONPath, Lodash and plain JavaScript are also available.
+
+Compare highlights every difference between the two documents in tree and table modes. Green marks values that exist only on the right, red marks values that exist only on the left, and amber marks values that changed. Step through them with the arrows.
 
 ## Common JSON errors and what they mean
 
@@ -57,10 +66,4 @@ For the usual culprits there is a one-click Fix. It removes comments, swaps sing
 - **Unexpected end of input** means the document stops early. A closing `}` or `]` is missing.
 - **Unexpected token /** means a comment. Strict JSON has no comments.
 
-## Working with large documents
-
-Drop a 20 MB export onto the editor and it opens in a moment. The code pane virtualises rendering so scrolling stays smooth, and folding lets you collapse the parts you are not looking at. The tree pane renders the first 5,000 nodes, and the filter box narrows thousands of records to the ones that contain a term. Expand all and Collapse all work on whatever is visible.
-
-## Sharing and saving
-
-Share copies a link with the document compressed into the URL fragment. Browsers never send the fragment to a server, so the data travels only between you and the person you send it to. Links are limited to roughly 12 KB of compressed JSON; for anything bigger, Save downloads a .json file. Your current draft is also kept in this browser's local storage so a refresh or an accidental tab close costs nothing.
+In every case the editor points at the position and, for the common mistakes, offers to repair the document automatically.

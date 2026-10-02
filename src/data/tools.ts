@@ -155,10 +155,10 @@ export const TOOLS: Tool[] = [
     slug: 'json-editor',
     category: 'developer',
     name: 'JSON Editor',
-    title: 'JSON Editor Online - Code, Tree View, Validate & Fix',
-    tagline: 'Code and tree views, live validation, one-click fix and AI assist',
+    title: 'JSON Editor Online - Edit, Format, Compare & Query JSON',
+    tagline: 'Two panels with text, tree and table modes, compare, transform and repair',
     description:
-      'Free online JSON editor with code and tree views, live validation, one-click fix, format, sort, share links and optional AI assist. Private, runs in your browser.',
+      'Free online JSON editor with two panels: text, tree and table modes, format, sort, query and transform, compare documents, repair broken JSON. Private, in your browser.',
     keywords: ['json editor', 'json editor online', 'json viewer', 'json tree view', 'edit json online', 'online json editor free'],
     related: ['json-formatter', 'json-validator', 'json-minifier', 'json-to-csv'],
     status: 'live',

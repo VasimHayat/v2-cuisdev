@@ -15,6 +15,10 @@ npm run preview
 npm run check            # astro check (types + templates)
 ```
 
+## JSON editor
+
+The JSON Editor island (`src/islands/json-editor/`) wraps the open-source [vanilla-jsoneditor](https://github.com/josdejong/svelte-jsoneditor) engine (ISC licence, the same engine behind jsoneditoronline.org) in a two-panel shell: local documents in the URL hash (`store.ts`), Copy / Transform / Compare between panels (`diff.ts`), file and URL loading, share links and an optional Gemini drawer. The editor chunk is about 320 KB gzipped and is loaded only on the JSON tool pages.
+
 ## Add a tool
 
 1. Add an entry to `src/data/tools.ts`. Keep `status: 'soon'` until the island is done.

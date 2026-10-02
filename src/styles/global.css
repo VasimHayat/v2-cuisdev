@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "vanilla-jsoneditor/themes/jse-theme-dark.css";
 
 /* Dark mode is driven by a `.dark` class on <html>, set before paint by the inline theme script. */
 @custom-variant dark (&:where(.dark, .dark *));
@@ -258,3 +259,84 @@
 .cm-editor .cm-foldPlaceholder { background: var(--color-surface-3); border-color: var(--color-line-strong); color: var(--color-ink-2); }
 .cm-editor .cm-matchingBracket { background: color-mix(in oklch, var(--color-brand-500) 20%, transparent); outline: none; }
 .cm-editor .cm-lint-marker-error { content: ''; }
+
+
+/* ---------- vanilla-jsoneditor engine inside the JSON workspace ---------- */
+.cuis-jse {
+  --jse-font-family: var(--font-sans);
+  --jse-font-family-mono: var(--font-mono);
+  --jse-font-size: 13px;
+  --jse-font-size-mono: 13px;
+  --jse-theme-color: var(--color-brand-600);
+  --jse-theme-color-highlight: var(--color-brand-700);
+  --jse-background-color: var(--color-surface);
+  --jse-text-color: var(--color-ink);
+  --jse-main-border: 1px solid var(--color-line);
+  --jse-panel-background: var(--color-surface-2);
+  --jse-panel-border: 1px solid var(--color-line);
+  --jse-panel-background-border: 1px solid var(--color-line);
+  --jse-navigation-bar-background: var(--color-surface-2);
+  --jse-key-color: var(--color-brand-700);
+  --jse-value-color-string: oklch(0.52 0.15 150);
+  --jse-value-color-number: oklch(0.55 0.17 50);
+  --jse-value-color-boolean: oklch(0.55 0.2 320);
+  --jse-value-color-null: var(--color-ink-3);
+  --jse-selection-background-color: color-mix(in oklch, var(--color-brand-500) 18%, transparent);
+  --jse-hover-background-color: var(--color-surface-3);
+  --jse-modal-background: var(--color-surface);
+  --jse-context-menu-background: var(--color-surface);
+  --jse-context-menu-color: var(--color-ink);
+  --jse-context-menu-background-highlight: var(--color-surface-3);
+  --jse-context-menu-separator-color: var(--color-line);
+  --jse-button-background: var(--color-brand-600);
+  --jse-button-background-highlight: var(--color-brand-700);
+  --jse-button-secondary-background: var(--color-surface-3);
+  --jse-button-secondary-color: var(--color-ink);
+  --jse-button-secondary-background-highlight: var(--color-line);
+  --jse-input-background: var(--color-surface);
+  --jse-input-border: 1px solid var(--color-line-strong);
+  height: 100%;
+}
+.cuis-jse.jse-theme-dark {
+  --jse-theme-color: var(--color-brand-700);
+  --jse-theme-color-highlight: var(--color-brand-600);
+  --jse-background-color: var(--color-surface);
+  --jse-text-color: var(--color-ink);
+  --jse-main-border: 1px solid var(--color-line);
+  --jse-panel-background: var(--color-surface-2);
+  --jse-navigation-bar-background: var(--color-surface-3);
+  --jse-key-color: var(--color-brand-300);
+  --jse-value-color-string: oklch(0.78 0.14 150);
+  --jse-value-color-number: oklch(0.8 0.15 70);
+  --jse-value-color-boolean: oklch(0.78 0.16 320);
+  --jse-modal-background: var(--color-surface-2);
+  --jse-context-menu-background: var(--color-surface-3);
+  --jse-context-menu-background-highlight: var(--color-line);
+}
+.cuis-jse .jse-main { height: 100%; }
+.cuis-jse .jse-menu { border-radius: 0; }
+
+/* Compare highlights (classes come from onClassName, applied in tree and table modes) */
+.cuis-jse .cuis-diff-changed > .jse-contents, .cuis-jse .cuis-diff-changed.jse-value, .cuis-jse .cuis-diff-changed > .jse-header,
+.cuis-jse .jse-json-node.cuis-diff-changed > .jse-contents-outer > .jse-contents, .cuis-jse .jse-json-node.cuis-diff-changed > .jse-header-outer > .jse-header {
+  background: color-mix(in oklch, var(--color-warning) 28%, transparent);
+  border-radius: 3px;
+}
+.cuis-jse .jse-json-node.cuis-diff-added > .jse-contents-outer > .jse-contents, .cuis-jse .jse-json-node.cuis-diff-added > .jse-header-outer > .jse-header,
+.cuis-jse .cuis-diff-added > .jse-contents, .cuis-jse .cuis-diff-added > .jse-header {
+  background: color-mix(in oklch, var(--color-success) 24%, transparent);
+  border-radius: 3px;
+}
+.cuis-jse .jse-json-node.cuis-diff-removed > .jse-contents-outer > .jse-contents, .cuis-jse .jse-json-node.cuis-diff-removed > .jse-header-outer > .jse-header,
+.cuis-jse .cuis-diff-removed > .jse-contents, .cuis-jse .cuis-diff-removed > .jse-header {
+  background: color-mix(in oklch, var(--color-danger) 22%, transparent);
+  border-radius: 3px;
+}
+.cuis-jse .jse-json-node.cuis-diff-parent > .jse-header-outer > .jse-header > .jse-meta,
+.cuis-jse .jse-json-node.cuis-diff-parent > .jse-contents-outer > .jse-contents > .jse-meta {
+  box-shadow: inset 3px 0 0 var(--color-warning);
+}
+/* table mode rows */
+.cuis-jse tr.cuis-diff-changed td { background: color-mix(in oklch, var(--color-warning) 22%, transparent); }
+.cuis-jse tr.cuis-diff-added td { background: color-mix(in oklch, var(--color-success) 20%, transparent); }
+.cuis-jse tr.cuis-diff-removed td { background: color-mix(in oklch, var(--color-danger) 18%, transparent); }

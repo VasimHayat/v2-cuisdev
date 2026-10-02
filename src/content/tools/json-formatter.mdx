@@ -2,13 +2,13 @@
 slug: json-formatter
 updated: 2026-10-02
 howTo:
-  - Paste minified or messy JSON into the left pane, or drop a .json file onto the page.
-  - The formatted version appears instantly in the right pane. Choose 2 spaces, 4 spaces or tabs from the Indent menu.
-  - Tick "Sort keys" if you want object keys in alphabetical order for cleaner diffs.
-  - Click Copy to put the formatted JSON on your clipboard, or Download to save it as a file.
+  - Paste minified or messy JSON into the editor, or drop a .json file onto it.
+  - Press the Format button in the menu bar (or Ctrl+I) to pretty print with two-space indentation. Press Compact (Ctrl+Shift+I) to undo it.
+  - Use Sort in the menu bar to order object keys alphabetically at any level for cleaner diffs.
+  - Use Copy to put the formatted or compact JSON on your clipboard, or Save to download it as a file.
 features:
-  - Instant pretty printing as you type, no button to press
-  - 2 spaces, 4 spaces or tab indentation
+  - One-click Format and Compact with keyboard shortcuts
+  - Switch to tree or table view to read the structure
   - Optional alphabetical key sorting at every nesting level
   - Pinpoints syntax errors by line and column if the input is not valid
   - Handles files up to 25 MB entirely in your browser
@@ -19,8 +19,8 @@ faq:
     a: Nothing. Both terms describe the same operation of adding consistent indentation and line breaks to JSON so humans can read it. "Pretty print" is a third name for the same thing.
   - q: Will formatting change my data?
     a: No. Formatting only changes whitespace outside of strings. Values, key order (unless you tick Sort keys) and types are preserved exactly.
-  - q: Why is the output pane empty?
-    a: The input is not valid JSON yet. Look at the status bar under the editor for the line and the reason, fix it, and the output appears immediately.
+  - q: Why does Format do nothing?
+    a: The input is not valid JSON yet. The error is underlined and shown beneath the editor; fix it or accept the automatic repair, then Format again.
   - q: Which indentation should I use?
     a: Two spaces is the most common choice in JavaScript projects and the default for tools like Prettier. Four spaces is typical in Python and Java teams. Use whatever your project already uses.
   - q: Is my JSON sent to a server?

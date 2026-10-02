@@ -30,7 +30,8 @@
     "astro": "^5.0.0",
     "preact": "^10.25.0",
     "sharp": "^0.33.5",
-    "tailwindcss": "^4.0.0"
+    "tailwindcss": "^4.0.0",
+    "vanilla-jsoneditor": "^3.13.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.4",
