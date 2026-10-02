@@ -70,6 +70,7 @@ function loadPrefs(): Prefs {
 const DEFAULT_VIEW: Record<Mode, View> = { editor: 'split', formatter: 'output', validator: 'code', minifier: 'output' };
 
 export default function JsonEditor({ mode = 'editor' }: Props) {
+  const rootRef = useRef<HTMLDivElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
   const outHostRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
@@ -237,13 +238,32 @@ export default function JsonEditor({ mode = 'editor' }: Props) {
     return () => clearTimeout(t);
   }, [text]);
 
-  // Full screen body lock + Escape
+  // Full screen: native Fullscreen API when available (fills the whole screen), with the
+  // fixed overlay as fallback. Esc or the browser's own exit keeps `full` in sync.
   useEffect(() => {
     document.body.style.overflow = full ? 'hidden' : '';
+    const el = rootRef.current;
+    if (full && el && document.fullscreenEnabled && !document.fullscreenElement) {
+      el.requestFullscreen().catch(() => {});
+    } else if (!full && document.fullscreenElement === el && el) {
+      document.exitFullscreen().catch(() => {});
+    }
     return () => {
       document.body.style.overflow = '';
     };
   }, [full]);
+  useEffect(() => {
+    const onChange = () => {
+      if (!document.fullscreenElement) setFull(false);
+    };
+    document.addEventListener('fullscreenchange', onChange);
+    return () => document.removeEventListener('fullscreenchange', onChange);
+  }, []);
+
+  // CodeMirror measures lazily; after a view switch make sure it lays out in its new box.
+  useEffect(() => {
+    viewRef.current?.requestMeasure();
+  }, [view, full]);
 
   // ---------------------------------------------------------------- doc helpers
   const setDoc = useCallback((t: string) => {
@@ -439,9 +459,10 @@ export default function JsonEditor({ mode = 'editor' }: Props) {
 
   return (
     <div
+      ref={rootRef}
       class={
-        'relative flex flex-col overflow-hidden border border-line-strong bg-surface text-ink shadow-sm ' +
-        (full ? 'fixed inset-0 z-[60]' : 'h-[min(78vh,880px)] min-h-[560px] rounded-xl')
+        'flex flex-col overflow-hidden border-line-strong bg-surface text-ink ' +
+        (full ? 'fixed inset-0 z-[60] h-screen w-screen' : 'relative h-[min(78vh,880px)] min-h-[560px] rounded-xl border shadow-sm')
       }
       onDragOver={(e) => {
         e.preventDefault();
@@ -552,7 +573,7 @@ export default function JsonEditor({ mode = 'editor' }: Props) {
       {/* Workspace */}
       <div class="relative flex min-h-0 flex-1">
         <div class={'grid min-h-0 flex-1 ' + (view === 'split' || view === 'output' ? 'grid-rows-2 md:grid-cols-2 md:grid-rows-1' : '')}>
-          {showCode && <div ref={hostRef} class="relative min-h-0 overflow-hidden" />}
+          <div ref={hostRef} class={'relative min-h-0 overflow-hidden ' + (showCode ? '' : 'hidden')} />
           {showTree && (
             <div class={'flex min-h-0 flex-col ' + (view === 'split' ? 'border-t border-line md:border-l md:border-t-0' : '')}>
               <div class="flex items-center gap-2 border-b border-line bg-surface-2 px-2 py-1">
