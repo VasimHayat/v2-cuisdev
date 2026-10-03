@@ -1,0 +1,56 @@
+---
+slug: code-formatter
+updated: 2026-10-03
+howTo:
+  - Paste your code into the Input pane, drop a file onto it, or press Sample to load an example. The language is detected automatically; pick one from the Language menu to override it.
+  - Choose Beautify to pretty print the code or Minify to shrink it. Minify is available for JavaScript, CSS, HTML, JSON and SQL.
+  - "Set the style: 2 spaces, 4 spaces or tabs, a print width of 80, 100 or 120 columns, and for JavaScript and TypeScript whether to use single quotes, semicolons and trailing commas. SQL has its own dialect and keyword case options."
+  - The result updates as you type. Syntax errors are reported with the line and column and underlined in the input.
+  - Press Copy (or Ctrl+Shift+C) to take the result, Download to save it with the right file extension, or the arrow button to feed the output back into the input.
+features:
+  - Beautifies JavaScript, TypeScript, HTML, CSS, SCSS, JSON and SQL with Prettier and sql-formatter, the same engines your editor uses
+  - Minifies JavaScript with terser, CSS with csso, and HTML, JSON and SQL with careful whitespace passes
+  - Detects the language from the pasted code or the opened file
+  - Indent, print width, quote style, semicolons and trailing commas match any project style
+  - Thirteen SQL dialects including MySQL, PostgreSQL, SQL Server, BigQuery and Snowflake
+  - Syntax errors are underlined in the editor with the exact line and column
+  - Shows input and output sizes and the percentage saved when minifying
+  - Formatters are downloaded on first use and then work offline; nothing is uploaded
+faq:
+  - q: Which formatter does this tool use?
+    a: "Beautifying uses Prettier 3 running in your browser with its official parsers for JavaScript (Babel), TypeScript, HTML, CSS and SCSS (PostCSS) and JSON. SQL is formatted with the open-source sql-formatter library. The output is the same as running those tools on the command line with the same options."
+  - q: How is the code minified?
+    a: "JavaScript is minified with terser, which shortens local variable names and removes dead code. CSS is minified with csso, which also merges duplicate rules. HTML minification strips comments and whitespace-only gaps between tags. JSON is re-serialised without whitespace, and SQL has its comments removed and whitespace collapsed outside string literals."
+  - q: Why can I not minify TypeScript or SCSS?
+    a: "Neither runs in a browser as-is. TypeScript has to be compiled to JavaScript and SCSS to CSS before a minifier can safely touch them. Compile first, then paste the JavaScript or CSS output here. The Minify option is disabled for those two languages rather than producing something misleading."
+  - q: Does minifying HTML break my page?
+    a: "It should not. Whitespace inside pre, textarea, script and style is copied byte for byte, conditional comments are kept, and a single space is preserved wherever text sits next to a tag. What gets removed are the whitespace-only gaps between tags that your editor adds as indentation."
+  - q: How does language detection work?
+    a: "When the Language menu is on Auto, the tool looks at the shape of the code: valid JSON, an HTML document, SQL keywords at the start, CSS rule blocks, SCSS variables and mixins, or JavaScript and TypeScript syntax. It guesses on every change, so if it picks wrong, choose the language explicitly and the choice is remembered."
+  - q: Where do the error line and column come from?
+    a: "From the parser itself. Prettier, terser, csso and sql-formatter report the position of the first syntax error. The tool repeats it in the status line and underlines it in the input editor so you can jump straight to the problem."
+  - q: Is my code uploaded anywhere?
+    a: "No. The formatters are downloaded once as static files and run on your machine. Your code never leaves the tab, and the tool keeps working with the network disconnected. That makes it safe to paste proprietary source or configuration that contains keys."
+---
+
+## Why format code
+
+Badly indented code is hard to review and minified code is impossible to read. This tool does both jobs in one place: paste JavaScript, TypeScript, HTML, CSS, SCSS, JSON or SQL, pick Beautify to pretty print it or Minify to squeeze it down, and the result appears as you type. There is no submit button, no page reload and no upload.
+
+Beautifying uses Prettier, the formatter most editors run on save, so the output matches what your project would produce. That matters when you paste a snippet from a pull request, a Stack Overflow answer or a production bundle and want it to look like the rest of the codebase before you read it.
+
+## Formatter versus minifier
+
+A formatter adds whitespace for people. A minifier removes it, and more, for machines. Terser also renames local variables to single letters, drops unreachable code and folds constant expressions, which is why a minified JavaScript file can be half the size of the original even after gzip. Csso goes further than whitespace too: it merges rules with the same selector and removes overridden declarations.
+
+The size readout in the output header shows exactly how much was saved. For HTML and SQL the saving is smaller, because those minifiers deliberately keep anything that could change meaning, such as the contents of a pre block or a quoted string.
+
+## Matching your project style
+
+The options map directly onto Prettier settings: Indent is `tabWidth` and `useTabs`, Width is `printWidth`, and the three chips are `singleQuote`, `semi` and `trailingComma`. Set them once and they are remembered on this device. If your repository has a Prettier config, copy the values from it and the output will diff cleanly against your files.
+
+SQL has no single style guide, so the tool exposes the two choices that cause the most arguments: the dialect, which decides which keywords and operators are recognised, and keyword case. Uppercase keywords are the conventional choice; lowercase is common in Postgres teams.
+
+## Related tasks
+
+To tidy JSON only, the [JSON Formatter](/tools/developer/json-formatter/) adds tree and table views and key sorting. To see what a formatter changed, paste the before and after into the [Text Diff Checker](/tools/developer/text-diff-checker/).

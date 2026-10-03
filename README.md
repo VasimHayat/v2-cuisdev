@@ -13,17 +13,22 @@ npm run dev              # http://localhost:4321
 npm run build            # generates OG images, then builds to dist/
 npm run preview
 npm run check            # astro check (types + templates)
+npm test                 # vitest: unit tests for the pure tool logic (src/**/*.test.ts)
 ```
 
 ## JSON editor
 
 The JSON Editor island (`src/islands/json-editor/`) wraps the open-source [vanilla-jsoneditor](https://github.com/josdejong/svelte-jsoneditor) engine (ISC licence, the same engine behind jsoneditoronline.org) in a two-panel shell: local documents in the URL hash (`store.ts`), Copy / Transform / Compare between panels (`diff.ts`), file and URL loading, share links and an optional Gemini drawer. The editor chunk is about 320 KB gzipped and is loaded only on the JSON tool pages.
 
+## Code Formatter and Text Diff Checker
+
+Both islands share `src/islands/shared/CodeEditor.tsx` (a CodeMirror 6 wrapper that follows the design tokens) and `src/islands/shared/controls.tsx` (segmented control, chip toggle, header button). The Code Formatter (`src/islands/code-formatter/`) lazy-loads Prettier, terser, csso and sql-formatter on first use; the Text Diff Checker (`src/islands/text-diff/`) renders jsdiff output as side-by-side or inline rows with collapsed unchanged regions. Their logic lives in pure `logic.ts` modules with Vitest tests next to them.
+
 ## Add a tool
 
 1. Add an entry to `src/data/tools.ts`. Keep `status: 'soon'` until the island is done.
 2. Write `src/content/tools/<slug>.mdx` with `howTo`, `features`, `faq` and an explainer body.
-3. Build the island in `src/islands/<slug>/` (Preact) and register it in `src/islands/registry.ts`.
+3. Build the island in `src/islands/<slug>/` (Preact), import it in `src/islands/ToolIsland.astro` and add its key to `src/islands/registry.ts`. Keep pure logic in `logic.ts` with a `logic.test.ts` beside it.
 4. Flip `status` to `'live'`, set `island` (and `islandProps` if one island serves several pages).
 5. `npm run build`. Nav, sitemap, hub pages, related links, schema and the OG image update themselves.
 

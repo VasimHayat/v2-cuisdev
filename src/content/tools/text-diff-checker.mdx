@@ -1,0 +1,58 @@
+---
+slug: text-diff-checker
+updated: 2026-10-03
+howTo:
+  - Paste the old version into Original and the new version into Changed, or drop a file onto either pane. The comparison appears underneath as you type.
+  - "Pick how to compare with the Compare by menu: Lines highlights whole lines, Words marks only the words that changed, Characters narrows it down to single characters."
+  - Tick Ignore case or Ignore whitespace if capitalisation or indentation differences are noise.
+  - Switch between Side by side and Inline, and turn on Only changes to hide unchanged regions with three lines of context. Use the arrows (or Alt+Up and Alt+Down) to jump between changes.
+  - Press Copy diff or Download to export the result as a unified .diff patch that git apply and patch understand.
+features:
+  - Side-by-side and inline (unified) views with line numbers for both texts
+  - Line, word and character granularity with the changed part of each line highlighted
+  - Ignore case and ignore whitespace options
+  - Only-changes mode collapses unchanged regions; click to expand any of them
+  - Previous and next change navigation with keyboard shortcuts
+  - Swap the two sides with one click
+  - Copy or download a standard unified diff with hunk headers
+  - Handles up to 2 million characters per side, entirely in your browser
+faq:
+  - q: How do I compare two texts and see the differences?
+    a: "Paste the old version into the Original pane and the new version into the Changed pane. The differences appear immediately underneath: removed lines are tinted red, added lines are tinted green, and the counters in the header show the number of additions and deletions."
+  - q: What is the difference between line, word and character comparison?
+    a: "Lines are always aligned line by line. Compare by chooses how a modified line is highlighted inside itself: Lines highlights the whole line, Words highlights only the words that changed, and Characters narrows it down to individual characters, which is useful for spotting a single changed digit or a typo."
+  - q: Can I copy the result as a unified diff or patch file?
+    a: "Yes. Copy diff and Download produce a standard unified diff with --- a/original.txt, +++ b/changed.txt and @@ hunk headers with three lines of context, the same format git diff emits, so git apply and patch can consume it."
+  - q: What do Ignore case and Ignore whitespace do?
+    a: "Ignore case treats Value and value as the same line. Ignore whitespace trims each line and collapses runs of spaces and tabs, so re-indenting a file does not show up as a change. Both sides are still displayed exactly as you pasted them."
+  - q: Why does the header say Approximate?
+    a: "The two texts were so different that aligning them line by line would take too long, so the tool shows every original line as removed and every changed line as added. This happens with unrelated documents or after a complete rewrite. Comparing a smaller section usually gives a proper alignment."
+  - q: How large a text can I compare?
+    a: "Line and word comparison accept up to 2,000,000 characters per side. Character-by-character comparison is capped at 100,000 characters because it is far more expensive. Very long results are shown 5,000 rows at a time, and Copy and Download always contain the complete diff."
+  - q: Is my text uploaded anywhere?
+    a: "No. The comparison runs entirely in your browser with a JavaScript diff implementation. You can disconnect from the internet after the page loads and the tool keeps working, so it is safe to compare configuration files, logs and contracts."
+---
+
+## What a diff shows
+
+A diff shows what changed between two versions of a text: which lines were added, which were removed and which were edited. Developers use it to review a change before committing it, writers use it to spot edits in a revised draft, and anyone can use it to answer "what is different between these two files?" without reading both line by line.
+
+This checker aligns the two texts with the same algorithm git uses, then looks inside each changed line to mark the exact words or characters that differ. A one-character typo therefore looks like a one-character change, not a whole rewritten line.
+
+## Reading the two views
+
+Side by side puts the original on the left and the changed text on the right, with each line's own number. Lines that exist on only one side leave a blank on the other, so the two columns stay aligned and you can read down either one. This is the view to use when both versions matter, such as reviewing an edit to a document.
+
+Inline stacks the removed lines above the added lines, prefixed with minus and plus signs, in the same order a unified patch uses. It is narrower, so it suits long lines and small screens, and it is the view to use when you only care about what the new version looks like.
+
+Only changes hides every run of unchanged lines longer than six, keeping three lines of context on each side of a change. A collapsed run shows how many lines it hides and expands with a click, the same way a code review tool does.
+
+## Exporting the result
+
+Copy diff and Download produce a unified diff. It starts with the two file headers, then one hunk per group of changes, each introduced by an `@@` line that gives the starting line and length on both sides. A hunk contains context lines prefixed with a space, removed lines prefixed with a minus and added lines prefixed with a plus.
+
+Because this is the format every version control system understands, you can save it as a patch file and apply it elsewhere with `git apply changes.diff` or `patch -p1 < changes.diff`, or paste it into a ticket so a colleague sees the exact change.
+
+## Related tasks
+
+If the two texts are JSON, the [JSON Editor](/tools/developer/json-editor/) compares them structurally and highlights changed keys in the tree. To normalise formatting before comparing code, run both versions through the [Code Formatter](/tools/developer/code-formatter/) first so that only real changes show up.

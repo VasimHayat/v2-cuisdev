@@ -6,6 +6,8 @@
  * ISLAND_KEYS in registry.ts so the build can verify the registry.
  */
 import JsonEditor from './json-editor/JsonEditor';
+import CodeFormatter from './code-formatter/CodeFormatter';
+import TextDiff from './text-diff/TextDiff';
 
 interface Props {
   island: string;
@@ -15,3 +17,5 @@ const { island, props = {} } = Astro.props;
 ---
 
 {island === 'json-editor' && <JsonEditor client:load {...props} />}
+{island === 'code-formatter' && <CodeFormatter client:load {...props} />}
+{island === 'text-diff' && <TextDiff client:load {...props} />}

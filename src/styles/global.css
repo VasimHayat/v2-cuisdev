@@ -236,6 +236,29 @@
 .cm-editor .tok-bool, .cm-editor .tok-null, .cm-editor .tok-keyword { color: oklch(0.55 0.2 320); }
 .dark .cm-editor .tok-bool, .dark .cm-editor .tok-null, .dark .cm-editor .tok-keyword { color: oklch(0.78 0.16 320); }
 
+/* Extra token colours for the code tools (classHighlighter emits tok-* classes) */
+.cm-editor .tok-comment, .cm-editor .tok-lineComment, .cm-editor .tok-blockComment { color: var(--color-ink-3); font-style: italic; }
+.cm-editor .tok-tagName { color: oklch(0.5 0.17 20); }
+.dark .cm-editor .tok-tagName { color: oklch(0.78 0.14 20); }
+.cm-editor .tok-attributeName { color: oklch(0.55 0.15 60); }
+.dark .cm-editor .tok-attributeName { color: oklch(0.8 0.12 70); }
+.cm-editor .tok-attributeValue { color: oklch(0.55 0.15 150); }
+.dark .cm-editor .tok-attributeValue { color: oklch(0.78 0.14 150); }
+.cm-editor .tok-typeName, .cm-editor .tok-className, .cm-editor .tok-namespace { color: oklch(0.5 0.14 200); }
+.dark .cm-editor .tok-typeName, .dark .cm-editor .tok-className, .dark .cm-editor .tok-namespace { color: oklch(0.78 0.12 200); }
+.cm-editor .tok-definition { color: var(--color-brand-700); }
+.dark .cm-editor .tok-definition { color: var(--color-brand-300); }
+.cm-editor .tok-variableName { color: var(--color-ink); }
+.cm-editor .tok-operator, .cm-editor .tok-punctuation { color: var(--color-ink-2); }
+.cm-editor .tok-atom, .cm-editor .tok-literal { color: oklch(0.55 0.2 320); }
+.dark .cm-editor .tok-atom, .dark .cm-editor .tok-literal { color: oklch(0.78 0.16 320); }
+.cm-editor .tok-invalid { color: var(--color-danger); }
+.cm-editor .tok-meta, .cm-editor .tok-processingInstruction, .cm-editor .tok-documentMeta { color: var(--color-ink-3); }
+.cm-editor .cm-lint-marker { width: 0.7em; height: 0.7em; }
+.cm-editor .cm-gutter-lint { width: 0.9em; }
+.cm-editor .cm-diagnostic { font-family: var(--font-sans); font-size: 12px; }
+.cm-editor .cm-diagnostic-error { border-left-color: var(--color-danger); }
+
 /* JSON token colours shared by the tree view (CodeMirror uses the same hues above) */
 .tok-key { color: var(--color-brand-600); }
 .dark .tok-key { color: var(--color-brand-400); }

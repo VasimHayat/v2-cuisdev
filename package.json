@@ -10,6 +10,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "og": "node scripts/og.mjs",
     "lint": "astro check && tsc --noEmit",
     "lighthouse": "lhci autorun"
@@ -20,23 +22,35 @@
     "@astrojs/rss": "^4.0.0",
     "@astrojs/sitemap": "^3.2.0",
     "@codemirror/commands": "^6.7.0",
+    "@codemirror/lang-css": "^6.3.1",
+    "@codemirror/lang-html": "^6.4.12",
+    "@codemirror/lang-javascript": "^6.2.5",
     "@codemirror/lang-json": "^6.0.1",
+    "@codemirror/lang-sql": "^6.10.0",
     "@codemirror/language": "^6.10.0",
     "@codemirror/lint": "^6.8.0",
     "@codemirror/search": "^6.5.0",
     "@codemirror/state": "^6.5.0",
     "@codemirror/view": "^6.35.0",
+    "@lezer/highlight": "^1.2.5",
     "@tailwindcss/vite": "^4.0.0",
     "astro": "^5.0.0",
+    "csso": "^5.0.5",
+    "diff": "^8.0.4",
     "preact": "^10.25.0",
+    "prettier": "^3.9.9",
     "sharp": "^0.33.5",
+    "sql-formatter": "^15.9.0",
     "tailwindcss": "^4.0.0",
+    "terser": "^5.51.2",
     "vanilla-jsoneditor": "^3.13.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.4",
     "@lhci/cli": "^0.14.0",
-    "typescript": "^5.7.0"
+    "@types/csso": "^5.0.5",
+    "typescript": "^5.7.0",
+    "vitest": "^3.2.7"
   },
   "engines": {
     "node": ">=20"
