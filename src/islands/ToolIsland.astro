@@ -12,6 +12,7 @@ import ImageEditor from './image-editor/ImageEditor';
 import PdfConverter from './pdf-converter/PdfConverter';
 import Converter from './converter/Converter';
 import Codec from './codec/Codec';
+import JwtDecoder from './jwt-decoder/JwtDecoder';
 
 interface Props {
   island: string;
@@ -27,3 +28,4 @@ const { island, props = {} } = Astro.props;
 {island === 'pdf-converter' && <PdfConverter client:load {...props} />}
 {island === 'converter' && <Converter client:load {...props} />}
 {island === 'codec' && <Codec client:load {...props} />}
+{island === 'jwt-decoder' && <JwtDecoder client:load {...props} />}

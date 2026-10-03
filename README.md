@@ -40,6 +40,10 @@ The XML Formatter page is the Code Formatter island with `islandProps: { languag
 
 `src/islands/codec/` is one island for the Base64, URL and HTML entity pages, selected with `islandProps: { kind }`. Each codec is a pure module (`base64.ts`, `url.ts`, `entities.ts`) with tests; `Codec.tsx` adds the Encode/Decode shell, file encoding and binary download for Base64, the URL breakdown, and paste detection that switches to Decode when encoded text lands in an empty editor (the editor reports `wasEmpty` to `onPaste`).
 
+## JWT Decoder
+
+`src/islands/jwt-decoder/logic.ts` decodes compact JWS tokens with specific errors per part, describes registered and common OpenID claims, resolves NumericDate claims, and verifies or signs HS256/HS384/HS512 with WebCrypto. The island keeps the token in sessionStorage only. The sample token is signed with the classic `your-256-bit-secret`.
+
 ## Data converters
 
 `src/islands/converter/` is one island serving several pages: the registry passes `islandProps: { from, to }` (JSON, CSV or YAML) and the user can swap direction in the toolbar. `logic.ts` wraps papaparse and yaml with positioned errors; `src/islands/shared/json-errors.ts` holds the JSON scanner that locates errors when V8's message carries no position (also used by the Code Formatter).
