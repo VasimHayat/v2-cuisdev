@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+  # Rebuild twice a week so blog posts dated in the future go live on schedule
+  # (Tuesday and Thursday, 06:00 UTC). See src/lib/blog.ts.
+  schedule:
+    - cron: '0 6 * * 2,4'
 
 concurrency:
   group: deploy-${{ github.ref }}

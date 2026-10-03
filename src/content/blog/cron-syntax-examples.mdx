@@ -1,0 +1,158 @@
+---
+title: Cron syntax explained with 30 real-world examples
+description: Cron syntax explained field by field, with 30 copy-ready cron examples for every minute, hourly, daily, weekdays, monthly and the gotchas that break schedules.
+publishDate: 2026-10-03
+author: Cuisdev Team
+tags: [DevOps, Developer]
+tools: [cron-parser, timestamp-converter]
+---
+
+A cron expression is five fields separated by spaces: minute, hour, day of month, month and day of week. Each field is a number, a list, a range, a step or `*` for "every". For example, `0 9 * * 1-5` means "at minute 0 of hour 9, on any day of the month, in any month, Monday to Friday", which is 09:00 on weekdays.
+
+Below you will find how each field works, 30 tested examples you can copy, and the handful of rules that cause most cron surprises. Every expression here was checked against a cron engine, and you can paste any of them into the [Cron Expression Parser](/tools/developer/cron-parser/) to see the plain-English meaning and the next run times.
+
+## The five cron fields
+
+```text
+┌───────────── minute        (0 to 59)
+│ ┌─────────── hour          (0 to 23)
+│ │ ┌───────── day of month  (1 to 31)
+│ │ │ ┌─────── month         (1 to 12, or JAN to DEC)
+│ │ │ │ ┌───── day of week   (0 to 7, or SUN to SAT; 0 and 7 are Sunday)
+│ │ │ │ │
+* * * * *  command to run
+```
+
+Each field accepts the same building blocks:
+
+| Syntax | Meaning | Example | Reads as |
+| --- | --- | --- | --- |
+| `*` | Every value | `*` in hour | every hour |
+| `n` | A single value | `30` in minute | at minute 30 |
+| `a,b,c` | A list | `1,15` in day of month | on the 1st and 15th |
+| `a-b` | A range | `1-5` in day of week | Monday to Friday |
+| `*/n` | Every n-th value from the start | `*/15` in minute | minutes 0, 15, 30, 45 |
+| `a-b/n` | Every n-th value within a range | `9-17/2` in hour | 09, 11, 13, 15, 17 |
+
+## 30 cron examples you can copy
+
+### Every few minutes or hours
+
+| # | Expression | Runs |
+| --- | --- | --- |
+| 1 | `* * * * *` | Every minute |
+| 2 | `*/5 * * * *` | Every 5 minutes |
+| 3 | `*/15 * * * *` | Every 15 minutes, at :00, :15, :30 and :45 |
+| 4 | `0 * * * *` | Every hour, on the hour |
+| 5 | `30 * * * *` | Every hour at 30 minutes past |
+| 6 | `0 */2 * * *` | Every 2 hours, at 00:00, 02:00, 04:00 and so on |
+| 7 | `0 0,12 * * *` | Twice a day, at 00:00 and 12:00 |
+
+### Daily
+
+| # | Expression | Runs |
+| --- | --- | --- |
+| 8 | `0 0 * * *` | Every day at midnight |
+| 9 | `0 9 * * *` | Every day at 09:00 |
+| 10 | `30 18 * * *` | Every day at 18:30 |
+| 11 | `5 4 * * *` | Every day at 04:05, a common off-peak slot for backups |
+
+### Weekdays and business hours
+
+| # | Expression | Runs |
+| --- | --- | --- |
+| 12 | `0 9 * * 1-5` | 09:00, Monday to Friday |
+| 13 | `0 6 * * 1-5` | 06:00, Monday to Friday |
+| 14 | `0 9-17 * * 1-5` | Every hour from 09:00 to 17:00, weekdays |
+| 15 | `*/10 9-17 * * 1-5` | Every 10 minutes from 09:00 to 17:50, weekdays |
+| 16 | `*/30 * * * 1-5` | Every 30 minutes, all day, weekdays only |
+
+Note example 15: the hour range `9-17` includes the whole of hour 17, so the last run is 17:50, not 17:00. Use `9-16` if work should stop at 17:00.
+
+### Specific days of the week
+
+| # | Expression | Runs |
+| --- | --- | --- |
+| 17 | `0 0 * * 0` | Every Sunday at midnight |
+| 18 | `0 8 * * 1` | Every Monday at 08:00 |
+| 19 | `0 22 * * 5` | Every Friday at 22:00 |
+| 20 | `0 0 * * 6,0` | Saturday and Sunday at midnight |
+
+### Monthly, quarterly and yearly
+
+| # | Expression | Runs |
+| --- | --- | --- |
+| 21 | `0 0 1 * *` | Midnight on the 1st of every month |
+| 22 | `0 0 15 * *` | Midnight on the 15th of every month |
+| 23 | `0 0 1,15 * *` | Midnight on the 1st and 15th |
+| 24 | `15 14 1 * *` | 14:15 on the 1st of every month |
+| 25 | `0 12 1 */3 *` | Noon on 1 January, 1 April, 1 July and 1 October |
+| 26 | `0 0 1 1 *` | Midnight on 1 January, once a year |
+
+### Shortcuts most cron implementations accept
+
+| # | Expression | Same as |
+| --- | --- | --- |
+| 27 | `@hourly` | `0 * * * *` |
+| 28 | `@daily` or `@midnight` | `0 0 * * *` |
+| 29 | `@weekly` | `0 0 * * 0` |
+| 30 | `@monthly` | `0 0 1 * *` |
+
+`@yearly` (or `@annually`) equals `0 0 1 1 *`, and `@reboot`, supported by the classic Vixie and cronie daemons, runs once when the cron service starts.
+
+## Cron gotchas that break schedules
+
+### Day of month and day of week combine with OR
+
+When both day fields are restricted, standard cron runs the job if **either** matches. This expression looks like "03:00 on the first Monday of the month":
+
+```text
+0 3 1-7 * 1
+```
+
+It actually runs at 03:00 on every one of days 1 to 7 **and** on every Monday. To run on the first Monday only, the portable trick is to schedule `0 3 1-7 * *` and check the weekday inside the command:
+
+```bash
+0 3 1-7 * * [ "$(date +\%u)" = 1 ] && /usr/local/bin/monthly-report
+```
+
+Some engines, including Quartz-style schedulers, offer `1#1` for "first Monday" instead. It is not part of classic cron.
+
+### Steps restart every month
+
+`0 0 */2 * *` means "days 1, 3, 5 and so on", not "every 48 hours". After the 31st, the next run is the 1st, so the job runs on two consecutive days at month end. Checked against a cron engine, starting at 28 January it runs on 29 January, 31 January, 1 February and 3 February. If you need a true every-other-day rhythm, run daily and let the script skip alternate days.
+
+### Percent signs need escaping in crontab
+
+In a crontab line, an unescaped `%` is turned into a newline and everything after it becomes the command's standard input. That breaks commands such as `date +%Y-%m-%d`. Escape each one as `\%`, as in the example above, or move the command into a script.
+
+### Last day of the month is not standard
+
+There is no standard field for "last day of the month". Many schedulers support `L` (`0 0 L * *`), but classic cron does not. The portable version runs on days 28 to 31 and checks whether tomorrow is the 1st:
+
+```bash
+0 23 28-31 * * [ "$(date -d tomorrow +\%d)" = 01 ] && /usr/local/bin/month-end
+```
+
+The `-d tomorrow` option is GNU `date`, found on most Linux systems but not macOS.
+
+### Time zones and daylight saving
+
+Cron uses the system's time zone unless your scheduler lets you set one. In zones with daylight saving, a job at 02:30 can be skipped on the night the clocks spring forward and run twice when they fall back, depending on the implementation. Schedule critical jobs outside the 01:00 to 03:00 window, or run the server in UTC. Cloud schedulers such as Kubernetes CronJobs (`spec.timeZone`) and most CI systems let you set the zone explicitly.
+
+### Six fields means seconds, sometimes
+
+Classic cron has five fields. Quartz, Spring, node-cron and several other schedulers accept a sixth field at the **start** for seconds, so `0 */5 * * * *` there means "every 5 minutes at second 0". Paste a five-field expression into a six-field scheduler and every field shifts by one. Check which format your tool expects.
+
+## Where you will write cron expressions
+
+- **Linux crontab.** `crontab -e` edits your user's schedule; system jobs live in `/etc/cron.d/`. Each line is the five fields followed by a command.
+- **Kubernetes CronJob.** The `schedule` field takes a standard five-field expression.
+- **GitHub Actions.** `on.schedule.cron` uses five fields in UTC. Scheduled runs can be delayed during busy periods, so do not rely on exact minutes.
+- **Cloud schedulers.** AWS EventBridge uses its own six-field format with a year field and `?`, so check its documentation rather than pasting a crontab line.
+
+## How to check a cron expression before you deploy it
+
+Reading cron is easy to get wrong, especially with ranges, steps and the OR rule. Before you deploy, list the next few run times in the time zone the job will really use. The [Cron Expression Parser](/tools/developer/cron-parser/) does exactly that: it translates the expression into a sentence, breaks down each field, warns when the day fields combine with OR, and lists upcoming runs in any time zone.
+
+When a log shows a run at a Unix timestamp, the [Timestamp Converter](/tools/converters/timestamp-converter/) turns it back into a readable date in your zone, so you can match runs against the schedule.

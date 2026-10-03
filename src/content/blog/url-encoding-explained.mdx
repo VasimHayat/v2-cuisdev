@@ -1,0 +1,154 @@
+---
+title: "URL encoding explained: percent-encoding, + vs %20"
+description: "URL encoding explained: which characters must be percent-encoded, why spaces become + or %20, encodeURI vs encodeURIComponent, and how to avoid double encoding."
+publishDate: 2026-10-13
+author: Cuisdev Team
+tags: [Web, Encoding]
+tools: [url-encode-decode, api-request-tester]
+---
+
+URL encoding, also called percent-encoding, replaces characters that are not allowed or have a special meaning in a URL with a `%` followed by two hexadecimal digits for each byte. A space becomes `%20`, `&` becomes `%26` and `é` becomes `%C3%A9`, its two UTF-8 bytes. In HTML form data and many query strings a space may also be written as `+`, which is where most of the confusion comes from.
+
+This guide explains which characters need encoding and why, the difference between `+` and `%20`, which JavaScript and Python functions to use for which part of a URL, and how to spot and fix double encoding. You can check any example in the [URL Encoder and Decoder](/tools/developer/url-encode-decode/).
+
+## Why do URLs need encoding?
+
+A URL is a structured string. Characters such as `/`, `?`, `#`, `&` and `=` separate its parts:
+
+```text
+https://example.com/search/results?q=coffee&page=2#top
+└─┬─┘   └────┬────┘└─────┬──────┘ └─────┬──────┘ └┬┘
+scheme     host        path           query     fragment
+```
+
+If a value contains one of these characters, it would change the structure. A search for `salt & pepper` written literally as `?q=salt & pepper` breaks the query into a parameter `q=salt ` and a stray `pepper`. Encoding the value as `salt%20%26%20pepper` keeps it as one value.
+
+URLs are also limited to a small set of ASCII characters, so anything else, including accented letters, other scripts and emoji, has to be converted to bytes and percent-encoded.
+
+## Which characters must be encoded?
+
+[RFC 3986](https://www.rfc-editor.org/rfc/rfc3986) splits characters into groups:
+
+| Group | Characters | Rule |
+| --- | --- | --- |
+| Unreserved | `A-Z a-z 0-9 - . _ ~` | Never need encoding |
+| Reserved, general delimiters | `: / ? # [ ] @` | Encode when used inside a value |
+| Reserved, sub-delimiters | `! $ & ' ( ) * + , ; =` | Encode when used inside a value |
+| Everything else | Spaces, `%`, quotes, `<`, `>`, non-ASCII | Always encode |
+
+The percent sign itself must be encoded as `%25`, otherwise a decoder treats it as the start of an escape. That is why `100%` in a URL is invalid.
+
+## How does percent-encoding handle non-ASCII text?
+
+The character is first converted to UTF-8 bytes, then each byte is written as `%` plus two hex digits. `é` is two bytes in UTF-8, `C3` and `A9`, so it becomes `%C3%A9`. A three-byte character such as `€` becomes three escapes, and most emoji become four. If you see `%E9` for `é` instead, the text was encoded as Latin-1, an old convention that modern decoders will reject or display as garbage.
+
+## Plus or %20: how should a space be encoded?
+
+Both exist, in different contexts:
+
+- **`%20`** is the RFC 3986 encoding of a space and is valid everywhere in a URL.
+- **`+`** for a space comes from the `application/x-www-form-urlencoded` format that HTML forms use to submit data. It is only meaningful in query strings and form bodies.
+
+In a path, a `+` is a literal plus sign: `/files/c++` means "c++", not "c  ". In a query string decoded as form data, a `+` means a space, so a literal plus must be written `%2B`. A classic bug is a phone number such as `+44 20 7946 0000` sent in a query string without encoding, arriving at the server as `44 20 7946 0000` with a leading space.
+
+The safe rule: encode spaces as `%20` when you build URLs by hand, and let a form or URL library choose `+` when it produces form data.
+
+## encodeURI vs encodeURIComponent in JavaScript
+
+JavaScript has two built-in functions, and choosing the wrong one is the most common URL bug in front-end code.
+
+`encodeURIComponent` is for a **single value**, such as one query parameter or one path segment. It encodes everything except unreserved characters and `!'()*`:
+
+```js
+encodeURIComponent('café & crème?x=1/2 #top');
+// 'caf%C3%A9%20%26%20cr%C3%A8me%3Fx%3D1%2F2%20%23top'
+```
+
+`encodeURI` is for a **whole URL** that is already structured. It leaves delimiters such as `/`, `?`, `&`, `=` and `#` alone and only encodes what is clearly invalid:
+
+```js
+encodeURI('https://example.com/a path/café?q=x y&z=1#top');
+// 'https://example.com/a%20path/caf%C3%A9?q=x%20y&z=1#top'
+```
+
+Use `encodeURI` on a full URL and a value containing `&` will silently split into two parameters. Use `encodeURIComponent` on a full URL and the `://` and slashes get encoded, producing a broken link.
+
+### The easier way: URL and URLSearchParams
+
+For query strings, let the platform do the work:
+
+```js
+const params = new URLSearchParams({ q: 'café & crème', page: '2' });
+params.toString(); // 'q=caf%C3%A9+%26+cr%C3%A8me&page=2'
+
+const url = new URL('https://example.com/search');
+url.search = params;
+url.href; // 'https://example.com/search?q=caf%C3%A9+%26+cr%C3%A8me&page=2'
+```
+
+Note that `URLSearchParams` follows the form-data rules and writes spaces as `+`. Reading it back is symmetric:
+
+```js
+new URLSearchParams('q=a+b').get('q');  // 'a b'
+decodeURIComponent('a+b');              // 'a+b'  (no form rules here)
+```
+
+That asymmetry is worth remembering: `decodeURIComponent` does not turn `+` into a space, so decoding form data with it leaves plus signs in your values.
+
+## URL encoding in Python
+
+The `urllib.parse` module has the equivalents:
+
+```python
+from urllib.parse import quote, quote_plus, unquote_plus, urlencode
+
+quote('café & crème/x')            # 'caf%C3%A9%20%26%20cr%C3%A8me/x'
+quote('café & crème/x', safe='')   # 'caf%C3%A9%20%26%20cr%C3%A8me%2Fx'
+quote_plus('café & crème')         # 'caf%C3%A9+%26+cr%C3%A8me'
+unquote_plus('a+b%26c')            # 'a b&c'
+urlencode({'q': 'café & crème', 'page': 2})
+# 'q=caf%C3%A9+%26+cr%C3%A8me&page=2'
+```
+
+`quote` leaves `/` unencoded by default because it is designed for paths. Pass `safe=''` when encoding a single value that might contain a slash. The `requests` library builds query strings for you from a `params` dictionary, which avoids most of these choices.
+
+## What is double encoding and how do you fix it?
+
+Double encoding happens when an already encoded value is encoded again. The `%` of `%20` is itself encoded as `%25`, giving `%2520`:
+
+```js
+encodeURIComponent(encodeURIComponent('a b')); // 'a%2520b'
+```
+
+Signs that you have it: `%25` followed by two hex digits in a URL, or values that arrive at the server still containing `%20`. It usually comes from two layers each "helpfully" encoding: a function that encodes values, called with a value that was already encoded, or a proxy or redirect that re-encodes a URL.
+
+The fix is to encode exactly once, at the point where a raw value is placed into a URL, and to pass raw values everywhere else. When you need to clean up existing data, decode repeatedly until the string stops changing.
+
+## Common decoding errors
+
+Malformed input makes strict decoders fail:
+
+```js
+decodeURIComponent('100%'); // URIError: URI malformed
+```
+
+A `%` not followed by two hex digits, or escapes that do not form valid UTF-8, both cause this. Wrap decoding of untrusted input in error handling, and treat a failure as invalid input rather than crashing.
+
+## Encoding different parts of a URL
+
+| Part | What to encode | JavaScript |
+| --- | --- | --- |
+| Path segment | Everything except unreserved, keep `/` only between segments | `encodeURIComponent(segment)` per segment |
+| Query parameter name or value | Everything except unreserved | `URLSearchParams` or `encodeURIComponent` |
+| Fragment | Spaces and non-ASCII at least | `encodeURIComponent` |
+| Host name | Not percent-encoded; international domains use Punycode | `new URL()` handles it |
+
+International domain names are a separate system: `café.example` becomes `xn--caf-dma.example` through Punycode, not percent-encoding.
+
+## Testing encoded URLs against an API
+
+When an API rejects a request, check what was actually sent. The [API Request Tester](/tools/developer/api-request-tester/) keeps a parameter table in sync with the URL, so you can type raw values and see exactly how they are encoded before you press Send.
+
+## Do it in your browser
+
+The [URL Encoder and Decoder](/tools/developer/url-encode-decode/) encodes text in component, whole-URL or form-data mode, decodes repeatedly to strip double encoding and tells you how many layers it removed, points at malformed escapes, and breaks any URL into its parts with every query parameter decoded. It runs locally, so URLs containing tokens never leave your browser.

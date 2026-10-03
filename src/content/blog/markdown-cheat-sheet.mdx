@@ -1,0 +1,245 @@
+---
+title: "Markdown cheat sheet: GitHub Flavored Markdown with examples"
+description: "A complete Markdown cheat sheet with copyable examples: headings, emphasis, lists, links, images, code, tables, task lists and GitHub Flavored Markdown extras."
+publishDate: 2026-10-03
+author: Cuisdev Team
+tags: [Writing, Developer]
+tools: [markdown-preview, html-entity-encoder]
+---
+
+Markdown is a plain-text formatting syntax: `#` makes a heading, `**text**` makes bold, `-` starts a list item and `[text](url)` makes a link. GitHub Flavored Markdown (GFM) is the most widely used dialect, adding tables, task lists, strikethrough and automatic links on top of the CommonMark core. This cheat sheet covers every common element with an example you can copy.
+
+Open the [Markdown Preview](/tools/text/markdown-preview/) in another tab and paste any example to see it rendered as you read.
+
+## Headings
+
+Start a line with one to six `#` characters followed by a space:
+
+```markdown
+# Heading 1
+## Heading 2
+### Heading 3
+#### Heading 4
+```
+
+Use one `# Heading 1` per document as the title, and do not skip levels: going from `##` straight to `####` confuses screen readers and table-of-contents generators.
+
+## Paragraphs and line breaks
+
+Separate paragraphs with a blank line. A single newline inside a paragraph is **not** a line break in standard Markdown; the lines are joined:
+
+```markdown
+Line one
+Line two
+```
+
+renders as one paragraph, "Line one Line two". To force a line break, end the line with two spaces or a backslash:
+
+```markdown
+Line one\
+Line two
+```
+
+GitHub renders single newlines as line breaks in issues and comments, but not in README files, which is why the same text can look different in two places.
+
+## Emphasis
+
+```markdown
+*italic* or _italic_
+**bold** or __bold__
+***bold and italic***
+~~strikethrough~~
+```
+
+Strikethrough with `~~` is a GFM extension. Underscores inside words are not treated as emphasis, so `snake_case_name` stays as written.
+
+## Lists
+
+Unordered lists use `-`, `*` or `+`. Ordered lists use a number followed by a period:
+
+```markdown
+- Apples
+- Pears
+  - Conference
+  - Williams
+
+1. Preheat the oven
+2. Mix the dry ingredients
+3. Bake for 25 minutes
+```
+
+Indent nested items so they line up under the text of the parent item, usually two or three spaces. For ordered lists, only the first number matters: `1.`, `1.`, `1.` renders as 1, 2, 3, which keeps diffs clean when you insert a step.
+
+## Task lists
+
+A GFM extension, popular in issues and pull requests:
+
+```markdown
+- [x] Write the draft
+- [x] Add screenshots
+- [ ] Ask for review
+```
+
+Rendered, these become checkboxes. On GitHub they are clickable in issues and pull request descriptions.
+
+## Links
+
+```markdown
+[Inline link](https://example.com)
+[Link with a title](https://example.com "Shown on hover")
+<https://example.com>
+https://example.com
+```
+
+The last form is a GFM autolink: a bare URL becomes clickable. For documents with many links, reference-style links keep paragraphs readable:
+
+```markdown
+Read the [style guide][guide] before you start.
+
+[guide]: https://example.com/style-guide
+```
+
+## Images
+
+An image is a link with a `!` in front. The text in brackets becomes the alt text:
+
+```markdown
+![A red bicycle leaning on a wall](images/bike.jpg)
+```
+
+Always write meaningful alt text. Standard Markdown has no syntax for image size; when you need it, use an HTML `img` tag with `width` and `height`, which most renderers allow.
+
+## Code
+
+Inline code uses single backticks: `` `npm install` ``. For blocks, use three backticks and an optional language name for syntax highlighting:
+
+````markdown
+```js
+const total = items.reduce((sum, item) => sum + item.price, 0);
+```
+````
+
+To show backticks inside inline code, wrap it in double backticks with spaces: ``` `` `code` `` ```. To show a fenced block inside another one, as above, use four backticks for the outer fence.
+
+## Blockquotes
+
+```markdown
+> Markdown is intended to be as easy-to-read and easy-to-write as is feasible.
+>
+> Nested quotes use more than one marker:
+>> like this.
+```
+
+GitHub also supports alert blocks that render as colored callouts:
+
+```markdown
+> [!NOTE]
+> Useful information that users should know.
+
+> [!WARNING]
+> Critical content demanding immediate attention.
+```
+
+The other alert types are `TIP`, `IMPORTANT` and `CAUTION`. Other renderers show these as ordinary quotes.
+
+## Tables
+
+Tables are a GFM extension. A header row, a separator row of dashes, then data rows. Colons in the separator set alignment:
+
+```markdown
+| Name | Role  | Commits |
+| :--- | :---: | ------: |
+| Ada  | Admin |     128 |
+| Alan | Dev   |      42 |
+```
+
+`:---` aligns left, `:---:` centers and `---:` aligns right. The pipes do not need to line up; that is only for readability. To use a literal pipe inside a cell, escape it as `\|`.
+
+Here is what a renderer produces for a two-column table, a task list and some inline formatting, using a standard GFM parser:
+
+```html
+<table>
+<thead>
+<tr>
+<th align="left">Name</th>
+<th align="right">Role</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">Ada</td>
+<td align="right">Admin</td>
+</tr>
+</tbody></table>
+<ul>
+<li><input checked="" disabled="" type="checkbox"> Done</li>
+<li><input disabled="" type="checkbox"> Todo</li>
+</ul>
+<p><del>old</del> <strong>bold</strong> <em>it</em></p>
+```
+
+Knowing the HTML output helps when you style Markdown with CSS or debug why something renders oddly.
+
+## Horizontal rules
+
+Three or more dashes, asterisks or underscores on their own line:
+
+```markdown
+---
+```
+
+Leave a blank line above it. Directly under a line of text, `---` turns that text into a heading instead (the older "setext" heading style).
+
+## Escaping special characters
+
+Put a backslash before a character to show it literally instead of formatting with it:
+
+```markdown
+\*not italic\*
+1986\. A great year
+\# not a heading
+```
+
+Characters you can escape include `\`, `` ` ``, `*`, `_`, `{`, `}`, `[`, `]`, `(`, `)`, `#`, `+`, `-`, `.`, `!` and `|`.
+
+## HTML inside Markdown
+
+Most renderers pass raw HTML through, which covers the things Markdown cannot do, such as collapsible sections:
+
+```html
+<details>
+<summary>Click to expand</summary>
+
+Hidden **Markdown** content.
+
+</details>
+```
+
+Leave a blank line after `<summary>` so the content inside is parsed as Markdown. On sites that render user-written Markdown, raw HTML is usually filtered for safety, so these tricks may not work in comments or forums. If you need to show literal `<` and `&` characters in HTML rather than have them interpreted, encode them with the [HTML Entity Encoder](/tools/developer/html-entity-encoder/).
+
+## Footnotes
+
+GFM and many other renderers support footnotes:
+
+```markdown
+Markdown was created in 2004.[^1]
+
+[^1]: By John Gruber, with help from Aaron Swartz.
+```
+
+The note is numbered automatically and placed at the bottom of the document.
+
+## Common Markdown mistakes
+
+- **Missing blank lines.** A list or code block directly under a paragraph may not be recognized. Put a blank line before lists, fences, tables and headings.
+- **No space after `#`.** `#Heading` is a paragraph in CommonMark. Write `# Heading`.
+- **Mismatched indentation in nested lists.** If a sub-item does not nest, align it with the parent item's text, not its bullet.
+- **Expecting single newlines to break lines.** Use a blank line for a new paragraph or a trailing backslash for a line break.
+- **Unescaped underscores and asterisks** in file names or math, such as `2*3*4`, which turns `3` into italics. Escape them or wrap them in backticks.
+
+## Which Markdown flavor should you write?
+
+CommonMark is the precise specification most modern parsers follow, and GitHub Flavored Markdown is CommonMark plus tables, task lists, strikethrough, autolinks and a filter for unsafe HTML. If you write for GitHub, GitLab, most static site generators or documentation tools, GFM syntax is the safest bet. The [GFM specification](https://github.github.com/gfm/) is the reference when a detail matters.
+
+## Do it in your browser
+
+The [Markdown Preview](/tools/text/markdown-preview/) renders GitHub Flavored Markdown as you type, with tables, task lists and code blocks, synced scrolling between editor and preview, formatting buttons, and export to HTML. The output is sanitized, so pasted content cannot run scripts, and your draft stays in your browser.

@@ -1,0 +1,119 @@
+---
+title: "UUID v4 vs v7: which to use for database primary keys"
+description: "UUID v4 vs v7 for database primary keys: how each is built, why random v4 keys slow down inserts, what v7 leaks, and how to generate and store them."
+publishDate: 2026-10-06
+author: Cuisdev Team
+tags: [Databases, Developer]
+tools: [uuid-generator, hash-generator]
+---
+
+For new database primary keys, UUID v7 is usually the better choice. It starts with a millisecond timestamp, so new keys arrive in roughly increasing order, which keeps B-tree indexes compact and inserts fast. UUID v4 is fully random, which spreads inserts across the whole index and costs performance on large tables. Use v4 when an identifier must not reveal anything, including when it was created.
+
+This guide shows how both versions are laid out bit by bit, why the ordering matters to databases, what v7 gives away, and how to generate and store each one. You can generate either version in bulk with the [UUID Generator](/tools/developer/uuid-generator/).
+
+## What is the difference between UUID v4 and v7?
+
+Both are 128-bit identifiers written as 32 hexadecimal digits in five groups, such as `f7aa6f92-629f-4fc0-9833-a34ba5186a66`. Both are defined in [RFC 9562](https://www.rfc-editor.org/rfc/rfc9562), which replaced RFC 4122 in 2024 and introduced version 7. The difference is what fills the bits.
+
+| | UUID v4 | UUID v7 |
+| --- | --- | --- |
+| First 48 bits | Random | Unix time in milliseconds |
+| Version bits | `4` | `7` |
+| Random bits | 122 | 74 |
+| Sort order | Random | Roughly by creation time |
+| Reveals creation time | No | Yes, to the millisecond |
+| Index behavior | Inserts scattered across the index | Inserts append near the end |
+
+You can read the version from the first digit of the third group: `xxxxxxxx-xxxx-4xxx-...` is v4 and `xxxxxxxx-xxxx-7xxx-...` is v7.
+
+## How is a UUID v7 built?
+
+A v7 UUID packs a timestamp into its first 12 hex digits. This short Node.js function builds one by hand, following the RFC layout:
+
+```js
+import crypto from 'node:crypto';
+
+function uuidv7() {
+  const bytes = crypto.randomBytes(16);
+  const ms = BigInt(Date.now());
+  for (let i = 0; i < 6; i++) bytes[i] = Number((ms >> BigInt(8 * (5 - i))) & 0xffn);
+  bytes[6] = (bytes[6] & 0x0f) | 0x70; // version 7
+  bytes[8] = (bytes[8] & 0x3f) | 0x80; // RFC variant
+  const h = bytes.toString('hex');
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+}
+```
+
+Running it produced `01a101ba-6aca-78fd-8d13-a3bbcfbd63f7`. Reading the timestamp back out is just as easy:
+
+```js
+const id = '01a101ba-6aca-78fd-8d13-a3bbcfbd63f7';
+const ms = parseInt(id.replace(/-/g, '').slice(0, 12), 16);
+new Date(ms).toISOString(); // '2026-10-03T12:25:56.682Z'
+```
+
+That ability to recover the creation time is both the strength and the weakness of v7, as you will see below. For production code, prefer a maintained library, which also guarantees ordering when many IDs are created within the same millisecond.
+
+## Why do random UUIDs slow down databases?
+
+Most relational databases store a primary key in a B-tree index, and many (MySQL's InnoDB, SQL Server with a clustered key, SQLite's `WITHOUT ROWID` tables) also store the table rows themselves in primary key order.
+
+With an auto-increment integer or a time-ordered key, every new row goes at the end of the index. The database keeps appending to the same few pages, which stay in memory, and pages fill up neatly.
+
+With a random v4 key, each new row lands at a random position. On a small table this does not matter. On a large one:
+
+- **Writes touch pages all over the index**, so far more of the index must be in memory to keep inserts fast. When it does not fit, inserts start waiting on disk.
+- **Pages split** when a random key has to squeeze into a full page, leaving many pages half empty. The index grows larger than it needs to be.
+- **Write-ahead logs and replication carry more data**, because more pages change per insert.
+
+UUID v7 keys arrive in time order, so inserts behave much like an auto-increment integer while keeping the benefits of UUIDs: they can be generated anywhere, by any service, without asking the database for the next number.
+
+## What does UUID v7 reveal?
+
+The first 48 bits are a readable timestamp. Anyone who sees a v7 ID can tell when the record was created, to the millisecond. Sometimes that matters:
+
+- **User or account IDs in URLs** reveal sign-up times and let outsiders estimate how fast you are growing.
+- **Document or invoice IDs** can disclose business activity patterns.
+- **Security tokens** must never be time-based. A reset-password token or session ID needs to be unpredictable, so use a dedicated random token instead of any UUID.
+
+A common pattern is to use v7 as the internal primary key and expose a separate random identifier, or a v4 UUID, in public URLs.
+
+## Are UUIDs unique enough?
+
+A v4 UUID has 122 random bits. You would need to generate roughly 2.7 quintillion (2.7 × 10^18) of them before the chance of a single collision reached 50 percent, a figure that follows from the birthday bound. In practice, collisions come from broken random number generators, not from the math, so always use your platform's cryptographic random source.
+
+A v7 UUID has 74 random bits per millisecond. Collisions would require two IDs in the same millisecond with the same random bits, which is still vanishingly unlikely for any realistic workload. Good libraries also add a counter inside the random bits so IDs created in the same millisecond keep their order.
+
+## How to generate UUIDs in common languages
+
+```js
+// JavaScript, browsers and Node.js
+crypto.randomUUID(); // v4
+```
+
+```python
+import uuid
+
+uuid.uuid4()  # v4, every Python 3 version
+uuid.uuid7()  # v7, Python 3.14 and later
+```
+
+In PostgreSQL, `gen_random_uuid()` returns a v4 UUID, and PostgreSQL 18 added a built-in `uuidv7()` function. On older versions, generate v7 in the application or with an extension. Most languages have well-maintained libraries for v7 if their standard library does not include it yet.
+
+## How should you store UUIDs?
+
+Store them in a native 16-byte type, not as text:
+
+- **PostgreSQL:** the `uuid` type stores 16 bytes and compares efficiently.
+- **SQL Server:** `uniqueidentifier`. Note that SQL Server sorts this type in an unusual byte order, so a v7 value may not sort by time there. Check before relying on it for a clustered index.
+- **MySQL and MariaDB:** `BINARY(16)` with `UUID_TO_BIN()` and `BIN_TO_UUID()` in MySQL, or MariaDB's native `UUID` type. Do not pass the swap flag to `UUID_TO_BIN` for v7; it exists to reorder v1 timestamps, and v7 is already in the right order.
+
+A `CHAR(36)` column takes more than twice the space of 16 bytes, and that cost repeats in every index and foreign key that references it.
+
+## Should you use UUIDs at all?
+
+UUIDs make sense when IDs are created by many services or offline clients, when records are merged between databases, or when you want to hide row counts from outsiders. An auto-increment integer is still smaller (8 bytes or less) and faster for single-database applications whose IDs never leave the system. If you only need a short public identifier, a random token or a hash-based ID can work; the [Hash Generator](/tools/developer/hash-generator/) shows how different hash functions turn the same input into fixed-length digests if you are comparing options.
+
+## Do it in your browser
+
+The [UUID Generator](/tools/developer/uuid-generator/) creates v4, v7, v1, v5 and v3 UUIDs, from one to ten thousand at a time, with uppercase, braces, quotes and other output formats. Its inspector shows the version and variant of any UUID you paste and, for v1 and v7, the embedded creation time. Everything is generated locally with your browser's cryptographic random source.

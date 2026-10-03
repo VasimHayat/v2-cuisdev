@@ -20,7 +20,7 @@ faq:
   - q: Is YAML a superset of JSON?
     a: "Mostly. YAML 1.2 was designed so that any JSON document is also valid YAML, which is why you can paste JSON into a YAML file and it parses. The reverse is not true: YAML adds comments, anchors, multi-line strings and multiple documents that JSON cannot express. This tool resolves anchors and drops comments when converting to JSON."
   - q: Why are some strings quoted in the YAML output?
-    a: "YAML infers types from unquoted text. A value like 123, true, null, 1.0 or one containing a colon and a space would be read back as a number, boolean, null or a nested map, so the converter quotes those strings to keep them as strings. Everything else is left unquoted for readability."
+    a: "YAML infers types from unquoted text. A value like 123, true, null, 1.0 or one containing a colon and a space would be read back as a number, boolean, null or a nested map, so the converter quotes those strings to keep them as strings. It also quotes yes, no, on and off in any capitalization, because older YAML 1.1 parsers still in common use read them as booleans, which is how the country code NO famously turns into false. Everything else is left unquoted for readability."
   - q: Do comments survive the conversion?
     a: "No. JSON has no comment syntax, so YAML comments are removed when converting to JSON. Going the other way there is nothing to preserve, because JSON cannot contain comments in the first place."
   - q: Can I convert a Kubernetes or Docker Compose file with several documents?

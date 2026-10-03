@@ -1,0 +1,140 @@
+---
+title: What DPI to use when converting a PDF to images
+description: "What DPI to use for PDF to image conversion: 150 DPI for screens, 300 DPI for print and OCR, with the pixel sizes, memory cost and file size each choice brings."
+publishDate: 2027-01-26
+author: Cuisdev Team
+tags: [PDF, Images]
+tools: [pdf-to-image, image-compressor]
+---
+
+Use 150 DPI when the images are for screens, such as slides, web pages, chat or email. Use 300 DPI when the images will be printed or fed to text recognition (OCR). Go higher only for fine line art or small print you need to zoom into, and drop to 72 or 96 DPI for thumbnails and previews. The [PDF to Image](/tools/pdf/pdf-to-image/) converter shows the resulting pixel size before you convert, so you can check the choice against where the image is going.
+
+The rest of this guide explains why those numbers work, what DPI actually controls when you render a PDF, and how to balance sharpness against file size.
+
+## What does DPI mean for a PDF?
+
+A PDF page has a physical size, not a pixel size. Text and vector graphics are stored as shapes, so they can be drawn sharply at any scale. PDF measures pages in points, where 72 points equal one inch.
+
+When you convert a page to an image, the renderer has to decide how many pixels to use for each inch of the page. That is the DPI (dots per inch, often used interchangeably with PPI, pixels per inch). The formula is simple:
+
+```text
+pixel width  = page width in inches  × DPI
+pixel height = page height in inches × DPI
+```
+
+An A4 page is 210 × 297 mm, which is about 8.27 × 11.69 inches. At 150 DPI that becomes 1240 × 1753 pixels.
+
+Embedded photos are the exception to "sharp at any scale". A photo inside a PDF already has a fixed number of pixels. Rendering above its native resolution makes the image bigger without adding detail.
+
+## How many pixels does each DPI give you?
+
+This short script calculates pixel sizes for common page sizes:
+
+```python
+PAGE_SIZES_IN = {"A4": (210 / 25.4, 297 / 25.4), "US Letter": (8.5, 11)}
+
+def pixels(width_in, height_in, dpi):
+    return int(width_in * dpi), int(height_in * dpi)
+
+for name, (w, h) in PAGE_SIZES_IN.items():
+    for dpi in (72, 150, 300):
+        pw, ph = pixels(w, h, dpi)
+        megapixels = pw * ph / 1_000_000
+        print(f"{name:9} {dpi:3} dpi -> {pw} x {ph} px ({megapixels:.1f} MP)")
+```
+
+```text
+A4         72 dpi -> 595 x 841 px (0.5 MP)
+A4        150 dpi -> 1240 x 1753 px (2.2 MP)
+A4        300 dpi -> 2480 x 3507 px (8.7 MP)
+US Letter  72 dpi -> 612 x 792 px (0.5 MP)
+US Letter 150 dpi -> 1275 x 1650 px (2.1 MP)
+US Letter 300 dpi -> 2550 x 3300 px (8.4 MP)
+```
+
+Different tools round the last pixel differently, so you may see 3508 instead of 3507. The full picture for an A4 page:
+
+| DPI | A4 pixels | Megapixels | Memory while rendering (RGBA) |
+| --- | --- | --- | --- |
+| 72 | 595 × 841 | 0.5 | 1.9 MiB |
+| 96 | 793 × 1122 | 0.9 | 3.4 MiB |
+| 150 | 1240 × 1753 | 2.2 | 8.3 MiB |
+| 200 | 1653 × 2338 | 3.9 | 14.7 MiB |
+| 300 | 2480 × 3507 | 8.7 | 33.2 MiB |
+
+The memory column is the uncompressed bitmap: width × height × 4 bytes. It is what your browser or converter holds in memory for each page while drawing it, before the image is compressed to PNG or JPEG.
+
+## Why doubling the DPI quadruples the cost
+
+DPI applies to both width and height. Going from 150 to 300 DPI doubles each dimension, so the image has four times as many pixels. Rendering takes roughly four times as long, uses four times the memory, and the file is usually several times larger.
+
+For a 50-page document that difference adds up quickly. It is the main reason not to default to the highest setting.
+
+## Which DPI should you choose?
+
+### For screens: 96 to 150 DPI
+
+A typical laptop or monitor shows a full page height in roughly 1000 to 1400 pixels. At 150 DPI an A4 page is 1753 pixels tall, which looks sharp on most displays and on high-density phone screens when the reader zooms a little. 96 DPI is fine when the image will be shown small, such as an embedded preview in a web page.
+
+### For thumbnails: 72 DPI or less
+
+Galleries and file pickers show pages at a few hundred pixels wide. Rendering at 72 DPI or below is fast and the result is still recognizable.
+
+### For printing: 300 DPI
+
+Print is viewed up close, and 300 DPI is the long-standing target for sharp text and images at actual size. If the image will be printed smaller than the original page, you can render lower and still keep 300 pixels per printed inch.
+
+### For OCR: 300 DPI
+
+Text recognition engines generally work best when characters are around 300 DPI. Lower resolutions blur the shapes of small letters, and much higher resolutions mostly add processing time. Use a lossless format such as PNG for OCR input.
+
+### For fine detail: 400 to 600 DPI
+
+Engineering drawings, maps and pages with tiny print may need more. Render only the pages you need at this level, because an A4 page at 600 DPI is about 35 megapixels.
+
+## PNG or JPEG for converted pages?
+
+The format matters as much as the DPI for the final file size.
+
+| Content | Best format | Why |
+| --- | --- | --- |
+| Text, diagrams, charts, screenshots | PNG | Lossless, keeps sharp edges, compresses flat areas well |
+| Scanned pages, photos | JPEG or WebP | Much smaller for photographic content |
+| Pages for OCR | PNG | Compression artifacts around letters hurt recognition |
+| Pages for the web | WebP | Usually smaller than JPEG or PNG at similar quality, and supported by all major browsers |
+
+A text page saved as JPEG shows faint halos around the letters, and the file is often no smaller than PNG. A scanned photo saved as PNG can be several times larger than a good JPEG.
+
+## How to convert from the command line
+
+If you convert PDFs often, the Poppler utilities include `pdftoppm`, which takes a resolution flag:
+
+```bash
+# Every page as PNG at 150 DPI: page-1.png, page-2.png, ...
+pdftoppm -r 150 -png input.pdf page
+
+# Pages 2 to 4 as JPEG at 300 DPI
+pdftoppm -r 300 -f 2 -l 4 -jpeg input.pdf page
+```
+
+With ImageMagick, the density must come before the input file, because it tells the PDF reader how to rasterize:
+
+```bash
+magick -density 300 input.pdf page-%02d.png
+```
+
+Putting `-density` after the file name is a common mistake. ImageMagick then rasterizes at its default of 72 DPI and resizes the result, which looks soft.
+
+## Making the images smaller after converting
+
+If the images are still too large for email or a website, reduce them in this order:
+
+1. **Lower the DPI first.** It cuts every dimension and gives the biggest saving.
+2. **Choose the right format.** Use JPEG or WebP for photographic pages and keep PNG for text.
+3. **Compress.** For JPEG and WebP, a quality setting in the 75 to 85 range is usually hard to tell from the original on screen. The [Image Compressor](/tools/image/image-compressor/) shows the before and after side by side and can aim for a target file size.
+
+If the goal is a smaller PDF rather than images, compressing the PDF itself is usually better. See [why PDFs are so large](/blog/reduce-pdf-file-size/).
+
+## Convert PDF pages in your browser
+
+The [PDF to Image](/tools/pdf/pdf-to-image/) converter renders pages as PNG, JPEG or WebP at 72, 96, 150, 200 or 300 DPI. It shows the pixel size of page 1 for your chosen resolution and warns when a setting would produce an impractically large image. Pages are rendered on your own computer, so the PDF is never uploaded.

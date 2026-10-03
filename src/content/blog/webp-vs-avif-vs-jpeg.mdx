@@ -1,0 +1,117 @@
+---
+title: "WebP vs AVIF vs JPEG vs PNG: which image format to use"
+description: "WebP vs AVIF vs JPEG vs PNG compared: compression, transparency, browser support and encoding speed, with a simple rule for choosing the best image format."
+publishDate: 2026-10-03
+author: Cuisdev Team
+tags: [Images, Performance]
+tools: [image-converter, image-compressor]
+---
+
+For photos on the web, use AVIF or WebP, with JPEG as a fallback only if you must support very old browsers. For logos, screenshots and graphics with sharp edges or transparency, use lossless WebP or PNG, or SVG when the artwork is vector. AVIF usually produces the smallest files, WebP is close behind and encodes much faster, JPEG is the universal fallback, and PNG is for pixel-perfect images where size matters less.
+
+That is the short answer. The rest of this guide explains why, compares the four formats feature by feature, shows a measured example, and gives a practical way to serve modern formats without breaking older browsers. To convert your own files while you read, use the [Image Converter](/tools/image/image-converter/).
+
+## What is the difference between lossy and lossless?
+
+Every format choice starts here.
+
+- **Lossy** compression throws away detail the eye is unlikely to notice, such as fine color variation in busy areas. Files get dramatically smaller, but each save at low quality loses a little more. JPEG is lossy, and WebP and AVIF have lossy modes.
+- **Lossless** compression keeps every pixel exactly. Files are larger, but text, edges and flat colors stay crisp. PNG is lossless, and WebP and AVIF have lossless modes too.
+
+Photos tolerate lossy compression very well. Screenshots of text and UI do not: lossy artifacts show up as blur and halos around letters.
+
+## How do the formats compare?
+
+| | JPEG | PNG | WebP | AVIF |
+| --- | --- | --- | --- | --- |
+| Compression | Lossy | Lossless | Lossy and lossless | Lossy and lossless |
+| Transparency | No | Yes | Yes | Yes |
+| Animation | No | APNG variant | Yes | Yes |
+| Typical photo size | Baseline | Much larger | Smaller than JPEG | Smallest |
+| Encoding speed | Fast | Fast | Fast | Slow |
+| High bit depth and HDR | 8-bit | Up to 16-bit | 8-bit | Up to 12-bit, HDR |
+| Maximum size | 65,535 px per side | Very large | 16,383 px per side | Large, via tiling |
+| Browser support | Universal | Universal | All current major browsers | All current major browsers |
+
+At the time of writing, every current version of Chrome, Edge, Firefox and Safari decodes both WebP and AVIF. The gaps are older devices, especially Safari versions released before AVIF support, and some email clients and desktop apps that still expect JPEG or PNG.
+
+## A measured example
+
+To make the differences concrete, we encoded one 1,600 by 1,000 pixel test image, an illustrated sunset with smooth gradients, soft shapes and a line of text, with the same image library at common quality settings:
+
+| Format and setting | File size |
+| --- | --- |
+| PNG (lossless) | 116.3 KB |
+| WebP lossless | 49.9 KB |
+| JPEG, quality 80 | 27.4 KB |
+| WebP, quality 80 | 16.0 KB |
+| AVIF, quality 50 | 4.4 KB |
+
+Treat this as an illustration, not a benchmark. Smooth gradients and flat areas are where AVIF shines most, so the gap here is larger than you will usually see on detailed photos. Quality scales also differ between encoders, so "quality 80" in one format is not the same visual quality as "quality 80" in another. The only reliable test is your own images at the quality you can accept. The [Image Compressor](/tools/image/image-compressor/) shows before and after sizes side by side so you can judge quickly.
+
+## When should you use each format?
+
+### JPEG: the safe fallback for photos
+
+JPEG has been readable everywhere for decades: browsers, email clients, office software, printers and every phone. Use it when compatibility is the requirement, for example images attached to emails or uploaded to systems you do not control. For your own website, it is the fallback behind WebP or AVIF rather than the first choice.
+
+### PNG: pixel-perfect graphics and transparency
+
+PNG keeps every pixel, supports full transparency and is universally supported. Use it for screenshots, diagrams, UI mockups and logos when you need exact pixels, and for images that will be edited again. It is a poor choice for photos: a photo saved as PNG can be many times larger than the same photo as JPEG with no visible gain.
+
+### WebP: the practical default for the web
+
+WebP covers both worlds: lossy for photos, lossless for graphics, with transparency and animation in both. It encodes quickly, so it suits sites that convert images on upload or on the fly, and its file sizes are consistently smaller than JPEG at similar visual quality. If you only pick one modern format, WebP is the low-risk choice.
+
+### AVIF: the smallest files, slower to make
+
+AVIF is based on the AV1 video codec. It usually gives the smallest files, handles gradients without banding and supports high bit depth and HDR. The trade-offs are slower encoding, which matters if you convert thousands of images or convert on request, and the slightly smaller pool of older devices that can read it. For hero images and large photos on a performance-focused site, AVIF is worth the encoding time.
+
+### SVG and GIF
+
+For logos and icons drawn as shapes, SVG beats every raster format: it is tiny and sharp at any size. GIF is only worth keeping for compatibility with old tools; animated WebP or AVIF, or a short video, are much smaller.
+
+## How to serve AVIF and WebP with a fallback
+
+The HTML `picture` element lets the browser pick the first format it supports:
+
+```html
+<picture>
+  <source srcset="/img/sunset.avif" type="image/avif" />
+  <source srcset="/img/sunset.webp" type="image/webp" />
+  <img src="/img/sunset.jpg" alt="Sunset over the hills" width="1600" height="1000" loading="lazy" />
+</picture>
+```
+
+Browsers that understand AVIF download only the AVIF file. Others fall through to WebP, then to the JPEG in the `img` tag. Always keep `width` and `height` on the `img` so the page does not jump while the image loads, and `alt` text for accessibility.
+
+Many CDNs and image services can also negotiate the format automatically by reading the browser's `Accept` header, so a single URL returns AVIF to browsers that ask for it. That saves you from storing three copies.
+
+## How to convert images on the command line
+
+If you prefer scripts, these widely used tools convert in bulk:
+
+```bash
+# WebP with Google's cwebp, quality 80
+cwebp -q 80 photo.jpg -o photo.webp
+
+# AVIF with libavif's avifenc (lower --qcolor means smaller and lower quality)
+avifenc --qcolor 60 photo.jpg photo.avif
+
+# Any format with ImageMagick 7
+magick photo.png -quality 80 photo.webp
+```
+
+Options and defaults change between versions, so check each tool's help output. For a handful of files, a browser-based converter is quicker and nothing has to be installed.
+
+## Common mistakes when choosing a format
+
+- **Saving photos as PNG** because "lossless is better". The file grows without any visible benefit.
+- **Saving screenshots as JPEG or lossy WebP.** Text gets fuzzy halos. Use PNG or lossless WebP.
+- **Re-compressing JPEGs repeatedly.** Each lossy save adds artifacts. Keep an original and export from it.
+- **Converting a tiny JPEG to AVIF and expecting miracles.** A file that is already small and heavily compressed has little left to remove, and the result can even grow.
+- **Forgetting dimensions.** A 4,000-pixel-wide photo displayed at 800 pixels wastes far more bytes than the format choice saves. Resize first, then pick the format.
+
+## Do it in your browser
+
+The [Image Converter](/tools/image/image-converter/) turns JPEG, PNG, WebP, GIF and BMP into WebP, AVIF, JPEG or PNG in bulk, with a quality slider, a background color for formats without transparency and a before and after comparison. Pair it with the [Image Compressor](/tools/image/image-compressor/) to hit a target file size. Both run on your device, so your photos are never uploaded.

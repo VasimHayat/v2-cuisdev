@@ -1,0 +1,153 @@
+---
+title: "MD5, SHA-1, SHA-256 and BLAKE3 compared: which hash to use"
+description: "MD5 vs SHA-256, SHA-1, SHA-3 and BLAKE3 compared: which hash algorithm to use for checksums, signatures and passwords, and which ones are broken."
+publishDate: 2026-10-20
+author: Cuisdev Team
+tags: [Security, Developer]
+tools: [hash-generator, password-generator]
+---
+
+Use SHA-256 unless you have a specific reason not to. It is secure, universally supported and fast enough for almost everything. Use BLAKE3 when you need maximum speed on large data and control both ends. Never use MD5 or SHA-1 where an attacker could benefit from a collision, and never use any of these fast hashes on their own to store passwords.
+
+The rest of this guide explains why, what "broken" actually means for each algorithm, and how to compute any of them on your machine. To try them side by side, paste text into the [Hash Generator](/tools/developer/hash-generator/) and compare the outputs.
+
+## What does a hash function do?
+
+A cryptographic hash function turns any input into a fixed-length fingerprint. The same input always gives the same output, and a tiny change to the input changes the output completely. Here is the word `hello` through three algorithms, computed with Node's built-in `crypto` module:
+
+```js
+const { createHash } = require('node:crypto');
+
+for (const algo of ['md5', 'sha1', 'sha256']) {
+  console.log(algo.padEnd(6), createHash(algo).update('hello').digest('hex'));
+}
+```
+
+```
+md5    5d41402abc4b2a76b9719d911017c592
+sha1   aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d
+sha256 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
+```
+
+A secure hash must make three things infeasible:
+
+- **Preimage resistance.** Given a hash, you cannot find an input that produces it.
+- **Second preimage resistance.** Given an input, you cannot find a different input with the same hash.
+- **Collision resistance.** You cannot find any two inputs with the same hash.
+
+When people say an algorithm is "broken", they almost always mean collision resistance has failed. That distinction decides where an old algorithm is still acceptable.
+
+## The algorithms side by side
+
+| Algorithm | Output size | Status | Good for |
+| --- | --- | --- | --- |
+| MD5 | 128 bits | Collisions practical since 2004 | Non-security checksums, cache keys |
+| SHA-1 | 160 bits | Practical collision published in 2017 (SHAttered) | Legacy compatibility only |
+| SHA-256 | 256 bits | Secure | The default for almost everything |
+| SHA-512 | 512 bits | Secure | Same uses as SHA-256; often faster on 64-bit CPUs |
+| SHA3-256 | 256 bits | Secure | A different design from SHA-2, as a backup |
+| BLAKE2b | Up to 512 bits | Secure | Fast hashing where libraries support it |
+| BLAKE3 | 256 bits by default | Secure | Very fast hashing of large data, parallelizable |
+
+SHA-256 and SHA-512 belong to the SHA-2 family, standardized by NIST in FIPS 180-4. SHA-3 is standardized in FIPS 202 and is built on a completely different construction, which is why it is valued as a fallback rather than a replacement.
+
+## Is MD5 still safe to use?
+
+For security, no. Researchers demonstrated practical MD5 collisions in 2004, and the attacks have only become cheaper since. An attacker can craft two different files with the same MD5 hash, which defeats any system that trusts MD5 to tell files apart, such as code signing or certificate checks.
+
+MD5 is still fine where nobody is trying to fool you:
+
+- Detecting accidental corruption when copying a file you created yourself.
+- Building cache keys or deduplicating your own data.
+- Matching a published MD5 checksum when it is the only one offered. Prefer SHA-256 when both are listed.
+
+Even then, there is rarely a reason to choose MD5 for new work. SHA-256 is everywhere, and the speed difference rarely matters.
+
+## Is SHA-1 broken?
+
+Yes, for collision resistance. In 2017 a team from Google and CWI Amsterdam published SHAttered, two different PDF files with the same SHA-1 hash. Browsers had already stopped trusting SHA-1 certificates by then.
+
+Git famously identifies objects by SHA-1. It added collision detection after SHAttered and supports a SHA-256 object format, which shows the general direction: keep SHA-1 only where compatibility forces it.
+
+## Why is SHA-256 the default?
+
+SHA-256 has no known practical attack on any of its three properties, and it is available in every language, operating system and hardware security module you are likely to use. It is the hash inside TLS certificates, JWT signatures such as HS256 and RS256, Bitcoin, package manager lockfiles and most published download checksums.
+
+SHA-512 is equally safe and often faster on 64-bit processors, because it works on 64-bit words. SHA-256 tends to win on hardware with dedicated SHA instructions. For most code the difference is irrelevant, so pick SHA-256 for compatibility.
+
+## When is BLAKE3 the better choice?
+
+BLAKE3 is designed to be very fast in software and to use many CPU cores and SIMD instructions at once, because it splits input into a tree of chunks. That makes it attractive for hashing large files, content-addressed storage and build systems.
+
+The trade-off is support. SHA-256 is built into every standard library. BLAKE3 usually needs an extra package, and other systems may not be able to verify it. Use it when you control both the producer and the consumer of the hash.
+
+Python's standard library includes BLAKE2 and SHA-3 but not BLAKE3:
+
+```python
+import hashlib
+
+print(hashlib.sha256(b"hello").hexdigest())
+print(hashlib.blake2b(b"hello", digest_size=32).hexdigest())
+print(hashlib.sha3_256(b"hello").hexdigest())
+```
+
+```
+2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
+324dcf027dd4a30a932c441f365a25e86b173defa4b8e58948253471b81b72cf
+3338be694f50c5f338814986cdf0686453a888b84f424d792af4b9202398f392
+```
+
+## Which hash should you use for passwords?
+
+None of the above on their own. MD5, SHA-1, SHA-256 and BLAKE3 are all designed to be fast, and fast is exactly what an attacker wants when guessing passwords from a stolen database. A modern graphics card can try enormous numbers of SHA-256 guesses per second.
+
+Use a dedicated password hashing function instead. These are deliberately slow and memory-hungry, and they add a unique salt to every password:
+
+- **Argon2id**, the winner of the Password Hashing Competition and the first choice in the OWASP Password Storage Cheat Sheet.
+- **scrypt**, a solid alternative where Argon2 is not available.
+- **bcrypt**, widely supported and still acceptable, with a 72-byte input limit to be aware of.
+
+The other half of password security is the password itself. A long random password from the [Password Generator](/tools/developer/password-generator/) resists guessing no matter how the server stores it.
+
+## How to compute a file hash on any system
+
+To verify a download, hash the file and compare it with the checksum the publisher lists.
+
+```bash
+# macOS
+shasum -a 256 installer.dmg
+
+# Linux
+sha256sum installer.iso
+
+# Windows (Command Prompt or PowerShell)
+certutil -hashfile installer.exe SHA256
+Get-FileHash installer.exe -Algorithm SHA256
+```
+
+For large files in your own code, read in chunks so memory use stays flat:
+
+```python
+import hashlib
+
+def sha256_file(path, chunk_size=1024 * 1024):
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(chunk_size), b""):
+            h.update(chunk)
+    return h.hexdigest()
+```
+
+Compare checksums exactly, ignoring only letter case. A hash that differs in a single character means the file differs.
+
+## A quick decision guide
+
+- Verifying a download or building a checksum file: **SHA-256**.
+- Signing or authenticating messages with a shared key: **HMAC-SHA256**, never a plain hash of key plus message.
+- Hashing huge files fast inside your own system: **BLAKE3**, or BLAKE2b if BLAKE3 is unavailable.
+- Storing passwords: **Argon2id**, scrypt or bcrypt.
+- Talking to a legacy system that requires MD5 or SHA-1: use it, and plan the migration.
+
+## Do it in your browser
+
+The [Hash Generator](/tools/developer/hash-generator/) computes MD5, SHA-1, the SHA-2 and SHA-3 families, BLAKE2b, BLAKE3 and others at once, for text or for files of any size, which it reads in chunks inside your browser. It also computes HMACs and checks a pasted checksum against every algorithm, so you can confirm which one a publisher used. Nothing is uploaded.

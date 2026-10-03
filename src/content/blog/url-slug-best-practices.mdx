@@ -1,0 +1,153 @@
+---
+title: What makes a good URL slug for SEO
+description: URL slug best practices for SEO and humans. Use lowercase words joined by hyphens, keep it short and stable, and handle accents and non-Latin titles well.
+publishDate: 2027-01-14
+author: Cuisdev Team
+tags: [SEO, Web]
+tools: [slug-generator, url-encode-decode]
+---
+
+A good URL slug is short, lowercase, made of a few meaningful words separated by hyphens, and stable for the life of the page. `/blog/reduce-pdf-file-size` is a good slug: it tells a person and a search engine what the page is about before they click. `/blog/post?id=8812&ref=nav` and `/blog/How_To_Reduce_The_File_Size_Of_A_PDF_Document_2026` are not.
+
+Slugs are a small part of SEO, but they are one of the few parts you control completely and set once. You can turn any title into a clean slug with the [Slug Generator](/tools/text/slug-generator/); the rest of this guide explains the rules behind it and the mistakes that are expensive to undo.
+
+## What is a URL slug?
+
+The slug is the part of a URL that identifies one page in human-readable words. In `https://example.com/blog/what-is-base64`, the slug is `what-is-base64`. The rest is the domain and the path to the section.
+
+Search engines use the whole URL as one of many signals about a page, and they display it in results. People see it in link previews, in their browser history and when someone pastes a link into a chat. A readable slug helps in all of those places.
+
+## The rules of a good slug
+
+### Use hyphens between words
+
+Use hyphens, not underscores or spaces. Google's [URL structure guidelines](https://developers.google.com/search/docs/crawling-indexing/url-structure) recommend hyphens rather than underscores to separate words, and hyphens are what readers expect. Spaces are not allowed in URLs at all; they have to be encoded as `%20`, which looks broken when shared.
+
+### Keep it lowercase
+
+The path of a URL is case-sensitive on most servers, so `/Blog/Base64` and `/blog/base64` can be two different pages, or one page and a 404. Lowercase everything and you avoid duplicate URLs and broken links from people retyping an address.
+
+### Keep it short and specific
+
+Aim for three to six words that describe the topic. Shorter slugs are easier to read, share and remember, and they are less likely to be cut off in search results. Compare:
+
+```text
+/blog/how-to-calculate-business-days-between-two-dates-in-excel-google-sheets-and-python
+/blog/count-business-days
+```
+
+The second slug is shorter than the topic sentence, and that is fine. The slug identifies the page; the title and content explain it.
+
+### Include the main keyword, once
+
+Put the words people search for in the slug, because they also appear in the visible URL. Do not repeat them or stuff in variants. `/blog/webp-vs-avif-vs-jpeg` is useful; `/blog/webp-avif-jpeg-image-format-webp-vs-avif-best-image-format` is not.
+
+### Leave out words that add nothing
+
+Articles and connectors such as "a", "the", "and", "of" and "to" can usually go: `/what-is-a-url-slug` can become `/what-is-url-slug` or simply `/url-slug`. Keep them when removing them changes the meaning or makes the slug unreadable. "Gone with the wind" should not become `gone-wind`.
+
+### Avoid dates and numbers that will age
+
+`/blog/best-image-formats-2026` forces you to either leave an outdated year in the URL or change the URL next year. If the content is evergreen and will be updated, leave the year out of the slug. Put it in the title if it matters.
+
+### Avoid IDs, parameters and file extensions
+
+Database IDs, tracking parameters and `.php` or `.html` endings add noise and tie the URL to your current technology. Clean paths survive a platform migration; `page.php?id=812` does not.
+
+## Good slugs and bad slugs
+
+| Title | Weak slug | Better slug |
+| --- | --- | --- |
+| 10 Tips and Tricks for Faster JavaScript! | `10_Tips_&_Tricks!` | `faster-javascript-tips` |
+| Crème Brûlée: The Ultimate Guide | `cr%C3%A8me-br%C3%BBl%C3%A9e` | `creme-brulee-guide` |
+| What Is a URL Slug and Why Does It Matter? | `what-is-a-url-slug-and-why-does-it-matter` | `what-is-url-slug` |
+| Our 2026 Pricing Update | `pricing-update-2026` | `pricing` (if it is the live pricing page) |
+
+## How to turn a title into a slug
+
+The steps are always the same: remove accents, lowercase, replace anything that is not a letter or digit with a hyphen, trim hyphens from the ends, and cut to a sensible length at a word boundary. In JavaScript:
+
+```js
+function slugify(title, maxLength = 60) {
+  const slug = title
+    .normalize('NFKD')                 // split letters from their accents
+    .replace(/[̀-ͯ]/g, '')   // drop the accents
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, '-')       // anything else becomes a hyphen
+    .replace(/^-+|-+$/g, '');          // no hyphens at the ends
+  if (slug.length <= maxLength) return slug;
+  return slug.slice(0, maxLength).replace(/-[^-]*$/, ''); // cut at a word boundary
+}
+
+slugify('10 Tips & Tricks for Faster JavaScript!');
+// "10-tips-and-tricks-for-faster-javascript"
+
+slugify('Crème Brûlée: The Ultimate Guide');
+// "creme-brulee-the-ultimate-guide"
+
+slugify('How to Calculate Business Days Between Two Dates in Excel, Google Sheets and Python', 50);
+// "how-to-calculate-business-days-between-two-dates"
+```
+
+Unicode normalization (`NFKD`) separates letters like `é` into `e` plus an accent mark, which the next line removes. This handles most Latin-script accents but not letters such as `ß`, `ø` or `ł`, which have no accent to strip; a proper slug tool maps those with a transliteration table (`ß` becomes `ss`, `ø` becomes `o`).
+
+## What about non-English slugs?
+
+You have two good options for titles in languages with accents or non-Latin scripts.
+
+**Transliterate to ASCII.** `Crème Brûlée` becomes `creme-brulee`. The slug is readable everywhere and safe in every tool, email client and log file.
+
+**Keep the native script.** Browsers display Unicode slugs correctly in the address bar, and search engines handle them. Under the hood they are sent percent-encoded, so `crème-brûlée` travels as `cr%C3%A8me-br%C3%BBl%C3%A9e`. That longer form is what appears when the link is copied into some apps.
+
+For a site whose readers use the native script, keeping it is reasonable and can match how people search. For a mixed or international audience, transliteration is the safer default. Whichever you choose, apply it consistently. The guide to [URL encoding](/blog/url-encoding-explained/) explains percent-encoding, and the [URL Encode and Decode](/tools/developer/url-encode-decode/) tool shows exactly how a slug will be encoded.
+
+## Slugs and the rest of the URL
+
+The slug is only the last part of the path. The folders in front of it deserve the same care.
+
+**Keep folders shallow and meaningful.** `/blog/count-business-days` and `/tools/pdf/pdf-split` tell readers where they are. Deep paths such as `/content/articles/2026/12/22/category/time/count-business-days` add length without adding meaning, and every level is another thing that can change later.
+
+**Pick one trailing-slash style.** `/blog/count-business-days` and `/blog/count-business-days/` can be treated as different URLs. Choose one, link to it consistently, and redirect the other form to it.
+
+**Avoid repeating the folder in the slug.** `/blog/blog-post-about-slugs` repeats itself. The folder already says it is a blog post.
+
+**Keep slugs unique within a section.** Two pages cannot share a path, so content systems append numbers to duplicates (`url-slugs-2`). If you see that happen, the two pages probably need clearer, more specific slugs, or should be merged.
+
+## Changing a slug later
+
+Once a page is published and linked, its URL is an address other people rely on. If you must change a slug, for example to fix a typo or remove a year:
+
+1. Publish the page at the new URL.
+2. Add a permanent 301 redirect from the old URL to the new one.
+3. Update your own internal links to point at the new URL directly.
+4. Keep the redirect in place indefinitely.
+
+Without the redirect, every existing link and bookmark breaks, and the page starts again in search results. This is the main reason to get the slug right before publishing: a good slug never needs changing.
+
+## Common questions about slugs
+
+### Do slugs still matter for rankings?
+
+They are a small factor next to the quality of the page itself. Their bigger effect is on people: a clear slug in a search result or a shared link tells readers what they will get, which can make them more likely to click.
+
+### Should the slug match the title exactly?
+
+No. The title can be longer and more descriptive. The slug should capture the topic in a few words and stay valid even if you later rewrite the title.
+
+### Can two languages share one slug?
+
+Usually each language version gets its own URL, often in a language folder such as `/de/` or `/fr/`, with a slug in that language. Linking the versions together with hreflang annotations helps search engines show the right one.
+
+## Slug checklist
+
+- Lowercase letters, digits and hyphens only.
+- Three to six meaningful words, with the main keyword once.
+- No stop words that add nothing, no dates on evergreen content.
+- No IDs, parameters or file extensions.
+- Unique within its section.
+- Never changed without a 301 redirect.
+
+## Do it in your browser
+
+The [Slug Generator](/tools/text/slug-generator/) converts titles into slugs in bulk, one per line, with transliteration for accented and non-Latin letters, optional stop-word removal, a maximum length that cuts at word boundaries, and a preview of the full URL. It runs entirely in your browser, so you can prepare a whole content calendar of slugs at once.

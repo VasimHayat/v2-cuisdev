@@ -1,0 +1,160 @@
+---
+title: "camelCase, snake_case, kebab-case: naming conventions by language"
+description: "camelCase vs snake_case vs kebab-case explained, with the naming conventions of Python, JavaScript, Java, C#, Go, Rust, CSS, SQL and URLs in one place."
+publishDate: 2026-10-29
+author: Cuisdev Team
+tags: [Code Style, Developer]
+tools: [case-converter, slug-generator]
+---
+
+camelCase joins words with each new word capitalized (`userId`), snake_case joins lowercase words with underscores (`user_id`), and kebab-case joins them with hyphens (`user-id`). None is better in general. What matters is following the convention of the language or format you are writing in, because that is what other developers, linters and frameworks expect.
+
+Below is what each style is called, where each one is the norm, and how to convert between them in code. To convert a whole list of names at once, paste them into the [Case Converter](/tools/text/case-converter/).
+
+## The naming styles at a glance
+
+| Style | Example | Also called |
+| --- | --- | --- |
+| camelCase | `maxRetryCount` | lower camel case |
+| PascalCase | `MaxRetryCount` | UpperCamelCase, StudlyCaps |
+| snake_case | `max_retry_count` | |
+| SCREAMING_SNAKE_CASE | `MAX_RETRY_COUNT` | constant case |
+| kebab-case | `max-retry-count` | dash case, lisp case |
+| Train-Case | `Max-Retry-Count` | HTTP header case |
+| dot.case | `max.retry.count` | |
+
+Most languages forbid hyphens in identifiers, because `max-retry` would be read as `max` minus `retry`. That is why kebab-case lives mostly outside program code: in CSS, HTML attributes, URLs and file names.
+
+## Is camelCase or snake_case better?
+
+Neither wins on its own merits. Both are readable once you are used to them, and the argument about which is easier to scan has never been settled convincingly.
+
+What does have real consequences is consistency. A Python codebase that mixes `getUser` and `get_user` makes people guess, breaks the assumptions of linters, and leads to bugs when one name is mistyped as the other. So the practical answer to "camelCase or snake_case" is: whichever the language's style guide uses.
+
+## Naming conventions by language
+
+### Python
+
+Python's style guide, PEP 8, uses snake_case for functions, methods, variables and modules, PascalCase (which PEP 8 calls CapWords) for classes, and SCREAMING_SNAKE_CASE for module-level constants.
+
+```python
+MAX_RETRIES = 3
+
+class OrderService:
+    def find_open_orders(self, customer_id):
+        ...
+```
+
+### JavaScript and TypeScript
+
+JavaScript uses camelCase for variables and functions and PascalCase for classes and constructor functions. SCREAMING_SNAKE_CASE for true constants is a widespread convention rather than a language rule. TypeScript adds PascalCase for types and interfaces.
+
+```js
+const MAX_RETRIES = 3;
+
+class OrderService {
+  findOpenOrders(customerId) {}
+}
+```
+
+### Java
+
+Classes and interfaces are PascalCase, methods and variables are camelCase, constants (`static final` fields) are SCREAMING_SNAKE_CASE, and packages are all lowercase, usually a reversed domain such as `com.example.orders`.
+
+### C#
+
+C# leans heavily on PascalCase: classes, methods, properties, events and public fields all use it. Local variables and parameters are camelCase. Private fields are commonly written `_camelCase` with a leading underscore, and interfaces start with `I`, as in `IOrderService`.
+
+### Go
+
+Go uses MixedCaps rather than underscores, and the case of the first letter is meaningful: `FindOrders` is exported from its package and `findOrders` is not. Acronyms keep a consistent case, so Go code writes `userID` and `ServeHTTP` rather than `userId` and `ServeHttp`.
+
+### Rust
+
+Rust uses snake_case for functions, variables and modules, UpperCamelCase for types and traits, and SCREAMING_SNAKE_CASE for constants and statics. The compiler warns when you break these rules, which keeps Rust code remarkably uniform.
+
+### Ruby and PHP
+
+Ruby uses snake_case for methods and variables, CamelCase for classes and modules, and SCREAMING_SNAKE_CASE for constants. PHP's PSR-1 standard uses StudlyCaps for classes, camelCase for methods and uppercase with underscores for class constants.
+
+## Naming outside program code
+
+### CSS and HTML
+
+CSS properties are kebab-case (`background-color`, `font-size`), and class names usually follow suit. The BEM methodology extends this with `block__element--modifier`, such as `card__title--large`.
+
+HTML custom data attributes are kebab-case too. JavaScript reads them through `dataset` with the name converted to camelCase, so `data-user-id` becomes `element.dataset.userId`. This is one of the few places the platform converts between styles for you.
+
+### SQL
+
+snake_case is the common choice for tables and columns (`order_items`, `created_at`). The reason is practical: unquoted identifiers are case-insensitive in SQL, and databases fold them to one case. PostgreSQL folds to lowercase, so a column created as `CreatedAt` without quotes is actually stored as `createdat`. snake_case survives that folding and still reads well.
+
+### JSON and APIs
+
+JSON itself has no convention. Public APIs pick one and stick with it: many use camelCase because JSON is closely tied to JavaScript, which is also what the Google JSON Style Guide recommends, while others use snake_case to match Python or Ruby backends. Choose one per API and convert at the boundary if your server code uses a different style.
+
+### Environment variables
+
+Environment variables are SCREAMING_SNAKE_CASE almost everywhere: `DATABASE_URL`, `NODE_ENV`, `AWS_REGION`.
+
+### URLs and file names
+
+URLs and web file names favor kebab-case. Google's guidance on URL structure recommends hyphens rather than underscores to separate words, and hyphens read naturally in a browser bar. The [Slug Generator](/tools/text/slug-generator/) turns titles into kebab-case slugs, including accented and non-Latin characters.
+
+## How do you handle acronyms?
+
+Acronyms are where styles disagree most. Is it `XMLHttpRequest`, `XmlHttpRequest` or `xmlHttpRequest`? The common rules:
+
+- **Go** keeps acronyms in one case: `HTTPServer`, `userID`.
+- **Microsoft's .NET guidelines** capitalize two-letter acronyms fully (`IOStream`) and treat longer ones as words (`HtmlParser`).
+- **Many JavaScript and Java style guides** treat every acronym as a word (`HtmlParser`, `userId`), which makes conversion between styles predictable.
+
+When you convert names automatically, a converter has to detect the boundary inside a run of capitals: `XMLHttpRequest` should split into `xml`, `http` and `request`.
+
+## How to convert between naming styles in code
+
+The reliable approach is to split any input into lowercase words first, then join the words in the target style. This JavaScript version handles spaces, hyphens, underscores, camelCase boundaries and acronym runs:
+
+```js
+function words(input) {
+  return input
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2') // userId -> user Id
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2') // XMLHttp -> XML Http
+    .split(/[^A-Za-z0-9]+/)
+    .filter(Boolean)
+    .map((w) => w.toLowerCase());
+}
+
+const cap = (w) => w[0].toUpperCase() + w.slice(1);
+const camel = (s) => words(s).map((w, i) => (i ? cap(w) : w)).join('');
+const pascal = (s) => words(s).map(cap).join('');
+const snake = (s) => words(s).join('_');
+const kebab = (s) => words(s).join('-');
+const screaming = (s) => snake(s).toUpperCase();
+
+for (const input of ['user id', 'XMLHttpRequest', 'max-retry-count']) {
+  console.log(input, '->', camel(input), pascal(input), snake(input), kebab(input), screaming(input));
+}
+```
+
+Output:
+
+```text
+user id -> userId UserId user_id user-id USER_ID
+XMLHttpRequest -> xmlHttpRequest XmlHttpRequest xml_http_request xml-http-request XML_HTTP_REQUEST
+max-retry-count -> maxRetryCount MaxRetryCount max_retry_count max-retry-count MAX_RETRY_COUNT
+```
+
+Note that converting `XMLHttpRequest` to PascalCase gives `XmlHttpRequest`. Round trips through lowercase words lose the original acronym casing, which is fine for consistency but worth knowing if a name must be preserved exactly.
+
+## A short checklist for naming
+
+- Follow the language's official style guide: PEP 8, Effective Go, the Rust API guidelines, and so on.
+- Let a linter enforce it, so nobody has to remember.
+- Pick one style for your API's JSON keys and convert at the edge.
+- Use kebab-case for URLs, CSS classes and web file names.
+- Decide once how your project writes acronyms, and write it down.
+
+## Do it in your browser
+
+The [Case Converter](/tools/text/case-converter/) converts text into camelCase, PascalCase, snake_case, SCREAMING_SNAKE_CASE, kebab-case, Train-Case, dot.case and more, line by line. It splits acronyms the way the code above does, so a list of mixed identifiers comes out consistent. It runs in your browser, so internal names and schemas stay private.

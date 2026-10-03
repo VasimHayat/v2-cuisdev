@@ -1,0 +1,146 @@
+---
+title: "How EMI is calculated: formula, worked example, amortization"
+description: "The EMI calculation formula explained step by step, with a worked example, a month-by-month amortization schedule, flat vs reducing rates and prepayments."
+publishDate: 2026-11-10
+author: Cuisdev Team
+tags: [Finance, Calculators]
+tools: [loan-emi-calculator, compound-interest-calculator]
+---
+
+EMI (equated monthly installment) is calculated with the formula **EMI = P × r × (1 + r)^n ÷ ((1 + r)^n − 1)**, where P is the loan amount, r is the monthly interest rate (the annual rate divided by 12 and by 100), and n is the number of monthly payments. For a loan of 500,000 at 9% a year over 10 years, that gives an EMI of 6,333.79.
+
+Below, the formula is taken apart piece by piece, with a full worked example, an explanation of why early payments are mostly interest, and what changes when you prepay or choose a longer tenure. To try your own numbers, use the [Loan & EMI Calculator](/tools/calculators/loan-emi-calculator/).
+
+This article is general information to help you understand loan math. It is not financial advice, and your lender's figures may differ because of fees, rounding and how they count interest.
+
+## The EMI formula explained
+
+```
+EMI = P × r × (1 + r)^n ÷ ((1 + r)^n − 1)
+```
+
+- **P** is the principal, the amount you borrow.
+- **r** is the interest rate per payment period. For monthly payments, r = annual rate ÷ 12 ÷ 100. A 9% annual rate gives r = 0.0075.
+- **n** is the number of payments. Ten years of monthly payments is n = 120.
+
+The formula comes from a simple requirement: a fixed payment, made every month, that pays the interest on whatever you still owe and repays the whole principal exactly by the last month. The `(1 + r)^n` term is the same compounding factor that makes savings grow. Here it works against the borrower, which is why a loan's total cost rises so quickly with its length.
+
+If the interest rate is zero, the formula divides by zero. The answer in that case is simply P ÷ n.
+
+## Worked example: 500,000 at 9% for 10 years
+
+1. Monthly rate: r = 9 ÷ 12 ÷ 100 = 0.0075.
+2. Number of payments: n = 10 × 12 = 120.
+3. Growth factor: (1 + 0.0075)^120 ≈ 2.4514.
+4. EMI = 500,000 × 0.0075 × 2.4514 ÷ (2.4514 − 1) ≈ **6,333.79**.
+
+Over the life of the loan:
+
+| Item | Amount |
+| --- | --- |
+| Monthly EMI | 6,333.79 |
+| Total of all payments | 760,054.64 |
+| Total interest | 260,054.64 |
+
+You repay the 500,000 you borrowed plus about 260,000 in interest, a little over half the original amount again.
+
+## How is each EMI split between interest and principal?
+
+Every month, the interest part is the monthly rate times the balance you still owe. The rest of the EMI reduces the balance. Here are the first three months:
+
+| Month | Interest | Principal | Balance after payment |
+| --- | --- | --- | --- |
+| 1 | 3,750.00 | 2,583.79 | 497,416.21 |
+| 2 | 3,730.62 | 2,603.17 | 494,813.04 |
+| 3 | 3,711.10 | 2,622.69 | 492,190.35 |
+
+In month 1, interest is 500,000 × 0.0075 = 3,750. That leaves 6,333.79 − 3,750 = 2,583.79 to reduce the balance. In month 2, the balance is smaller, so the interest is smaller and slightly more goes to principal. This shift continues every month. This table is the beginning of an amortization schedule.
+
+### Why is most of the early EMI interest?
+
+Because interest is charged on a large balance at the start and a small one at the end. Looking at whole years of the same loan:
+
+| Year | Principal repaid | Interest paid | Balance at year end |
+| --- | --- | --- | --- |
+| 1 | 32,316.96 | 43,688.50 | 467,683.04 |
+| 5 | 46,258.67 | 29,746.80 | 305,119.97 |
+| 10 | 72,426.32 | 3,579.14 | 0.00 |
+
+In the first year, more than half of what you pay is interest. In the last year, almost all of it is principal. This is why paying extra early in a loan has such a large effect.
+
+## How to calculate EMI in Excel or Google Sheets
+
+Both use the same `PMT` function:
+
+```
+=PMT(9%/12, 120, -500000)
+```
+
+It returns 6,333.79. The loan amount is negative because, in spreadsheet convention, money you receive and money you pay have opposite signs. To split a single payment, use `IPMT` for the interest part and `PPMT` for the principal part of a given month:
+
+```
+=IPMT(9%/12, 1, 120, -500000)   → 3,750.00
+=PPMT(9%/12, 1, 120, -500000)   → 2,583.79
+```
+
+## How to calculate EMI in Python
+
+```python
+def emi(principal, annual_rate, months):
+    r = annual_rate / 12 / 100
+    if r == 0:
+        return principal / months
+    growth = (1 + r) ** months
+    return principal * r * growth / (growth - 1)
+
+payment = emi(500_000, 9, 120)
+print(f"EMI: {payment:,.2f}")
+
+balance = 500_000
+for month in range(1, 4):
+    interest = balance * 9 / 12 / 100
+    principal_part = payment - interest
+    balance -= principal_part
+    print(f"{month}: interest {interest:,.2f}, principal {principal_part:,.2f}, balance {balance:,.2f}")
+```
+
+```text
+EMI: 6,333.79
+1: interest 3,750.00, principal 2,583.79, balance 497,416.21
+2: interest 3,730.62, principal 2,603.17, balance 494,813.04
+3: interest 3,711.10, principal 2,622.69, balance 492,190.35
+```
+
+Lenders round each payment to the currency's smallest unit and usually adjust the final payment so the balance ends at exactly zero. That is one reason your statement may differ by a few cents or paise from a calculator.
+
+## Flat rate vs reducing balance: why the quoted rate can mislead
+
+Some loans quote a **flat rate**, which charges interest on the original amount for the whole term, however much you have already repaid. A 9% flat rate on 500,000 for 10 years means:
+
+- Interest: 500,000 × 9% × 10 = 450,000.
+- EMI: (500,000 + 450,000) ÷ 120 = 7,916.67.
+
+That is 1,582.88 more per month than the reducing-balance EMI at the same quoted 9%. Solving for the reducing-balance rate that produces a 7,916.67 payment gives about 14.5% a year. So a "9% flat" loan costs about the same as a 14.5% reducing-balance loan. Always ask which method a quoted rate uses.
+
+## How do prepayments and tenure change the total cost?
+
+### Paying a little extra each month
+
+Add 2,000 a month to the EMI of the example loan, and the extra goes straight to principal:
+
+- The loan is paid off in 81 months instead of 120.
+- Total interest falls from 260,054.64 to 166,737.92, saving 93,316.72.
+
+Check whether your lender charges a prepayment fee before you do this. Many floating-rate loans allow prepayment without a fee, but terms vary.
+
+### Choosing a longer tenure
+
+Stretching the same loan to 15 years lowers the EMI to 5,071.33, which feels easier each month. But total interest rises to 412,839.93, about 153,000 more than the 10-year loan. A longer tenure trades monthly comfort for a much larger total cost.
+
+## Where the same math shows up elsewhere
+
+The `(1 + r)^n` factor at the heart of EMI is compound growth. In a loan it compounds the cost of borrowing. In savings it compounds your returns, which is easy to explore in the [Compound Interest Calculator](/tools/calculators/compound-interest-calculator/). Seeing both side by side is a good way to weigh paying off a loan early against investing the same money.
+
+## Do it in your browser
+
+The [Loan & EMI Calculator](/tools/calculators/loan-emi-calculator/) computes the EMI, total interest and payoff date, and builds the full amortization schedule by month or by year. Add a monthly prepayment or a one-off lump sum to see the interest and months saved, and download the schedule as a CSV. Your figures stay on your device.

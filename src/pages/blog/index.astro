@@ -1,12 +1,10 @@
 ---
-import { getCollection } from 'astro:content';
+import { publishedPosts } from '@/lib/blog';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import Breadcrumbs from '@/components/Breadcrumbs.astro';
 import { graph, organizationLd, websiteLd, breadcrumbLd, type Crumb } from '@/lib/seo';
 
-const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
-  (a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf(),
-);
+const posts = await publishedPosts();
 const crumbs: Crumb[] = [
   { name: 'Home', href: '/' },
   { name: 'Blog', href: '/blog/' },

@@ -1,0 +1,151 @@
+---
+title: "JWT explained: structure, signing and security mistakes"
+description: "What a JSON Web Token is, how its three parts and signature work, HS256 vs RS256, and the JWT security mistakes that lead to real vulnerabilities."
+publishDate: 2026-10-03
+author: Cuisdev Team
+tags: [Security, API]
+tools: [jwt-decoder, base64-encode-decode, hash-generator]
+---
+
+A JSON Web Token (JWT) is a compact, signed string that carries claims about a user or session, such as who they are and when the token expires. It has three Base64url-encoded parts separated by dots: a header, a payload and a signature. Anyone can read the header and payload. The signature lets a server check that the token was issued by someone holding the key and has not been changed since.
+
+That last point is where most mistakes start. JWTs are signed, not encrypted, and the security of the whole system depends on how the server verifies them. This guide walks through the format with a real token, explains the signing algorithms, and lists the mistakes that show up again and again in security reviews.
+
+## What does a JWT look like?
+
+Here is a token signed with HS256 and a shared secret. The line breaks are only for readability:
+
+```text
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+.eyJzdWIiOiJ1c2VyXzEyMyIsIm5hbWUiOiJBZGEiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NjcyMjU2MDAsImV4cCI6MTc2NzIyOTIwMH0
+.mo4FBbNqRzt2xnumzup95gfD1LRcEcYOXN38ic3ZcUA
+```
+
+Paste it into the [JWT Decoder](/tools/developer/jwt-decoder/) and you get two JSON objects and a signature.
+
+### The header
+
+```json
+{ "alg": "HS256", "typ": "JWT" }
+```
+
+`alg` names the signing algorithm and `typ` the token type. Headers can also carry `kid`, a key ID that tells the server which key to verify with.
+
+### The payload
+
+```json
+{
+  "sub": "user_123",
+  "name": "Ada",
+  "role": "admin",
+  "iat": 1767225600,
+  "exp": 1767229200
+}
+```
+
+The payload holds claims. Some are registered in [RFC 7519](https://www.rfc-editor.org/rfc/rfc7519) and have agreed meanings:
+
+| Claim | Meaning |
+| --- | --- |
+| `iss` | Issuer, who created the token |
+| `sub` | Subject, usually the user ID |
+| `aud` | Audience, the service the token is meant for |
+| `exp` | Expiration time, as seconds since 1970 |
+| `nbf` | Not before, the token is invalid until this time |
+| `iat` | Issued at |
+| `jti` | Unique token ID, useful for revocation lists |
+
+In the example, `iat` is 1,767,225,600, which is 1 January 2026 at 00:00 UTC, and `exp` is one hour later. Times in JWTs are Unix timestamps in seconds; if that format is new to you, see [Unix timestamps explained](/blog/unix-timestamp-explained/).
+
+### The signature
+
+The signature covers the first two parts exactly as encoded. For HS256 it is an HMAC with SHA-256:
+
+```text
+signature = base64url( HMAC-SHA256( secret, base64url(header) + "." + base64url(payload) ) )
+```
+
+Change a single character in the payload, for example `"role":"user"` to `"role":"admin"`, and the signature no longer matches. That is the protection: not secrecy, but tamper evidence.
+
+## How do you decode and verify a JWT in code?
+
+Decoding is just Base64url plus JSON parsing. In Node.js:
+
+```js
+const [header, payload] = token.split('.');
+JSON.parse(Buffer.from(header, 'base64url'));  // { alg: 'HS256', typ: 'JWT' }
+JSON.parse(Buffer.from(payload, 'base64url')); // { sub: 'user_123', ... }
+```
+
+You can do the same by hand in the [Base64 Decoder](/tools/developer/base64-encode-decode/), which accepts the URL-safe alphabet.
+
+Verifying HS256 means recomputing the HMAC and comparing it in constant time:
+
+```js
+import crypto from 'node:crypto';
+
+function verifyHs256(token, secret) {
+  const [h, p, s] = token.split('.');
+  const expected = crypto.createHmac('sha256', secret).update(`${h}.${p}`).digest();
+  const actual = Buffer.from(s, 'base64url');
+  return actual.length === expected.length && crypto.timingSafeEqual(expected, actual);
+}
+
+verifyHs256(token, 'change-me-to-a-long-random-secret'); // true
+```
+
+This shows the mechanism. In production, use a maintained library for your language, because correct verification involves more than the signature, as the next sections show.
+
+## HS256 vs RS256: which signing algorithm?
+
+| | HS256 | RS256 / ES256 |
+| --- | --- | --- |
+| Type | Symmetric (HMAC) | Asymmetric (RSA or ECDSA) |
+| Keys | One shared secret signs and verifies | Private key signs, public key verifies |
+| Who can verify | Only parties holding the secret | Anyone with the public key |
+| Who can forge | Anyone holding the secret | Only the private key holder |
+| Good for | A single service that issues and checks its own tokens | Identity providers, many services, third parties |
+
+With HS256, every service that verifies tokens can also create them, because it holds the same secret. Once tokens cross team or company boundaries, an asymmetric algorithm is the safer default: the identity provider keeps the private key and publishes public keys, usually as a JWKS (JSON Web Key Set) document.
+
+## The JWT security mistakes that matter
+
+### 1. Trusting the token without verifying it
+
+Decoding is not verifying. Code that reads `payload.role` without checking the signature lets anyone write their own token. Always verify the signature before using any claim.
+
+### 2. Accepting `alg: none`
+
+The specification allows unsecured tokens with `"alg": "none"` and an empty signature. A library that honors the header's `alg` blindly will accept a forged token with no signature at all. Configure verification with an explicit list of allowed algorithms and reject everything else.
+
+### 3. Algorithm confusion between RS256 and HS256
+
+If a server expects RS256 but lets the token choose its algorithm, an attacker can send a token marked HS256 and sign it with HMAC using the server's public key as the secret. A naive verifier then uses the same public key as an HMAC secret and accepts it. The fix is the same as above: the server decides the algorithm, never the token.
+
+### 4. Weak HMAC secrets
+
+An HS256 token can be attacked offline. Anyone with one valid token can try candidate secrets as fast as their hardware allows until the signature matches. Short, dictionary-based or default secrets fall quickly. Use a random secret of at least 256 bits (32 random bytes), stored outside the code base. A good way to produce one is a cryptographic random generator, not a human-chosen phrase; the [Hash Generator](/tools/developer/hash-generator/) is useful for checking digests while you debug signatures, but generate secrets with your platform's secure random function.
+
+### 5. Ignoring `exp`, `aud` and `iss`
+
+A valid signature only proves who issued the token. You still need to check that it has not expired, that it was issued for your service (`aud`) and by the issuer you trust (`iss`). Without the audience check, a token issued for one of your services may be accepted by another.
+
+### 6. Putting secrets in the payload
+
+The payload is readable by anyone who has the token, including browser extensions and anything that logs request headers. Never include passwords, API keys or personal data that the client should not see. If you need confidentiality, JWE (encrypted tokens) exists, but most applications are better served by keeping sensitive data on the server.
+
+### 7. Long-lived tokens with no way to revoke them
+
+A stateless JWT stays valid until it expires, even after the user logs out or is disabled. Keep access tokens short-lived, typically minutes, and use refresh tokens that the server can revoke. If you must revoke access tokens early, keep a deny list of `jti` values.
+
+### 8. Storing tokens where scripts can read them
+
+A token in `localStorage` is readable by any script on the page, so a single cross-site scripting bug leaks it. An `HttpOnly`, `Secure`, `SameSite` cookie hides the token from scripts, at the cost of needing CSRF protection. Neither choice is free; pick one deliberately rather than by default.
+
+## JWTs or server sessions?
+
+JWTs shine when several services need to verify identity without calling a central session store, or when a third-party identity provider issues tokens. For a single web application with one backend, a classic server-side session with an opaque cookie is often simpler: logout is instant, nothing sensitive reaches the browser, and there are fewer ways to get verification wrong.
+
+## Do it in your browser
+
+The [JWT Decoder](/tools/developer/jwt-decoder/) splits a token into its parts, explains every registered claim, converts `exp`, `nbf` and `iat` into readable dates with a clear expired or valid badge, and verifies HS256, HS384 and HS512 signatures with your secret. Decoding and verification run entirely in your browser, and the token is kept only for the current tab session, so you can inspect real tokens without sending them anywhere.

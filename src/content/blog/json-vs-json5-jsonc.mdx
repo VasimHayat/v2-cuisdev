@@ -1,0 +1,168 @@
+---
+title: "JSON vs JSON5 vs JSONC: what each allows and when to use it"
+description: "JSON vs JSON5 vs JSONC compared: comments, trailing commas, quotes and more, which tools accept each format, and when to use JSON with comments."
+publishDate: 2026-12-15
+author: Cuisdev Team
+tags: [JSON, Developer]
+tools: [json-validator, json-formatter]
+---
+
+JSON is the strict data format defined in RFC 8259: double-quoted keys and strings, no comments and no trailing commas. **JSONC** is JSON with comments, used for configuration files such as editor settings and `tsconfig.json`. **JSON5** goes further and allows comments, trailing commas, single quotes, unquoted keys and extra number formats. Use plain JSON for anything machines exchange, and JSONC or JSON5 only for files humans edit and a specific tool reads. If a file is supposed to be plain JSON, the [JSON Validator](/tools/developer/json-validator/) will tell you immediately whether it is.
+
+## What does plain JSON allow?
+
+The rules of standard JSON are short:
+
+- Objects use double-quoted keys: `{"name": "Ada"}`.
+- Strings use double quotes only, with backslash escapes.
+- Numbers are decimal: no leading `+`, no leading zeros, no hex, no `NaN` or `Infinity`.
+- Values are strings, numbers, `true`, `false`, `null`, objects and arrays.
+- **No comments. No trailing commas.**
+
+That strictness is the point. Every language can parse it the same way, which makes JSON reliable for APIs, data files and anything passed between programs. The cost is that it is awkward to write by hand, especially when you want to explain a setting or reorder a list.
+
+## What is JSONC?
+
+JSONC, short for "JSON with Comments", is JSON plus `//` line comments and `/* */` block comments. It is not a formal standard so much as a widely used convention. Code editors use it for settings files, and the TypeScript compiler reads `tsconfig.json` this way, which is why those files can contain comments even though they end in `.json`.
+
+Trailing commas are the grey area. Some JSONC parsers accept them and others report them as errors, often depending on an option. The `jsonc-parser` library used by many editors shows both behaviors:
+
+```js
+const jsonc = require('jsonc-parser');
+
+const src = `{
+  // compiler options
+  "compilerOptions": { "strict": true, },
+  /* block comment */
+  "include": ["src"]
+}`;
+
+const errors = [];
+console.log(JSON.stringify(jsonc.parse(src, errors, { allowTrailingComma: true })), errors.length);
+
+const strict = [];
+jsonc.parse(src, strict, { allowTrailingComma: false });
+console.log(strict.map((e) => jsonc.printParseErrorCode(e.error)));
+```
+
+```text
+{"compilerOptions":{"strict":true},"include":["src"]} 0
+[ 'PropertyNameExpected', 'ValueExpected' ]
+```
+
+Comments are always fine in JSONC. Trailing commas are best avoided unless you know the specific tool accepts them.
+
+## What is JSON5?
+
+JSON5 is a published specification that extends JSON with features borrowed from JavaScript. On top of comments and trailing commas, it allows:
+
+- Unquoted keys when they are valid identifiers: `{name: "Ada"}`
+- Single-quoted strings: `'hello'`
+- Hexadecimal numbers: `0x1F90`
+- Leading or trailing decimal points: `.5` and `5.`
+- A leading plus sign, plus `Infinity` and `NaN`
+- Strings that continue across lines with a backslash
+
+Here is a JSON5 document and what two parsers make of it:
+
+```js
+const JSON5 = require('json5');
+
+const src = `{
+  // comments are allowed
+  name: 'cuisdev',
+  port: 0x1F90,
+  ratio: .5,
+  max: Infinity,
+  tags: ['a', 'b',],
+}`;
+
+try { JSON.parse(src); } catch (e) { console.log('JSON.parse:', e.message); }
+console.log(JSON5.parse(src));
+```
+
+```text
+JSON.parse: Expected property name or '}' in JSON at position 4 (line 2 column 3)
+{
+  name: 'cuisdev',
+  port: 8080,
+  ratio: 0.5,
+  max: Infinity,
+  tags: [ 'a', 'b' ]
+}
+```
+
+The built-in `JSON.parse` stops at the first comment. The JSON5 parser reads everything, converting the hex port to 8080 and keeping `Infinity` as a number. Note that `Infinity` cannot be written back as standard JSON: `JSON.stringify` turns it into `null`, so a round trip from JSON5 to JSON can change data.
+
+## How do JSON, JSONC and JSON5 compare?
+
+| Feature | JSON | JSONC | JSON5 |
+| --- | --- | --- | --- |
+| Comments | No | Yes | Yes |
+| Trailing commas | No | Depends on the parser | Yes |
+| Unquoted keys | No | No | Yes |
+| Single-quoted strings | No | No | Yes |
+| Hex numbers, `Infinity`, `NaN` | No | No | Yes |
+| Formal specification | RFC 8259 | Convention | JSON5 spec |
+| Built into languages | Yes, everywhere | No | No |
+| Typical extension | `.json` | `.jsonc`, sometimes `.json` | `.json5` |
+
+Every valid JSON document is also valid JSONC and valid JSON5, so you can always tighten a file to plain JSON and keep it readable by all three.
+
+## When should I use each format?
+
+### Use plain JSON for data exchange
+
+API requests and responses, files read by more than one program, data stored for later processing, anything another team or system consumes. Standard parsers everywhere reject comments and trailing commas, so a "friendly" format here only creates errors downstream. Some files that look like configuration must also be strict JSON: npm, for example, cannot read a `package.json` that contains comments.
+
+### Use JSONC for tool configuration that supports it
+
+If a tool documents that its config file accepts comments, use them to explain non-obvious settings. Editor settings and TypeScript configuration are the common cases. Keep everything else standard, since you may later need to read the file with a strict parser.
+
+### Use JSON5 when you control the reader
+
+JSON5 is pleasant for hand-written config in your own projects, as long as your code reads it with a JSON5 library. Do not send it over the wire or expect other tools to understand it. If you want human-friendly configuration across many tools, YAML or TOML may be a better fit; our comparison of [YAML vs JSON for configuration](/blog/yaml-vs-json-config/) covers the trade-offs.
+
+## How do I convert JSON5 or JSONC to strict JSON?
+
+The reliable way is to parse with the matching library and write the result back out with a standard serializer, which removes comments, quotes keys and drops trailing commas:
+
+```js
+const JSON5 = require('json5');
+
+const source = `{
+  // retries before giving up
+  retries: 3,
+  timeout: .5,
+}`;
+
+console.log(JSON.stringify(JSON5.parse(source), null, 2));
+```
+
+```text
+{
+  "retries": 3,
+  "timeout": 0.5
+}
+```
+
+Then check the output with a strict validator before you ship it. Watch for the values JSON cannot represent, `Infinity` and `NaN`, which become `null`. Removing comments with a regular expression is tempting but fragile, because `//` can legitimately appear inside strings such as URLs.
+
+## Can I add comments to plain JSON another way?
+
+If a file must stay strict JSON, some projects add documentation as ordinary data, for example a `"//"` or `"_comment"` key:
+
+```json
+{
+  "_comment": "Timeout is in seconds; keep it below the load balancer limit",
+  "timeout": 30
+}
+```
+
+This is valid JSON, so every parser accepts it. The downsides are real, though: the "comment" becomes part of the data, programs that validate keys may reject it, and a JSON object should not contain the same key twice, so you cannot use `"//"` for several comments in one object. Use it sparingly, and prefer documentation outside the file, such as a README or a JSON Schema with descriptions, when you can.
+
+## Why does my editor accept the file but my build fails?
+
+Usually because the editor treats the file as JSONC while the build uses a strict JSON parser. The editor's syntax highlighting is not a promise about other tools. Paste the file into the [JSON Validator](/tools/developer/json-validator/) to see it exactly as a strict parser would: it reports the first comment, trailing comma or single quote by line and column, so you can fix it in seconds.
+
+Once the file is valid, the [JSON Formatter](/tools/developer/json-formatter/) gives it consistent indentation for a clean diff.

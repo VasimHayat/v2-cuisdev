@@ -1,0 +1,174 @@
+---
+title: "HEX, RGB, HSL and OKLCH: CSS color formats explained"
+description: "CSS color formats explained: HEX, RGB, HSL, HWB, LAB and OKLCH in CSS compared, why OKLCH gives even palettes, and how to use it with safe fallbacks."
+publishDate: 2026-11-12
+author: Cuisdev Team
+tags: [CSS, Design]
+tools: [color-converter, color-picker-from-image]
+---
+
+CSS can describe the same color in several formats. HEX (`#3b82f6`) and `rgb()` give the red, green and blue amounts. `hsl()` gives hue, saturation and lightness, which is easier to adjust by hand. `oklch()` gives lightness, chroma and hue in a perceptually uniform space. That means equal steps in its numbers look like equal steps to your eye, which makes OKLCH the best format for building palettes and themes today.
+
+This guide compares every CSS color format with the same example color, shows where HSL misleads you, and explains how to adopt OKLCH safely. To convert between any of them instantly, paste a color into the [Color Converter](/tools/converters/color-converter/).
+
+## One color in every format
+
+Here is a medium blue, `#3b82f6`, written each way:
+
+| Format | Value | What the numbers mean |
+| --- | --- | --- |
+| HEX | `#3b82f6` | Red, green, blue as two hex digits each (00 to ff) |
+| RGB | `rgb(59 130 246)` | Red, green, blue from 0 to 255 |
+| HSL | `hsl(217.2 91.2% 59.8%)` | Hue angle, saturation, lightness |
+| OKLCH | `oklch(62.3% 0.188 259.8)` | Perceived lightness, chroma, hue angle |
+
+All four produce exactly the same pixels on screen. They differ in how easy they are to reason about and edit.
+
+## HEX colors
+
+HEX is the oldest and most common format. Each pair of hex digits is one channel from 0 to 255: `#3b82f6` means red `3b` (59), green `82` (130), blue `f6` (246). CSS also accepts short forms: `#fff` expands to `#ffffff`, and an extra pair adds transparency, so `#3b82f680` is the same blue at about 50% opacity.
+
+HEX is compact and every design tool exports it. Its weakness is that the numbers say nothing about how the color looks. You cannot tell how to make `#3b82f6` a bit lighter by looking at it.
+
+## RGB colors
+
+`rgb()` is the same information in decimal. Modern CSS uses spaces and a slash for alpha:
+
+```css
+.button {
+  color: rgb(59 130 246);
+  background: rgb(59 130 246 / 0.15);
+}
+```
+
+The older comma syntax, `rgba(59, 130, 246, 0.15)`, still works everywhere. RGB is handy when you compute colors in JavaScript, but like HEX it describes light emitted by a screen, not what a person perceives.
+
+## HSL colors
+
+`hsl()` was designed to be human-friendly. You pick a hue as an angle on a color wheel (0 is red, 120 green, 240 blue), then a saturation and a lightness percentage:
+
+```css
+:root {
+  --brand: hsl(217 91% 60%);
+  --brand-light: hsl(217 91% 75%);
+}
+```
+
+Adjusting lightness by changing one number is a big improvement over HEX. The problem is that HSL's "lightness" is not how light a color looks.
+
+### Why HSL lightness lies
+
+Pure yellow and pure blue both have exactly 50% lightness in HSL: `hsl(60 100% 50%)` and `hsl(240 100% 50%)`. Put them side by side and yellow looks far brighter. OKLCH measures that difference:
+
+| Color | HSL lightness | OKLCH lightness |
+| --- | --- | --- |
+| Yellow `#ffff00` | 50% | 96.8% |
+| Blue `#0000ff` | 50% | 45.2% |
+
+So a palette built in HSL with the same lightness for every hue looks uneven. Some swatches glare and others look muddy. Text placed on them gets very different contrast, which is a real accessibility problem.
+
+## HWB, LAB and LCH
+
+CSS Color Level 4 added more formats:
+
+- **`hwb()`** describes a hue plus how much white and black to mix in. It mirrors how painters think about tints and shades.
+- **`lab()` and `lch()`** use the CIE LAB color space, designed to match human perception. LCH is LAB in polar form: lightness, chroma and hue.
+- **`oklab()` and `oklch()`** use OKLab, a newer space published by Björn Ottosson in 2020. It fixes known flaws of CIE LAB, especially hue shifts in blues, and has become the recommended choice for UI work.
+
+## What is OKLCH?
+
+OKLCH has three channels:
+
+- **L**, lightness, from 0% (black) to 100% (white), matched to perception.
+- **C**, chroma, how colorful the color is. 0 is gray. For typical screen colors it stays below about 0.37.
+- **H**, hue, an angle from 0 to 360.
+
+```css
+:root {
+  --blue-500: oklch(62.3% 0.188 259.8);
+  --blue-600: oklch(55% 0.188 259.8);
+  --green-500: oklch(62.3% 0.17 150);
+}
+```
+
+Because lightness is perceptual, changing only L gives a believable lighter or darker shade, and two colors with the same L look equally light even when their hues differ. That is exactly what you want for design tokens, dark mode themes and color scales.
+
+### Generate a palette by changing one number
+
+A ten-step scale in OKLCH can keep hue and chroma fixed and step lightness evenly, for example from 97% down to 25%. The result looks evenly spaced, which takes careful hand-tuning to achieve in HSL. Many modern design systems build their scales this way.
+
+## OKLCH and wide-gamut screens
+
+Many current phones and laptops display the Display P3 gamut, which holds more saturated colors than the older sRGB standard that HEX and RGB are limited to. OKLCH can describe those colors. Raise the chroma beyond what sRGB can show and a P3 screen displays it, while an sRGB screen gets the nearest color it can show, a process called gamut mapping.
+
+That is a feature, but it means an OKLCH value may not look identical on every screen. If a color must match exactly everywhere, such as a logo, keep its chroma within the sRGB range. The Color Converter flags out-of-gamut values and shows the mapped fallback.
+
+## How do you convert HEX to OKLCH?
+
+The conversion runs through linear light and a pair of matrix multiplications. This Python version follows the published OKLab definition and reproduces the CSS specification's value for pure red:
+
+```python
+import math
+
+def srgb_to_linear(c):
+    c = c / 255
+    return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
+
+def hex_to_oklch(hex_color):
+    r, g, b = (int(hex_color[i:i + 2], 16) for i in (1, 3, 5))
+    r, g, b = map(srgb_to_linear, (r, g, b))
+    l = 0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b
+    m = 0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b
+    s = 0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b
+    l, m, s = (x ** (1 / 3) for x in (l, m, s))
+    L = 0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s
+    a = 1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s
+    bb = 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s
+    C = math.hypot(a, bb)
+    H = math.degrees(math.atan2(bb, a)) % 360
+    return f"oklch({L * 100:.1f}% {C:.3f} {H:.1f})"
+
+for color in ("#3b82f6", "#ffff00", "#0000ff", "#ff0000"):
+    print(color, hex_to_oklch(color))
+```
+
+```text
+#3b82f6 oklch(62.3% 0.188 259.8)
+#ffff00 oklch(96.8% 0.211 109.8)
+#0000ff oklch(45.2% 0.313 264.1)
+#ff0000 oklch(62.8% 0.258 29.2)
+```
+
+## Using OKLCH safely today
+
+OKLCH is supported in all current major browsers. If you need to support older browsers, declare a HEX or RGB fallback first. Browsers that do not understand the second declaration ignore it:
+
+```css
+.badge {
+  background: #3b82f6;
+  background: oklch(62.3% 0.188 259.8);
+}
+```
+
+Or scope newer colors behind a feature query:
+
+```css
+@supports (color: oklch(0% 0 0)) {
+  :root {
+    --brand: oklch(62.3% 0.188 259.8);
+  }
+}
+```
+
+Two newer CSS features pair especially well with OKLCH. `color-mix(in oklch, var(--brand), white 30%)` mixes colors in a perceptual space, avoiding the gray midpoints that sRGB mixing produces. Relative color syntax, such as `oklch(from var(--brand) calc(l + 0.1) c h)`, derives a lighter shade directly from a variable. Check support for these against your audience before relying on them.
+
+## Which CSS color format should you use?
+
+- **HEX** for single fixed colors copied from a design file, and anywhere compatibility matters most.
+- **RGB** when JavaScript computes channel values.
+- **HSL** for quick manual tweaks when perfect evenness does not matter.
+- **OKLCH** for design tokens, palettes, themes and accessible contrast, which covers most new design system work.
+
+## Find colors, then convert them
+
+To start from a photo or a screenshot, sample colors with the [Color Picker from Image](/tools/image/color-picker-from-image/), then paste them into the [Color Converter](/tools/converters/color-converter/). It accepts any CSS syntax, shows every format at once, flags out-of-gamut values, checks contrast against a background, and generates OKLCH tints, shades and harmonies you can copy straight into your stylesheet.

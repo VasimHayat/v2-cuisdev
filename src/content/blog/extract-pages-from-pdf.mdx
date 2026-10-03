@@ -1,0 +1,134 @@
+---
+title: How to extract pages from a PDF on Windows, Mac and online
+description: Extract pages from a PDF on Windows, Mac, the command line or your browser, and learn which methods keep text, links and quality intact.
+publishDate: 2026-11-17
+author: Cuisdev Team
+tags: [PDF, Productivity]
+tools: [pdf-split, pdf-page-reorder]
+---
+
+To extract pages from a PDF, you either copy the pages you want into a new document or "print" just those pages to a new PDF. Copying is the better choice because the pages stay exactly as they were, while printing redraws them and can lose links, bookmarks and form fields. The quickest way to copy pages without installing anything is the free [PDF Split](/tools/pdf/pdf-split/) tool, which works in your browser and never uploads the file.
+
+This guide covers every common method, explains the trade-offs, and shows how to do it in code when you need to automate it.
+
+## What does "extract pages" actually mean?
+
+A PDF is a collection of page objects plus shared resources such as fonts and images. Extracting pages means building a new file that contains only some of those page objects, along with the resources they use. Nothing on the page has to be redrawn: the text stays text, the vector graphics stay sharp and images keep their original compression.
+
+There are three related jobs people often mix up:
+
+| Job | What you get | Typical use |
+| --- | --- | --- |
+| Extract | One new PDF with the pages you chose | Send pages 3 to 5 of a contract |
+| Split | Several PDFs, one per range or per page | Break a scanned batch into separate invoices |
+| Delete | The same PDF without some pages | Remove a blank page or a cover sheet |
+
+Most tools handle all three, but knowing which one you need helps you pick the fastest method.
+
+## How do I extract pages from a PDF in my browser?
+
+Open [PDF Split](/tools/pdf/pdf-split/), drop the file in, and type the pages you want in the custom ranges box, for example `3-5, 8`. You get a new PDF with those four pages. You can also click thumbnails to select pages instead of typing ranges, or produce one file per page.
+
+Because the work happens on your device, this is a good fit for documents you would rather not upload: payslips, medical letters, signed contracts. It also works the same on Windows, Mac, Linux and Chromebooks.
+
+## How do I extract pages from a PDF on Windows?
+
+Windows has no built-in PDF editor, but every Windows PC can print to a PDF, and printing a page range is effectively extraction.
+
+1. Open the PDF in Microsoft Edge or Chrome.
+2. Press Ctrl+P to open the print dialog.
+3. Set the printer or destination to "Microsoft Print to PDF" (or "Save as PDF" in Chrome).
+4. Under Pages, choose a custom range and enter something like `3-5, 8`.
+5. Click Print or Save and choose a file name.
+
+This is convenient, but remember it redraws the pages. The result usually keeps text selectable, yet internal links, bookmarks, form fields, comments and accessibility tags are commonly dropped. For a quick handout that is fine. For a legal document someone will fill in or sign, copy the pages instead.
+
+## How do I extract pages from a PDF on a Mac?
+
+Preview, which comes with macOS, copies pages rather than printing them:
+
+1. Open the PDF in Preview.
+2. Choose View, then Thumbnails, to show the page sidebar.
+3. Select the pages you want. Hold Command to pick individual pages or Shift to pick a run.
+4. Drag the selected thumbnails onto the desktop or into a Finder window.
+
+macOS creates a new PDF containing just those pages. If you prefer the print route, File, then Print, lets you set a page range and choose "Save as PDF" from the PDF menu in the bottom-left corner, with the same caveats as on Windows.
+
+## Can I extract pages from the command line?
+
+Yes. Two long-standing open-source tools do this well. With qpdf:
+
+```bash
+qpdf input.pdf --pages . 3-5,8 -- extract.pdf
+```
+
+The `.` means "the input file" and the ranges follow it. With pdftk the equivalent is:
+
+```bash
+pdftk input.pdf cat 3-5 8 output extract.pdf
+```
+
+Both copy page objects, so the output is identical in quality to the original pages. They are ideal for scripts that process hundreds of files.
+
+## How do I extract pages from a PDF in code?
+
+In JavaScript, the open-source pdf-lib library runs in Node and in browsers. This script copies pages 3 to 5 and page 8 of a ten-page report into a new file:
+
+```js
+const { PDFDocument } = require('pdf-lib');
+const fs = require('fs');
+
+(async () => {
+  const input = await PDFDocument.load(fs.readFileSync('report.pdf'));
+  const output = await PDFDocument.create();
+
+  const wanted = [2, 3, 4, 7]; // pages 3-5 and 8, counted from zero
+  const pages = await output.copyPages(input, wanted);
+  pages.forEach((page) => output.addPage(page));
+
+  fs.writeFileSync('extract.pdf', await output.save());
+  console.log('input pages', input.getPageCount(), 'output pages', output.getPageCount());
+})();
+```
+
+Running it prints:
+
+```text
+input pages 10 output pages 4
+```
+
+The one detail that trips people up is the numbering. People count pages from 1, while most libraries count from 0, so page 3 is index 2. Converting a range string such as `3-5, 8` into indexes is a small function, but it is worth unit testing, especially for ranges that run to the end like `8-`.
+
+## Which method should I use?
+
+| Method | Keeps links and form fields | Needs install | Works offline | Best for |
+| --- | --- | --- | --- | --- |
+| Browser tool (PDF Split) | Yes, pages are copied | No | Yes, after the page loads | Quick, private, any device |
+| Print to PDF (Windows, Chrome) | Often not | No | Yes | A simple handout |
+| Preview drag and drop (Mac) | Yes, pages are copied | No | Yes | Mac users |
+| qpdf or pdftk | Yes | Yes | Yes | Scripts and batches |
+| pdf-lib in code | Yes | A library | Yes | Building it into an app |
+
+If you are unsure, copy rather than print. It is never worse, and it is often noticeably better.
+
+## Common problems and fixes
+
+### The PDF is password protected
+
+A PDF that asks for a password when you open it is encrypted, and its pages cannot be copied without that password. Open it with the password in a PDF reader and use print to PDF, or ask the sender for an unprotected copy. Files that open freely but restrict editing often still allow page extraction in desktop tools.
+
+### The extracted file is almost as big as the original
+
+Pages share resources. If every page uses the same embedded fonts or a large background image, a four-page extract still has to carry those resources. That is expected. If size matters, run the result through a compressor afterwards.
+
+### The page order is wrong
+
+Ranges are usually output in the order you type them, so `8, 3-5` puts page 8 first. If you need to rearrange pages, rotate a sideways scan or remove a blank page before sharing, the [PDF Page Reorder](/tools/pdf/pdf-page-reorder/) tool lets you drag pages into place. Our guide on how to [rearrange, rotate and delete PDF pages](/blog/rearrange-pdf-pages/) covers that workflow in detail.
+
+### Scanned pages come out sideways
+
+The rotation is stored per page, and extraction keeps it. Rotate the pages after extracting, or before, in a tool that writes the rotation into the file rather than just displaying it.
+
+## Do it in your browser
+
+For one-off jobs, the fastest route is [PDF Split](/tools/pdf/pdf-split/): drop the PDF in, enter your page ranges or click the pages you want, and download the result. The pages are copied rather than redrawn, so text stays selectable and links keep working, and the file never leaves your computer.

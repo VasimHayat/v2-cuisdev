@@ -1,0 +1,166 @@
+---
+title: "JSON formatting conventions: indentation, key order, newlines"
+description: "JSON formatting best practices: two-space indentation, stable key order, UTF-8 without a BOM, LF line endings, a final newline and safe numbers."
+publishDate: 2027-03-18
+author: Cuisdev Team
+tags: [JSON, Developer]
+tools: [json-formatter, json-validator]
+---
+
+Good JSON formatting comes down to a few conventions: indent with two spaces, keep keys in a stable order (sorted, for config and test fixtures), save files as UTF-8 without a byte order mark, use LF line endings with a final newline, and keep the document strictly valid with no comments or trailing commas. None of these change what the data means. They make files easier to read, review and diff.
+
+To apply the indentation and key sorting to a file right now, paste it into the [JSON Formatter](/tools/developer/json-formatter/). This guide explains each convention and how to enforce it in code and in your repository.
+
+## Which indentation should JSON use?
+
+Two spaces is the most common choice for JSON, and it is the default in much of the JavaScript ecosystem, including Prettier and `npm`'s own `package.json` files. Four spaces is common in Python projects, partly because `python -m json.tool` indents with four spaces by default. Tabs are rare in JSON but perfectly valid.
+
+| Style | Pros | Cons |
+| --- | --- | --- |
+| 2 spaces | Compact, the most widely used default | Deep nesting can be harder to follow |
+| 4 spaces | Very clear nesting | Wide lines in deeply nested data |
+| Tabs | Each reader picks their own width | Displays inconsistently across tools |
+| None (minified) | Smallest raw size | Unreadable, and a whole file diffs as one line |
+
+The best choice is the one your project already uses. Consistency matters far more than the number of spaces. For data sent between machines, indentation is usually unnecessary; our analysis of [whether minifying JSON makes APIs faster](/blog/minify-json-api-performance/) shows how little it matters once responses are compressed.
+
+## Does key order matter in JSON?
+
+Not to the data. The JSON standard, RFC 8259, defines an object as an unordered collection of name and value pairs, so parsers are not required to preserve order. It does matter to people and to version control:
+
+- **Readable order.** In a config file, a logical order such as name, version, then settings is easier to scan than an arbitrary one.
+- **Stable order.** If a program rewrites a file and the key order changes each time, every save produces a noisy diff even when no values changed.
+
+For files written by programs, such as generated config, snapshots and test fixtures, sorting keys alphabetically is the simplest way to make output stable. For files written by hand, keep whatever order explains the data best and leave it alone.
+
+### How do you sort keys in code?
+
+JavaScript has no built-in option for sorted output, but a small recursive function does it:
+
+```js
+function sortKeys(value) {
+  if (Array.isArray(value)) return value.map(sortKeys);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.keys(value).sort().map((key) => [key, sortKeys(value[key])]),
+    );
+  }
+  return value;
+}
+
+const config = { version: 2, name: 'api', db: { port: 5432, host: 'localhost' } };
+process.stdout.write(JSON.stringify(sortKeys(config), null, 2) + '\n');
+```
+
+Output:
+
+```json
+{
+  "db": {
+    "host": "localhost",
+    "port": 5432
+  },
+  "name": "api",
+  "version": 2
+}
+```
+
+Arrays are left in their original order, which is correct: unlike object keys, array order is part of the data.
+
+Python's standard library has sorting built in:
+
+```python
+import json
+config = {'version': 2, 'name': 'api', 'db': {'port': 5432, 'host': 'localhost'}}
+print(json.dumps(config, indent=2, sort_keys=True, ensure_ascii=False))
+```
+
+From the command line, both of these sort keys and reindent a file:
+
+```bash
+python -m json.tool --sort-keys --indent 2 data.json
+jq -S . data.json
+```
+
+## Which encoding and line endings should JSON files use?
+
+### UTF-8, without a byte order mark
+
+RFC 8259 requires JSON exchanged between systems to be encoded in UTF-8, and says implementations must not add a byte order mark to the start of JSON text sent over a network. A BOM at the start of a file is a common cause of "unexpected token" errors from strict parsers, often from files saved by older Windows editors.
+
+You can keep non-ASCII text as real characters instead of escapes. Python escapes them by default:
+
+```python
+import json
+print(json.dumps({'name': 'café'}))
+print(json.dumps({'name': 'café'}, ensure_ascii=False))
+```
+
+The first prints `{"name": "café"}` and the second writes the `é` directly. Both are valid JSON with the same meaning, but the second is far easier to read and review.
+
+### LF line endings and a final newline
+
+Use LF line endings in repositories and end every file with a newline. Many command-line tools expect a final newline, and without one, adding a line at the end of the file shows up in diffs as a change to the previous last line too.
+
+An `.editorconfig` file tells most editors to follow these rules automatically:
+
+```ini
+[*.json]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+indent_style = space
+indent_size = 2
+```
+
+To stop Git converting line endings on Windows checkouts, add this to `.gitattributes`:
+
+```text
+*.json text eol=lf
+```
+
+## Should JSON contain comments or trailing commas?
+
+Not if it is meant to be standard JSON. Strict parsers reject both, and the file stops being portable. If you need comments in configuration, use a format designed for them: JSONC (supported by tools such as TypeScript and VS Code for their own config files), JSON5, or YAML. Our comparison of [JSON, JSON5 and JSONC](/blog/json-vs-json5-jsonc/) explains what each allows.
+
+Also keep keys unique within each object. RFC 8259 says names should be unique, and when they are not, different parsers disagree about which value wins.
+
+## How should numbers, dates and missing values be written?
+
+These are not formatting in the whitespace sense, but they are the conventions that most often cause bugs.
+
+### Large integers
+
+JavaScript represents every JSON number as a 64-bit floating-point value, so integers above 9,007,199,254,740,991 (`Number.MAX_SAFE_INTEGER`) lose precision silently:
+
+```js
+JSON.parse('{"id":9007199254740993}').id;   // 9007199254740992
+JSON.parse('{"id":"9007199254740993"}').id; // "9007199254740993"
+```
+
+The first value comes back off by one. If IDs or amounts can be that large, as database IDs and some financial values can, send them as strings.
+
+### Dates
+
+JSON has no date type. Use ISO 8601 strings in UTC, such as `"2027-03-18T09:30:00Z"`. They sort correctly as text, are unambiguous across time zones, and every language can parse them.
+
+### Null versus missing keys
+
+Pick one meaning and document it. A common convention: a key with `null` means "known to have no value", while an absent key means "not provided". Mixing the two without a rule leads to bugs in clients that check one but not the other.
+
+### Key naming
+
+Use one naming style for keys throughout an API, usually camelCase in JavaScript-heavy stacks or snake_case in Python and Ruby ones. Our guide to [naming conventions](/blog/naming-conventions-camel-snake-kebab/) covers the trade-offs.
+
+## How do you enforce these conventions?
+
+Write them down once, then let tools apply them:
+
+1. **Format on save** with Prettier or your editor's JSON formatter, configured for your indentation.
+2. **Add `.editorconfig`** for encoding, line endings and the final newline.
+3. **Check in CI**, for example with `prettier --check "**/*.json"`, so unformatted files fail the build.
+4. **Validate before committing** generated files. Paste suspicious output into the [JSON Validator](/tools/developer/json-validator/) to find the exact line and column of any error.
+
+## Do it in your browser
+
+To clean up a single file, paste it into the [JSON Formatter](/tools/developer/json-formatter/). It reindents with your choice of two spaces, four spaces or tabs, can sort keys alphabetically at every level for stable diffs, and points to the exact position of any syntax error. It runs entirely in your browser, so private config and data never leave your machine.

@@ -1,0 +1,147 @@
+---
+title: "How to calculate percentages: change, increase and points"
+description: "How to calculate percentage increase and decrease, reverse a percentage, and tell percent from percentage points, with worked examples and formulas."
+publishDate: 2026-10-15
+author: Cuisdev Team
+tags: [Math, Calculators]
+tools: [percentage-calculator, compound-interest-calculator]
+---
+
+To calculate a percentage increase, subtract the old value from the new value, divide by the old value and multiply by 100. A price that rises from 80 to 100 has increased by (100 − 80) ÷ 80 × 100 = 25%. The same formula gives a negative number for a decrease, so a fall from 100 to 80 is −20%.
+
+That one formula answers most everyday questions, but percentages hide a few traps: the base you divide by, increases that do not cancel decreases, and the difference between percent and percentage points. This guide walks through each with numbers you can check, and the [Percentage Calculator](/tools/calculators/percentage-calculator/) does any of them instantly if you would rather not do the arithmetic.
+
+## What is a percentage, really?
+
+A percentage is a fraction with 100 as the denominator. "15%" means 15 out of 100, or 0.15. Every percentage calculation is one of three questions about the same relationship:
+
+| You know | You want | Formula | Example |
+| --- | --- | --- | --- |
+| The percent and the whole | The part | part = percent ÷ 100 × whole | 15% of 240 = 36 |
+| The part and the whole | The percent | percent = part ÷ whole × 100 | 36 is 15% of 240 |
+| The part and the percent | The whole | whole = part ÷ (percent ÷ 100) | 36 is 15% of 240 |
+
+If you can name which two of the three numbers you have, you can always find the third.
+
+## How do you calculate a percentage increase?
+
+Use the change divided by the starting value:
+
+```
+percent change = (new − old) ÷ old × 100
+```
+
+The starting value is the base. That matters, because the same gap gives different percentages depending on which end you start from.
+
+### Worked example: a salary rise
+
+Your salary goes from 40,000 to 46,000.
+
+1. Change: 46,000 − 40,000 = 6,000
+2. Divide by the old value: 6,000 ÷ 40,000 = 0.15
+3. Multiply by 100: 15%
+
+Your salary rose by 15%.
+
+## How do you calculate a percentage decrease?
+
+The same formula works. A negative result is a decrease. If a subscription drops from 100 to 80:
+
+```
+(80 − 100) ÷ 100 × 100 = −20%
+```
+
+Notice that going from 80 up to 100 is +25%, but going from 100 down to 80 is −20%. The 20-point gap is the same, but the base is different. This asymmetry is the most common source of percentage confusion.
+
+## Why don't a 10% rise and a 10% fall cancel out?
+
+Because the second percentage applies to a different base. Start with 100:
+
+- Up 10%: 100 × 1.10 = 110
+- Down 10%: 110 × 0.90 = 99
+
+You end 1% below where you started. The same effect works in your favor with gains that build on gains. Two successive 15% increases give 100 × 1.15 × 1.15 = 132.25, which is a 32.25% total increase, not 30%. That compounding effect is the whole idea behind savings growth, and the [Compound Interest Calculator](/tools/calculators/compound-interest-calculator/) shows how it plays out over years.
+
+It also explains a rule investors learn the hard way: after a 50% fall, you need a 100% gain to get back to the start. Halving 100 gives 50, and getting from 50 back to 100 is (100 − 50) ÷ 50 × 100 = 100%.
+
+## How do you reverse a percentage?
+
+Say a price is 138 after a 15% increase and you want the original. The tempting mistake is to subtract 15% of 138. That gives 117.30, which is wrong because the 15% was calculated on the original price, not on 138.
+
+Divide by the growth factor instead:
+
+```
+original = final ÷ (1 + percent ÷ 100)
+original = 138 ÷ 1.15 = 120
+```
+
+Check it: 120 × 1.15 = 138. The same idea removes sales tax or VAT from a gross price. To strip 20% VAT from 60, divide by 1.20 to get 50.
+
+For a decrease, divide by (1 − percent ÷ 100). If something costs 68 after a 15% discount, the original price was 68 ÷ 0.85 = 80.
+
+## What are percentage points?
+
+Percentage points measure the gap between two percentages. Percent measures the relative change between them. They are easy to mix up in news headlines and reports.
+
+If an interest rate goes from 4% to 5%:
+
+- It rose by **1 percentage point** (5 − 4).
+- It rose by **25 percent** ((5 − 4) ÷ 4 × 100).
+
+Both statements are true, and they describe the same move. Use percentage points when you subtract one rate from another. Use percent when you describe how much bigger the new rate is relative to the old one. A report that says unemployment "rose 1%" when it went from 4% to 5% is ambiguous at best.
+
+## Percentage change or percentage difference?
+
+Percentage change has a direction: an old value and a new value. Percentage difference compares two values where neither is the starting point, such as two product prices or two measurements. It divides by the average of the two so the answer is the same whichever way round you put them:
+
+```
+percent difference = |a − b| ÷ ((a + b) ÷ 2) × 100
+```
+
+For 80 and 100, that is 20 ÷ 90 × 100 = 22.22%. Use it when you compare rather than track a change over time.
+
+## How to calculate percentages in Excel and Google Sheets
+
+Spreadsheets do not need a special function. Put the old value in A2 and the new value in B2:
+
+| Task | Formula |
+| --- | --- |
+| Percentage change | `=(B2-A2)/A2` then format the cell as Percent |
+| X% of a value | `=A2*15%` |
+| What percent A2 is of B2 | `=A2/B2` formatted as Percent |
+| Increase by 15% | `=A2*(1+15%)` |
+| Reverse a 15% increase | `=B2/(1+15%)` |
+
+Formatting a cell as Percent multiplies the display by 100, so do not multiply by 100 in the formula as well, or 25% will show as 2500%.
+
+## How to calculate percentages in code
+
+The same formulas in JavaScript, with rounding to two decimal places to hide floating-point noise:
+
+```js
+const round2 = (x) => Math.round(x * 100) / 100;
+const percentChange = (from, to) => round2(((to - from) / from) * 100);
+const percentOf = (pct, value) => round2((pct / 100) * value);
+const reverseIncrease = (final, pct) => round2(final / (1 + pct / 100));
+
+console.log(percentChange(80, 100)); // 25
+console.log(percentChange(100, 80)); // -20
+console.log(percentOf(15, 240)); // 36
+console.log(reverseIncrease(138, 15)); // 120
+```
+
+Without the rounding, `138 / 1.15` prints `120.00000000000001`, because binary floating point cannot store 1.15 exactly. Round for display, and keep full precision for any further calculation.
+
+## Common mistakes to avoid
+
+- **Dividing by the wrong base.** Percentage change always divides by the old value. Swapping old and new turns +25% into +20%.
+- **Adding percentages that apply in sequence.** Two 10% discounts are not a 20% discount. 100 × 0.9 × 0.9 = 81, so the total discount is 19%.
+- **Reversing by subtraction.** Removing a 15% increase means dividing by 1.15, not subtracting 15%.
+- **Mixing percent and percentage points.** A rate going from 2% to 3% is a 1-point rise and a 50% rise.
+- **Dividing by zero.** Percentage change from zero is undefined. If a metric goes from 0 to 5, say "from 0 to 5", not "an infinite increase".
+
+## Do it in your browser
+
+The [Percentage Calculator](/tools/calculators/percentage-calculator/) has each of these questions as a short sentence with boxes to fill in: what is X% of Y, what percent X is of Y, percentage change, increase or decrease by a percent, and percentage difference. It shows the working under each answer, so you can see which base was used and copy the result. It runs entirely in your browser.
+
+If the question is how a percentage grows over many years, rather than a single change, switch to the [Compound Interest Calculator](/tools/calculators/compound-interest-calculator/), which applies a rate period after period and charts the result.

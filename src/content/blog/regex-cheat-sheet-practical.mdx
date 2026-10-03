@@ -1,0 +1,178 @@
+---
+title: "Regex cheat sheet: 25 patterns you will actually use"
+description: "A practical regex cheat sheet: the syntax you need plus 25 tested common regex patterns for emails, dates, URLs, numbers, IPs and cleaning up text."
+publishDate: 2026-10-27
+author: Cuisdev Team
+tags: [Regex, Developer]
+tools: [regex-tester, find-and-replace]
+---
+
+This regex cheat sheet has two parts: the handful of syntax rules that cover nearly every pattern, and 25 ready-made patterns for things you match every week, such as dates, emails, URLs and numbers. Every pattern below was tested in JavaScript against both matching and non-matching examples. Paste any of them into the [Regex Tester](/tools/developer/regex-tester/) to see the matches highlighted against your own text.
+
+## Regex syntax in one table
+
+| Syntax | Meaning | Example | Matches |
+| --- | --- | --- | --- |
+| `.` | Any character except a newline | `a.c` | abc, a-c |
+| `\d` `\w` `\s` | Digit, word character, whitespace | `\d\d` | 42 |
+| `\D` `\W` `\S` | The opposite of each | `\S+` | hello |
+| `[abc]` | One of the listed characters | `[aeiou]` | e |
+| `[^abc]` | Any character not listed | `[^0-9]` | x |
+| `*` `+` `?` | Zero or more, one or more, zero or one | `colou?r` | color, colour |
+| `{3}` `{2,5}` | Exactly 3, between 2 and 5 | `\d{4}` | 2026 |
+| `^` `$` | Start and end of the string (or line with `m`) | `^Hi` | Hi there |
+| `\b` | Word boundary | `\bcat\b` | cat, not concat |
+| `( )` | Capture group | `(\d+)px` | captures 12 in 12px |
+| `(?: )` | Group without capturing | `(?:ab)+` | abab |
+| `(?<name> )` | Named group (JavaScript) | `(?<year>\d{4})` | year = 2026 |
+| `(?= )` `(?! )` | Lookahead, negative lookahead | `\d+(?=px)` | 12 in 12px |
+
+Quantifiers are greedy by default and take as much as they can. Add `?` to make them lazy: `<.+?>` stops at the first `>`, while `<.+>` runs to the last one.
+
+### Flags
+
+- `i` ignores case.
+- `g` finds every match instead of the first.
+- `m` makes `^` and `$` match at each line.
+- `s` lets `.` match newlines.
+- `u` enables full Unicode handling.
+
+## Validation patterns
+
+These patterns check a whole string, so they are anchored with `^` and `$`.
+
+### 1 to 4: email, URL, date, time
+
+```text
+Email (pragmatic):   /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+URL (http or https): /^https?:\/\/[^\s/$.?#].[^\s]*$/i
+ISO date:            /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/
+24-hour time:        /^([01]\d|2[0-3]):[0-5]\d$/
+```
+
+The email pattern checks the shape: something, an @, a domain with a dot. It accepts `a.b+tag@sub.example.co.uk` and rejects `ada@example`. Fully validating email syntax with a regex is notoriously complicated, and a valid-looking address can still bounce, so the only real test is sending a confirmation message.
+
+The ISO date pattern rejects month 13 and day 32 but not 31 February. Check real calendar validity in code after the regex passes.
+
+### 5 to 7: IP address, hex color, UUID
+
+```text
+IPv4 address: /^((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)$/
+Hex color:    /^#([0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i
+UUID:         /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+```
+
+The IPv4 pattern restricts each part to 0 to 255 and rejects leading zeros such as `01.2.3.4`. The hex color pattern accepts the 3, 4, 6 and 8 digit forms CSS allows.
+
+### 8 to 11: numbers and postal codes
+
+```text
+Whole number:            /^-?\d+$/
+Decimal number:          /^-?\d+(\.\d+)?$/
+Thousands with commas:   /^\d{1,3}(,\d{3})*(\.\d+)?$/
+US ZIP code (+4 option): /^\d{5}(-\d{4})?$/
+```
+
+The thousands pattern accepts `12,345,678.90` and rejects `1234,567` and `1,23`. Strip the commas before converting the string to a number.
+
+### 12 to 15: phone, username, password policy, slug
+
+```text
+Phone (E.164):     /^\+[1-9]\d{7,14}$/
+Username:          /^[a-z0-9_]{3,16}$/i
+Password policy:   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{12,}$/
+URL slug:          /^[a-z0-9]+(-[a-z0-9]+)*$/
+```
+
+E.164 is the international phone format: a plus sign, a country code that does not start with zero, and up to 15 digits in total. Normalize user input (remove spaces, dashes and brackets) before testing it.
+
+The password pattern uses three lookaheads. Each `(?=.*X)` checks that X appears somewhere without consuming characters, and `.{12,}` then enforces the length. Length matters far more than character rules, so if you write a policy, put the weight there.
+
+## Search and extraction patterns
+
+These find things inside longer text, so they are not anchored. Use the `g` flag to get every match.
+
+### 16 to 20: file extension, whitespace, duplicates, tags
+
+```text
+File extension:      /\.([a-z0-9]+)$/i
+Trailing whitespace: /[ \t]+$/gm
+Blank lines:         /^\s*$/gm
+Duplicate word:      /\b(\w+)\s+\1\b/gi
+HTML tag:            /<\/?([a-z][a-z0-9]*)\b[^>]*>/gi
+```
+
+The duplicate word pattern uses a backreference: `\1` means "the same text captured by group 1". It catches `is is` and `The the`, a classic typo checker.
+
+The HTML tag pattern is fine for quick searches and cleanup. Do not use regular expressions to parse or sanitize real HTML. Use a parser, because HTML nesting and attribute quoting are beyond what a regex can handle reliably.
+
+### 21 to 25: strings, hashtags, versions, cards, links
+
+```text
+Double-quoted string: /"(?:[^"\\]|\\.)*"/g
+Hashtag:              /(?:^|\s)#([a-z0-9_]+)/gi
+Semantic version:     /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9a-z.-]+)?(\+[0-9a-z.-]+)?$/i
+Card number format:   /^(?:\d[ -]?){12,18}\d$/
+Markdown link:        /\[([^\]]+)\]\(([^)\s]+)\)/g
+```
+
+The quoted string pattern handles escaped quotes inside the string: `[^"\\]` matches any normal character and `\\.` matches a backslash followed by anything.
+
+The card pattern only checks the format: 13 to 19 digits with optional spaces or dashes. It does not check that the number is real. Use the Luhn checksum in code for that, and never log card numbers.
+
+## Using capture groups and replacements
+
+Groups do more than validate. They pull out parts of a match and let you rearrange them. In JavaScript:
+
+```js
+const m = '2026-10-27'.match(/^(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})$/);
+console.log(m.groups); // { year: '2026', month: '10', day: '27' }
+
+console.log('2026-10-27'.replace(/(\d{4})-(\d{2})-(\d{2})/, '$3/$2/$1')); // 27/10/2026
+```
+
+In a replacement, `$1` refers to the first group and `$<name>` to a named group. This is the basis of bulk cleanup in editors: reorder dates, swap first and last names, or wrap matches in markup. The [Find and Replace](/tools/text/find-and-replace/) tool applies regex replacements like this to a whole document, with several rules in order.
+
+## Regex flavors: what changes between languages
+
+The patterns above are written for JavaScript, and most also work unchanged in Python, Java, Go, PHP and .NET. The differences that bite most often:
+
+- **Named groups.** JavaScript and .NET use `(?<name>...)`. Python's `re` module uses `(?P<name>...)`.
+- **Lookbehind.** Supported in modern JavaScript, Python, Java and .NET, but not in Go's standard `regexp` package, which also lacks backreferences.
+- **Escaping in strings.** In most languages you write the pattern inside a string, so every backslash must be doubled: `"\\d+"`. Python's raw strings, `r"\d+"`, and JavaScript regex literals avoid that.
+- **Unicode.** `\w` matches only ASCII letters in JavaScript, even with the `u` flag. Use `\p{L}` with the `u` flag to match letters in any script.
+
+## Two bugs that catch everyone
+
+### Forgetting the anchors
+
+Without `^` and `$`, a pattern only has to match somewhere inside the string, not the whole string. That turns a validator into a search:
+
+```js
+const loose = /\d{4}-\d{2}-\d{2}/;
+const strict = /^\d{4}-\d{2}-\d{2}$/;
+
+console.log(loose.test('due 2026-10-27, maybe')); // true
+console.log(strict.test('due 2026-10-27, maybe')); // false
+```
+
+If you are checking that an entire input is valid, anchor both ends. If you are searching inside text, leave the anchors off.
+
+### Reusing a global regex with test()
+
+A regex with the `g` flag remembers where its last match ended, in its `lastIndex` property. Calling `test()` on the same string repeatedly then gives alternating results:
+
+```js
+const g = /\d+/g;
+console.log(g.test('a1'), g.test('a1'), g.test('a1')); // true false true
+```
+
+Drop the `g` flag when you only need a yes or no answer, or reset `lastIndex` to 0 before each call.
+
+## Avoiding slow patterns
+
+Nested quantifiers such as `(a+)+` or `(\w+\s?)*$` can take exponential time on input that almost matches. This is called catastrophic backtracking, and it has taken production services down. Keep groups specific, avoid stacking `+` and `*` on overlapping character classes, and test patterns against long, nearly matching strings before shipping them.
+
+## Do it in your browser
+
+The [Regex Tester](/tools/developer/regex-tester/) highlights every match as you type, lists each match with its capture groups, previews replacements and includes a built-in cheat sheet. It runs your pattern in a background worker with a time limit, so a catastrophic pattern shows a warning instead of freezing the page.

@@ -1,0 +1,157 @@
+---
+title: "YAML gotchas: the Norway problem, indentation and anchors"
+description: "The YAML Norway problem and other pitfalls explained: booleans, version numbers, octal, tabs and anchors, with the quoting rules that prevent them."
+publishDate: 2026-11-19
+author: Cuisdev Team
+tags: [YAML, DevOps]
+tools: [json-to-yaml, yaml-to-json]
+---
+
+The YAML "Norway problem" is the classic example of YAML guessing types for you: in a YAML 1.1 parser, the unquoted country code `NO` is read as the boolean `false`, so a list of countries silently loses Norway. The fix is simple once you know it: quote any value that should be a string but looks like something else. The rest of this guide covers the other places YAML guesses, why different tools disagree, and a quick way to see exactly what a parser will do with your file.
+
+## Why does YAML turn NO into false?
+
+YAML lets you write values without quotes, so the parser has to decide what type each plain value is. The rules for that decision changed between versions of the specification.
+
+- **YAML 1.1** treats `yes`, `no`, `on`, `off`, `y`, `n`, `true` and `false` (in several capitalizations) as booleans.
+- **YAML 1.2**, published in 2009, narrowed booleans to `true` and `false` only.
+
+The problem is that many widely used libraries still follow YAML 1.1 rules by default, so the same file means different things depending on which program reads it. Here is one document parsed both ways with the JavaScript `yaml` library, which supports both versions:
+
+```yaml
+countries:
+  - GB
+  - NO
+  - SE
+version: 1.10
+mode: 0755
+duration: 1:20
+zip: 01234
+empty: ~
+answer: yes
+```
+
+```text
+YAML 1.2: {"countries":["GB","NO","SE"],"version":1.1,"mode":755,"duration":"1:20","zip":1234,"empty":null,"answer":"yes"}
+YAML 1.1: {"countries":["GB",false,"SE"],"version":1.1,"mode":493,"duration":80,"zip":668,"empty":null,"answer":true}
+```
+
+Almost every line is a trap in at least one version. Let's go through them.
+
+## Which values does YAML misread?
+
+| Value written | YAML 1.1 reads it as | YAML 1.2 reads it as | What you probably meant |
+| --- | --- | --- | --- |
+| `NO`, `yes`, `off` | Boolean | String | String |
+| `1.10` | Float `1.1` | Float `1.1` | String "1.10" |
+| `0755` | Octal, so `493` | Integer `755` | Usually the string or octal |
+| `01234` | Octal, so `668` | Integer `1234` | String "01234" |
+| `1:20` | Sexagesimal, so `80` | String | String "1:20" |
+| `~` or nothing | Null | Null | Often an empty string |
+
+### Version numbers lose their trailing zeros
+
+`version: 1.10` is a float in every YAML version, and the float `1.10` is the same number as `1.1`. If your tool compares versions, release 1.10 suddenly looks older than 1.9. Always quote versions: `version: "1.10"`.
+
+### Leading zeros change the number
+
+Postal codes, product codes and phone extensions with leading zeros are the quiet killers. In YAML 1.1, `01234` is octal and becomes `668`. In YAML 1.2 it becomes `1234`. Neither is what you typed. Quote them.
+
+### Times become numbers
+
+In YAML 1.1, `1:20` is a base-60 number, which is why a duration or a time of day can turn into `80`. YAML 1.2 dropped this rule, but older parsers still apply it.
+
+### Empty values are null, not empty strings
+
+`key:` with nothing after it, or `key: ~`, is null. If your application expects an empty string, write `key: ""`.
+
+## How do I avoid the Norway problem for good?
+
+The reliable rule is short: **quote any string that could be mistaken for a boolean, number, date or null.** Quoting costs nothing and removes the ambiguity for every parser:
+
+```yaml
+country: "NO"
+version: "1.10"
+zip: "01234"
+```
+
+Parsing that gives `{"country":"NO","version":"1.10","zip":"01234"}` in both YAML versions.
+
+Two habits make this automatic:
+
+1. **Generate YAML from data instead of typing it.** A good serializer quotes ambiguous strings for you. That is exactly what the [JSON to YAML converter](/tools/converters/json-to-yaml/) does: give it JSON where `"NO"` is clearly a string, and the YAML it writes keeps the quotes.
+2. **Check what the parser actually sees.** Paste the YAML into the [YAML to JSON converter](/tools/converters/yaml-to-json/). JSON has no type guessing, so the output shows plainly whether `NO` became `false` or `1.10` became `1.1`.
+
+## Why are tabs not allowed in YAML?
+
+YAML uses indentation to express structure, and the specification forbids tab characters for indentation because tab width is ambiguous. Parsers stop with an error such as:
+
+```text
+Tabs are not allowed as indentation at line 2, column 1
+```
+
+Configure your editor to insert spaces in `.yml` and `.yaml` files. Two spaces per level is the common convention.
+
+### Indentation must be consistent within a level
+
+Sibling keys must start in the same column. A key indented one space further than its siblings becomes a syntax error or, worse, is attached to the wrong parent. List items can be indented under their key or written flush with it; both are valid, as long as you are consistent inside a list.
+
+## What do the | and > symbols do?
+
+Block scalars let you write multi-line strings without escape sequences, and the two indicators behave differently:
+
+```yaml
+literal: |
+  line one
+  line two
+folded: >
+  line one
+  line two
+```
+
+```text
+{"literal":"line one\nline two\n","folded":"line one line two\n"}
+```
+
+`|` keeps line breaks, which suits scripts, certificates and SQL. `>` folds lines into spaces, which suits long prose. Both add a single trailing newline by default. Add `-` (as in `|-`) to strip it, or `+` to keep all trailing blank lines.
+
+## How do YAML anchors and merge keys work?
+
+Anchors let you define a block once and reuse it, which is common in CI pipelines and Docker Compose files:
+
+```yaml
+defaults: &defaults
+  adapter: postgres
+  host: localhost
+development:
+  <<: *defaults
+  database: dev_db
+```
+
+`&defaults` names the mapping, `*defaults` refers to it, and `<<` merges its keys into the current mapping. With merge keys enabled, this produces:
+
+```text
+{"defaults":{"adapter":"postgres","host":"localhost"},"development":{"adapter":"postgres","host":"localhost","database":"dev_db"}}
+```
+
+Two cautions apply. First, the `<<` merge key was a YAML 1.1 type that is not part of the YAML 1.2 core schema, so support varies between libraries and some need an option to enable it. Second, keys you write after the merge override merged keys, which is usually what you want, but makes it easy to miss where a value really comes from. Converting to JSON expands everything and shows the final result.
+
+## Which parser is my tool using?
+
+The honest answer is "check the documentation", because behavior depends on the library and its settings rather than on the file. Some libraries default to YAML 1.1 rules, others to YAML 1.2, and several let you choose. If a file has to work across tools, such as a CI system, a deployment tool and a linter, write it so that every version agrees: quote ambiguous strings, avoid tabs, and do not rely on merge keys unless you have confirmed every consumer supports them.
+
+If you are deciding between YAML and JSON for a new configuration format, our comparison of [YAML vs JSON for configuration files](/blog/yaml-vs-json-config/) weighs these trade-offs.
+
+## How do I catch these mistakes before deploying?
+
+Treat YAML like code and check it automatically:
+
+- **Lint it.** `yamllint` is a widely used command-line linter, and its `truthy` rule flags exactly the values that cause the Norway problem, such as unquoted `yes`, `no`, `on` and `off`. It also catches tabs, inconsistent indentation and duplicate keys. Run it in CI so a bad file never reaches production.
+- **Validate against a schema.** Many editors can check YAML against a JSON Schema for the file type, such as a CI pipeline or a Kubernetes manifest. A schema that expects a string for `country` will flag `false` immediately.
+- **Fail loudly on duplicate keys.** Some parsers silently keep the last of two identical keys. A linter or a strict parser setting turns that into an error, which is almost always what you want.
+
+Combined with quoting ambiguous strings, these checks remove nearly every way YAML can surprise you.
+
+## Do it in your browser
+
+To write YAML that no parser can misread, start from JSON and let the [JSON to YAML converter](/tools/converters/json-to-yaml/) quote the risky values for you. To audit an existing file, convert it the other way and read the JSON: every guessed type is visible at a glance, and nothing leaves your browser.

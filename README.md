@@ -104,6 +104,10 @@ scripts/og.mjs  Generates OG images and app icons at prebuild
 public/         robots.txt, .htaccess (Hostinger redirects + caching), manifest
 ```
 
+## Blog
+
+Posts live in `src/content/blog/` and follow the schedule in [docs/CONTENT-CALENDAR.md](docs/CONTENT-CALENDAR.md): every tool has one guide that targets a different search than the tool page. A post is published when it is not a draft and its `publishDate` has arrived at build time (`src/lib/blog.ts`); the blog index, RSS, sitemap, home page and each tool page's Guides box all use that rule. The deploy workflow rebuilds every Tuesday and Thursday at 06:00 UTC so scheduled posts go live on time. `src/lib/rehype-unpublished-links.mjs` turns links to not-yet-published posts into plain text until they go live.
+
 ## Deploy
 
 Pushing to `main` runs `.github/workflows/deploy.yml`: type check, build, Lighthouse CI, then FTPS upload of `dist/` to Hostinger `public_html/`.

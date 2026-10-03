@@ -1,0 +1,153 @@
+---
+title: What is Base64 encoding and when should you use it
+description: What Base64 encoding is, how it turns bytes into text, why it adds 33 percent, and when to use it or avoid it, with examples in JavaScript and Python.
+publishDate: 2026-10-03
+author: Cuisdev Team
+tags: [Encoding, Developer]
+tools: [base64-encode-decode, image-converter]
+---
+
+Base64 is a way to represent any binary data, such as an image, a file or encrypted bytes, using only 64 printable characters: A to Z, a to z, 0 to 9, `+` and `/`. It exists so binary data can travel safely through systems that only handle text, like email, JSON, URLs and HTTP headers. It is an encoding, not encryption: anyone can decode it, and the output is about a third larger than the input.
+
+This guide shows how the encoding works bit by bit, where you will meet it in practice, the URL-safe variant, and the cases where Base64 is the wrong tool. You can try every example in the [Base64 Encoder and Decoder](/tools/developer/base64-encode-decode/) as you read.
+
+## How does Base64 work?
+
+Base64 takes the input three bytes at a time. Three bytes are 24 bits. It splits those 24 bits into four groups of 6 bits, and each 6-bit group (a number from 0 to 63) picks one character from the alphabet defined in [RFC 4648](https://www.rfc-editor.org/rfc/rfc4648).
+
+Take the word `Man`:
+
+| Step | M | a | n |
+| --- | --- | --- | --- |
+| ASCII code | 77 | 97 | 110 |
+| Bits | `01001101` | `01100001` | `01101110` |
+
+Joined, that is `010011010110000101101110`. Split into four 6-bit groups:
+
+| 6-bit group | `010011` | `010110` | `000101` | `101110` |
+| --- | --- | --- | --- | --- |
+| Value | 19 | 22 | 5 | 46 |
+| Character | T | W | F | u |
+
+So `Man` encodes to `TWFu`. The alphabet maps 0 to 25 onto `A` to `Z`, 26 to 51 onto `a` to `z`, 52 to 61 onto the digits, then `+` for 62 and `/` for 63.
+
+### What are the `=` signs at the end?
+
+When the input length is not a multiple of three, the last group is short. Base64 pads the output with `=` so it is always a multiple of four characters:
+
+```js
+btoa('Man'); // 'TWFu'
+btoa('Ma');  // 'TWE='
+btoa('M');   // 'TQ=='
+```
+
+One `=` means the last group held two bytes, two `=` mean it held one byte. Some formats drop the padding because the length already tells the decoder what is missing.
+
+## Why is Base64 about 33 percent larger?
+
+Every 3 bytes of input become 4 characters of output, so the encoded size is four thirds of the original, plus up to two padding characters. A 3,000-byte file becomes exactly 4,000 characters. If the result is wrapped into lines, as email does every 76 characters, the line breaks add a little more.
+
+That overhead is the main reason not to Base64 large files when you have a choice. Sending raw bytes over HTTP, or uploading with `multipart/form-data`, avoids it entirely.
+
+## Where is Base64 used?
+
+You have almost certainly used Base64 today without noticing:
+
+- **Email attachments.** MIME encodes attachments as Base64 so binary files survive mail servers built for text.
+- **Data URLs.** A small image can be inlined in HTML or CSS as `data:image/png;base64,iVBORw0KGgo...`, saving one request.
+- **JSON APIs.** JSON has no binary type, so APIs that return files, signatures or thumbnails inside JSON use Base64 strings.
+- **HTTP Basic authentication.** The `Authorization: Basic` header carries `username:password` in Base64. That is encoding, so Basic auth is only safe over HTTPS.
+- **JSON Web Tokens.** Each part of a JWT is Base64url-encoded JSON. Our guide to [JWT structure and security](/blog/jwt-explained-security/) shows how to read one.
+- **Keys and certificates.** PEM files (`-----BEGIN CERTIFICATE-----`) are Base64 between header lines.
+
+## What is URL-safe Base64?
+
+The standard alphabet uses `+` and `/`, which have special meanings in URLs and file names, and `=`, which has a meaning in query strings. RFC 4648 defines a second alphabet, often called Base64url, that swaps `+` for `-` and `/` for `_`, and usually omits the padding.
+
+The same three bytes encoded both ways in Node.js:
+
+```js
+const bytes = Buffer.from([251, 255, 191]);
+bytes.toString('base64');    // '+/+/'
+bytes.toString('base64url'); // '-_-_'
+```
+
+JWTs, many API tokens and URL parameters use the URL-safe form. A decoder that only accepts the standard alphabet will reject them, so check which variant you have when decoding fails.
+
+## How do you encode and decode Base64 in code?
+
+### JavaScript in the browser
+
+The built-in `btoa` and `atob` functions work on strings where each character is a single byte. Plain ASCII works directly:
+
+```js
+btoa('Hello, World!'); // 'SGVsbG8sIFdvcmxkIQ=='
+```
+
+Text outside Latin-1 throws an error, which catches many people out:
+
+```js
+btoa('café ✓'); // InvalidCharacterError: Invalid character
+```
+
+Convert the text to UTF-8 bytes first, then encode the bytes:
+
+```js
+const bytes = new TextEncoder().encode('café ✓');
+const encoded = btoa(String.fromCharCode(...bytes));
+// 'Y2Fmw6kg4pyT'
+
+const decoded = new TextDecoder().decode(
+  Uint8Array.from(atob(encoded), (c) => c.charCodeAt(0)),
+);
+// 'café ✓'
+```
+
+For large inputs, spread syntax can hit the engine's argument limit, so encode in chunks or use `FileReader.readAsDataURL` for files.
+
+### Node.js
+
+`Buffer` handles both alphabets and UTF-8 directly:
+
+```js
+Buffer.from('café ✓', 'utf8').toString('base64'); // 'Y2Fmw6kg4pyT'
+Buffer.from('SGVsbG8sIFdvcmxkIQ==', 'base64').toString('utf8'); // 'Hello, World!'
+```
+
+### Python
+
+```python
+import base64
+
+base64.b64encode(b'Hello, World!').decode()   # 'SGVsbG8sIFdvcmxkIQ=='
+base64.b64decode('SGVsbG8sIFdvcmxkIQ==').decode()  # 'Hello, World!'
+base64.urlsafe_b64encode(bytes([251, 255, 191])).decode()  # '-_-_'
+```
+
+### Command line
+
+On Linux and macOS, `base64` encodes a file and `base64 -d` decodes. On Windows, `certutil -encode` and `certutil -decode` do the same job, adding header lines you may need to strip.
+
+## When should you use Base64?
+
+Use it when binary data has to pass through a channel that only accepts text, and the data is small:
+
+- Embedding a small icon or font subset as a data URL to avoid an extra request.
+- Putting a signature, hash or thumbnail inside a JSON payload.
+- Storing a binary key in an environment variable or a config file.
+- Sending binary content through a system you do not control that mangles raw bytes.
+
+## When should you avoid Base64?
+
+- **For security.** Base64 hides nothing. Decoding takes one function call. Never "protect" passwords, tokens or personal data by Base64-encoding them. Use real encryption, and hash passwords with a dedicated algorithm.
+- **For large files.** The 33 percent overhead costs bandwidth, memory and parsing time. Upload files as binary instead.
+- **For images on web pages, beyond small ones.** An inlined image cannot be cached separately from the page, and it delays the HTML. Large images are better as normal files in an efficient format. Our [Image Converter](/tools/image/image-converter/) turns PNG and JPEG into WebP or AVIF, which usually beats inlining.
+- **As compression.** It always makes data bigger. Compress first if size matters, then encode if you must.
+
+## How to recognize a Base64 string
+
+A Base64 string uses only letters, digits, `+` and `/` (or `-` and `_`), often ends in one or two `=`, and has a length that is a multiple of four when padded. Some prefixes are tell-tale signs: `iVBORw0KGgo` is the start of a PNG file, `/9j/` the start of a JPEG, `JVBERi0` a PDF, and `eyJ` is the encoding of `{"`, which is how most JWTs and Base64-encoded JSON begin.
+
+## Do it in your browser
+
+The [Base64 Encoder and Decoder](/tools/developer/base64-encode-decode/) encodes text with correct UTF-8 handling, accepts files, switches between the standard and URL-safe alphabets, and decodes data URLs back into downloadable files with a preview for images. Everything runs locally, so it is safe for tokens and private files.

@@ -1,0 +1,141 @@
+---
+title: How to open JSON in Excel and when to convert to CSV first
+description: "Open a JSON file in Excel with Power Query, flatten nested data, and see when converting JSON to CSV first is faster. Python and Node examples."
+publishDate: 2026-11-05
+author: Cuisdev Team
+tags: [JSON, Spreadsheets]
+tools: [json-to-csv, json-editor]
+---
+
+To open JSON in Excel on Windows, go to **Data > Get Data > From File > From JSON**, pick the file, then use the Power Query editor to turn the list into a table and expand its columns. That works well for clean, regular data. When the JSON is deeply nested, very large, or you use Excel for Mac or Google Sheets, it is usually quicker to convert the JSON to CSV first and open the CSV.
+
+This guide covers both routes, the pitfalls that silently corrupt data on the way into a spreadsheet, and code to do the conversion yourself. For a one-off file, the [JSON to CSV converter](/tools/converters/json-to-csv/) does it in your browser.
+
+## Why doesn't Excel just open a JSON file?
+
+A spreadsheet is a grid: rows and columns. JSON is a tree: objects inside objects, lists inside lists, with no fixed shape. Before Excel can show JSON, something has to decide how that tree becomes a grid. Which objects are rows? What happens to a nested address? What about a list of tags?
+
+Excel's answer is Power Query, which lets you make those decisions step by step. CSV converters make them for you with sensible defaults.
+
+## How to import JSON into Excel with Power Query
+
+Power Query is built into Excel for Microsoft 365 and Excel 2016 and later on Windows.
+
+1. Open Excel and go to **Data > Get Data > From File > From JSON**.
+2. Select your `.json` file. The Power Query editor opens.
+3. If the top level is a list, you will see a column of `Record` entries. Click **To Table** on the ribbon and accept the defaults.
+4. Click the expand icon (two arrows) in the column header, choose the fields you want, and untick **Use original column name as prefix** if you prefer short names.
+5. Repeat the expand step for any nested record column, such as an address.
+6. Click **Close & Load**. The data lands in a new sheet as a table.
+
+The best part is that Power Query remembers these steps. When the JSON file changes, **Data > Refresh All** reruns them, which makes it a good choice for a report you rebuild every week from an API export.
+
+### What about lists inside each row?
+
+A field such as `"tags": ["new", "vip"]` cannot fit in one cell. Power Query offers two choices when you expand it: **Expand to New Rows**, which duplicates the whole row once per tag, or **Extract Values**, which joins the list into one cell with a delimiter. Joining is usually what you want for a readable sheet. Expanding to rows is right when you want to count or filter by tag.
+
+### Excel for Mac
+
+Power Query support on Mac has arrived later and varies by Excel version. If you do not see a JSON option under Get Data, convert to CSV first and open that instead.
+
+## When should you convert JSON to CSV first?
+
+Converting first is often the faster and safer path:
+
+- **You use Google Sheets or Numbers.** Google Sheets has no built-in JSON import. It opens CSV files directly, and its `IMPORTDATA` function can pull a CSV from a URL.
+- **The data is deeply nested.** Expanding six levels of records by hand in Power Query is tedious. A converter flattens every level at once into columns such as `customer.address.city`.
+- **You need to share the result.** A CSV opens anywhere, while a Power Query workbook depends on the original file path.
+- **The file is huge.** Excel's grid has a hard limit of 1,048,576 rows and 16,384 columns per sheet. If the JSON has more records than that, filter or split it before it reaches Excel.
+
+## What a good JSON to CSV conversion looks like
+
+Take this order export:
+
+```json
+[
+  { "id": 1, "customer": { "name": "Ada", "city": "London" }, "total": 120.5, "tags": ["new", "vip"] },
+  { "id": 2, "customer": { "name": "Linus", "city": "Portland" }, "total": 89.0, "tags": [] }
+]
+```
+
+Each object becomes a row. The nested `customer` object becomes two columns named by path, and the `tags` list is joined into one cell:
+
+```text
+id,customer.name,customer.city,total,tags
+1,Ada,London,120.5,new;vip
+2,Linus,Portland,89,
+```
+
+### Converting JSON to CSV in Python
+
+pandas does the flattening with `json_normalize`:
+
+```python
+import json
+import pandas as pd
+
+with open("orders.json", encoding="utf-8") as f:
+    data = json.load(f)
+
+df = pd.json_normalize(data)  # nested objects become customer.name, customer.city
+df["tags"] = df["tags"].apply(lambda t: ";".join(t))  # lists need an explicit choice
+df.to_csv("orders.csv", index=False, encoding="utf-8-sig")  # BOM so Excel reads UTF-8
+print(df.to_csv(index=False))
+```
+
+```text
+id,total,tags,customer.name,customer.city
+1,120.5,new;vip,Ada,London
+2,89.0,,Linus,Portland
+```
+
+pandas puts flattened columns after the top-level ones. Reorder them with `df[[...]]` if column order matters.
+
+### Converting JSON to CSV in Node.js
+
+Without any packages, a small flatten function and careful quoting do the job:
+
+```js
+const fs = require('node:fs');
+
+const rows = JSON.parse(fs.readFileSync('orders.json', 'utf8'));
+
+function flatten(obj, prefix = '', out = {}) {
+  for (const [key, value] of Object.entries(obj)) {
+    const path = prefix ? `${prefix}.${key}` : key;
+    if (value && typeof value === 'object' && !Array.isArray(value)) flatten(value, path, out);
+    else out[path] = Array.isArray(value) ? value.join(';') : value;
+  }
+  return out;
+}
+
+const flat = rows.map((r) => flatten(r));
+const columns = [...new Set(flat.flatMap(Object.keys))];
+const cell = (v) => {
+  const s = v == null ? '' : String(v);
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+};
+const csv = [columns.join(','), ...flat.map((r) => columns.map((c) => cell(r[c])).join(','))].join('\n');
+fs.writeFileSync('orders.csv', '﻿' + csv + '\n');
+console.log(csv);
+```
+
+Collecting columns from every row matters. If only the third record has a `discount` field, the column still appears, with empty cells for the others.
+
+## Pitfalls when JSON data lands in Excel
+
+Excel guesses types as it opens a file, and its guesses can quietly change your data:
+
+- **Leading zeros vanish.** ZIP codes and IDs such as `02134` become `2134`. Import the column as Text in Power Query, or use the Data > From Text/CSV import and set the column type before loading.
+- **Long numbers lose digits.** Excel stores numbers with 15 significant digits, so an 18-digit order ID or a credit card number gets rounded and shown in scientific notation. Treat such IDs as text.
+- **Dates and codes get converted.** Values like `3-4` or `MARCH1` may turn into dates. Again, set the column to Text.
+- **Accents become garbage.** Excel on Windows may read a UTF-8 CSV without a byte order mark as a legacy encoding, turning `café` into `cafÃ©`. Both code examples above write a BOM (`utf-8-sig` in Python, `﻿` in Node) for this reason.
+- **Booleans and nulls.** JSON `true` and `null` arrive as text or empty cells. Decide whether empty means zero, unknown or not applicable before you calculate anything.
+
+## Check the JSON before you convert it
+
+A conversion is only as good as its input. If the file came from an API, open it in the [JSON Editor](/tools/developer/json-editor/) first. The tree and table views show the real structure: whether the records sit at the top level or inside an envelope such as `{"data": [...]}`, which fields are nested, and whether every record has the same shape. Five minutes there saves cleaning up a broken spreadsheet later.
+
+## Do it in your browser
+
+The [JSON to CSV converter](/tools/converters/json-to-csv/) flattens nested objects into dot-notation columns, keeps lists as JSON text so nothing is lost, finds the array inside an API envelope automatically, and lets you pick the delimiter. Download the CSV and open it in Excel, Google Sheets or Numbers. The data never leaves your browser, which matters for customer and financial exports.

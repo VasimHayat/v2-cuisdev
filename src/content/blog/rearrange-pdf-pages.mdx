@@ -1,0 +1,165 @@
+---
+title: How to rearrange, rotate and delete PDF pages without Acrobat
+description: Rearrange PDF pages, rotate scans that came out sideways and delete blank pages for free, in the browser, on a Mac, or from the command line.
+publishDate: 2027-02-18
+author: Cuisdev Team
+tags: [PDF, Productivity]
+tools: [pdf-page-reorder, pdf-split]
+---
+
+To rearrange PDF pages without Acrobat, open the file in a page organizer that shows thumbnails, drag the pages into the order you want, and save a new copy. The free [PDF Page Reorder](/tools/pdf/pdf-page-reorder/) tool does this in your browser, and it also rotates and deletes pages in the same pass. On a Mac, Preview can do it too, and on any system the command-line tools `qpdf` and `pdftk` handle it in one line.
+
+The rest of this guide covers why page order goes wrong in the first place, how each method works, and what actually changes inside the file when you move a page.
+
+## Why do PDF pages end up in the wrong order?
+
+Most out-of-order PDFs come from one of a few everyday situations.
+
+- **Double-sided scanning on a single-sided scanner.** You scan all the fronts, flip the stack, scan all the backs, and get pages 1, 3, 5, then 6, 4, 2.
+- **Merging files in the wrong sequence.** An appendix lands before the introduction because it sorted first alphabetically.
+- **Phone scans taken out of order.** You photograph a contract page by page and miss one, then add it at the end.
+- **Sideways pages.** A landscape table is scanned in portrait, or a phone records the wrong orientation.
+- **Extra pages.** Blank separator sheets, cover pages from a fax, or a duplicated page from a retry.
+
+All of these are fixed the same way: reorder, rotate, delete, save.
+
+## How do you rearrange PDF pages in the browser?
+
+A browser tool is the quickest option when you are not on your own machine or do not want to install anything. In the [PDF Page Reorder](/tools/pdf/pdf-page-reorder/) tool you open the file, drag thumbnails to new positions, use the rotate buttons on any sideways page, delete what you do not need, and save. The file is processed on your own device rather than uploaded, which matters for contracts, medical letters and anything else you would not email to a stranger.
+
+If you only need some of the pages rather than a new order, splitting is often the better tool. The [PDF Split](/tools/pdf/pdf-split/) tool extracts page ranges into separate files, and our guide on [extracting pages from a PDF](/blog/extract-pages-from-pdf/) compares the options.
+
+## How do you reorder PDF pages on a Mac?
+
+Preview, which ships with macOS, can reorder pages without any extra software:
+
+1. Open the PDF in Preview.
+2. Choose **View > Thumbnails** to show the sidebar.
+3. Drag thumbnails up or down to change the order.
+4. Select a thumbnail and press **Command+R** to rotate it right, or **Command+L** to rotate it left.
+5. Select a page and press **Delete** to remove it.
+6. Choose **File > Save**, or **File > Export as PDF** to keep the original untouched.
+
+Preview edits the document you opened, so export to a new name if you want an undo that survives closing the window.
+
+## Can you rearrange PDF pages on Windows without extra software?
+
+Windows does not include a PDF page editor. Microsoft Edge opens PDFs and can rotate the view, but it cannot drag pages into a new order and save them. The built-in "Microsoft Print to PDF" printer can save a page range as a new file, which works for deleting pages from the start or end, but not for reordering.
+
+For real reordering on Windows you need either a browser-based tool or one of the free command-line tools below.
+
+## How do you reorder PDF pages from the command line?
+
+Command-line tools are ideal when you have the same fix to apply to many files, or when you want the change recorded in a script.
+
+### qpdf
+
+`qpdf` is a free, open-source PDF transformation tool. To build a new file from pages 3, 1, 2 and then 4 to the end:
+
+```bash
+qpdf input.pdf --pages . 3,1,2,4-z -- output.pdf
+```
+
+The `.` means "the input file", `z` means "the last page", and the list after it is the new order. To delete page 5, list every page except it:
+
+```bash
+qpdf input.pdf --pages . 1-4,6-z -- output.pdf
+```
+
+To rotate page 2 a quarter turn clockwise:
+
+```bash
+qpdf input.pdf output.pdf --rotate=+90:2
+```
+
+### pdftk
+
+`pdftk` uses a slightly different vocabulary but does the same jobs. Reordering and deleting:
+
+```bash
+pdftk input.pdf cat 3 1 2 4-end output output.pdf
+pdftk input.pdf cat 1-4 6-end output output.pdf
+```
+
+Rotation is written as a direction after the page number, where `east` is a quarter turn clockwise:
+
+```bash
+pdftk input.pdf cat 1 2east 3-end output output.pdf
+```
+
+## How do you rearrange PDF pages in code?
+
+If PDFs are part of an application, a library is more reliable than shelling out to a tool. Here is a complete Node.js script using `pdf-lib` that puts the third page first, drops the second page, and rotates one page:
+
+```js
+import { PDFDocument, degrees } from 'pdf-lib';
+import { readFile, writeFile } from 'node:fs/promises';
+
+const source = await PDFDocument.load(await readFile('input.pdf'));
+const output = await PDFDocument.create();
+
+// New order, using 0-based page indexes: page 3 first, page 2 dropped.
+const order = [2, 0, 3, 4];
+const pages = await output.copyPages(source, order);
+pages.forEach((page) => output.addPage(page));
+
+// Rotate the second page of the new document a quarter turn clockwise.
+output.getPage(1).setRotation(degrees(90));
+
+await writeFile('output.pdf', await output.save());
+console.log(`Saved ${output.getPageCount()} pages`);
+```
+
+Run against a five-page file, it prints:
+
+```text
+Saved 4 pages
+```
+
+The new file starts with the old page 3, followed by the old page 1 rotated 90 degrees, then the old pages 4 and 5. The old page 2 is gone.
+
+## What actually happens when you move or rotate a PDF page?
+
+It helps to know what is going on inside the file, because it explains why reordering is safe.
+
+A PDF stores each page as a separate object with its own content: text, vector drawings and references to embedded images and fonts. A separate structure called the page tree lists those page objects in order. Reordering pages rewrites the page tree to point at the same page objects in a different sequence. The page content itself is copied unchanged.
+
+That has three practical consequences:
+
+| What you do | What changes | What stays the same |
+| --- | --- | --- |
+| Move a page | The page tree order | Text, images, fonts, quality |
+| Rotate a page | The page's `/Rotate` value (0, 90, 180 or 270) | The content stream; nothing is redrawn |
+| Delete a page | The page is left out of the new page tree | Every other page, untouched |
+
+Because nothing is re-rendered, text stays selectable and searchable, vector drawings stay sharp, and images keep their original resolution. This is different from tools that "print" a PDF to a new PDF, which can flatten pages and lose links and form fields.
+
+### Do bookmarks and links survive reordering?
+
+It depends on the tool. Page content always survives, but bookmarks, the document outline and internal links point at specific page objects. When pages are copied into a brand new document, as in the script above, those document-level structures are usually not carried across. If your PDF relies on a clickable table of contents, check it after saving, and rebuild the bookmarks if they matter.
+
+## How do you fix a double-sided scan?
+
+The classic case is a ten-page document scanned as all fronts (1, 3, 5, 7, 9) followed by all backs in reverse (10, 8, 6, 4, 2). The correct order interleaves them: take the first page of the fronts, then the last page of the backs, and so on.
+
+For ten pages, the original page numbers in the file are 1 to 5 for the fronts and 6 to 10 for the backs, so the new order is:
+
+```text
+1, 10, 2, 9, 3, 8, 4, 7, 5, 6
+```
+
+With `qpdf` that becomes:
+
+```bash
+qpdf scan.pdf --pages . 1,10,2,9,3,8,4,7,5,6 -- fixed.pdf
+```
+
+In a drag-and-drop tool you can do the same by moving each back page up under its front page, which takes a minute for a short document.
+
+## What about blank pages?
+
+Blank pages usually come from double-sided scanning of single-sided originals. Delete them individually in a page organizer, or with a page list on the command line. Look closely before deleting: a "blank" scan of a form can contain faint signatures or stamps that are easy to miss in a small thumbnail. Zooming into the thumbnail or opening the page at full size first avoids losing something important.
+
+## Do it in your browser
+
+If you just need to fix one document now, open it in the [PDF Page Reorder](/tools/pdf/pdf-page-reorder/) tool. Drag pages into order, rotate the sideways ones, delete the blanks, and save a new copy. Everything runs on your device, and the original file is not modified, so you can always start again.

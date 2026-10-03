@@ -1,0 +1,152 @@
+---
+title: "How to resize images for the web: srcset, density and file size"
+description: How to resize images for a website, which pixel sizes to export, how srcset and sizes pick the right file per screen, and how to keep file size down.
+publishDate: 2027-03-09
+author: Cuisdev Team
+tags: [Images, Performance]
+tools: [image-resizer, image-compressor]
+---
+
+To resize images for a website, export each image at the largest width it will ever be displayed, multiplied by the screen density you want to support, usually 2x. Then provide a few smaller versions and let the browser choose with `srcset` and `sizes`. An image shown at most 800 CSS pixels wide needs a 1,600-pixel version for high-density screens, plus smaller ones such as 480 and 960 for phones.
+
+You can produce those sizes in one batch with the [Image Resizer](/tools/image/image-resizer/). This guide covers how to choose the sizes, how the browser picks between them, and how to keep each file small.
+
+## Why does image size matter so much on the web?
+
+A camera or phone photo is far larger than any web page needs. A typical 12-megapixel photo is 4,000 by 3,000 pixels, while the content column of most sites is well under 1,000 CSS pixels wide.
+
+Oversized images cost you twice:
+
+1. **Download size.** More pixels usually means a bigger file and a slower page, especially on mobile networks.
+2. **Memory and decoding.** Once downloaded, the browser decodes the image into raw pixels, roughly 4 bytes per pixel. That memory is used regardless of how small the file was.
+
+| Image size | Megapixels | Decoded memory (about) |
+| --- | --- | --- |
+| 4000 × 3000 | 12.0 | 48 MB |
+| 1600 × 1200 | 1.92 | 7.7 MB |
+| 800 × 600 | 0.48 | 1.9 MB |
+
+The original photo has 6.25 times as many pixels as a 1,600-pixel-wide version. Shown in an 800-pixel column, every one of those extra pixels is downloaded, decoded and then thrown away.
+
+## What size should you export images at?
+
+Work it out from how the image is displayed, not from the original file.
+
+1. **Find the largest display width in CSS pixels.** Check your layout at its widest breakpoint. A blog content column might max out at 720 pixels, a full-width hero at 1,440.
+2. **Multiply by the density you support.** Most phones and many laptops have screens with a device pixel ratio of 2 or 3, meaning each CSS pixel is drawn with 2 or 3 physical pixels in each direction. Supporting 2x is a sensible default, since images beyond that cost a lot more bytes for a difference few people notice.
+3. **Add smaller steps for smaller screens.** A phone does not need the desktop file.
+
+For an image displayed at up to 800 CSS pixels, that gives a set such as 480, 960, 1440 and 1920 pixels wide. The 1,920 version covers an 800-pixel slot on a 2x screen with room to spare, while phones get a much lighter file.
+
+## How do srcset and sizes work?
+
+`srcset` lists the files and their widths. `sizes` tells the browser how wide the image will be displayed, which it cannot know before the CSS has loaded. The browser combines the two with the screen's pixel density and picks a file.
+
+```html
+<img
+  src="photo-960.webp"
+  srcset="photo-480.webp 480w,
+          photo-960.webp 960w,
+          photo-1440.webp 1440w,
+          photo-1920.webp 1920w"
+  sizes="(max-width: 800px) 100vw, 800px"
+  width="1920"
+  height="1440"
+  alt="A description of the photo"
+/>
+```
+
+Reading `sizes` from left to right: on viewports up to 800 pixels wide, the image fills the viewport width; otherwise it is 800 pixels wide.
+
+Two worked examples of what the browser typically does:
+
+- **A phone 390 CSS pixels wide with 3x density.** The slot is 390 pixels, times 3 is 1,170 physical pixels, so the browser picks the 1440w file, the smallest one that is wide enough.
+- **A laptop with an 800-pixel slot and 2x density.** It needs 1,600 pixels, so it picks the 1920w file.
+
+Browsers are allowed to adjust the choice, for example preferring a smaller file on a slow connection, which is one more reason to let them decide instead of hard-coding a single size.
+
+### Why include width and height?
+
+The `width` and `height` attributes do not set the displayed size when your CSS sets one. They tell the browser the image's aspect ratio before it downloads, so it can reserve the right amount of space. Without them, text below the image jumps down when the image arrives, which hurts both the reading experience and the Cumulative Layout Shift metric.
+
+Pair them with this CSS so the image still scales with its container:
+
+```css
+img {
+  max-width: 100%;
+  height: auto;
+}
+```
+
+### Should images be lazy loaded?
+
+Add `loading="lazy"` to images below the fold so they only download when the reader scrolls near them. Do not lazy load the main image at the top of the page, because that delays the most important content. Leave the first visible image as normal loading.
+
+## Which format should resized images use?
+
+Modern formats such as WebP and AVIF usually produce much smaller files than JPEG at similar visual quality, and every current browser supports WebP. You can serve several formats with a `picture` element and let the browser take the first one it supports:
+
+```html
+<picture>
+  <source type="image/avif" srcset="photo-960.avif 960w, photo-1920.avif 1920w" sizes="(max-width: 800px) 100vw, 800px" />
+  <img src="photo-960.webp" srcset="photo-960.webp 960w, photo-1920.webp 1920w" sizes="(max-width: 800px) 100vw, 800px" width="1920" height="1440" alt="A description of the photo" />
+</picture>
+```
+
+Our comparison of [WebP, AVIF, JPEG and PNG](/blog/webp-vs-avif-vs-jpeg/) covers which format suits which kind of image.
+
+## How do you generate all the sizes automatically?
+
+For a build pipeline, the Node library `sharp` resizes quickly and preserves aspect ratio when you give only a width. This script writes four WebP versions of one photo:
+
+```js
+const sharp = require('sharp');
+
+const widths = [480, 960, 1440, 1920];
+
+async function main() {
+  for (const width of widths) {
+    const info = await sharp('photo.jpg')
+      .resize({ width, withoutEnlargement: true })
+      .webp({ quality: 80 })
+      .toFile(`photo-${width}.webp`);
+    console.log(`photo-${width}.webp  ${info.width}x${info.height}`);
+  }
+}
+
+main();
+```
+
+Run on a 4,000 by 3,000 photo, it prints:
+
+```text
+photo-480.webp  480x360
+photo-960.webp  960x720
+photo-1440.webp  1440x1080
+photo-1920.webp  1920x1440
+```
+
+`withoutEnlargement: true` stops the script from upscaling an image that is smaller than the requested width, which would add bytes without adding detail.
+
+On the command line, ImageMagick does the same job one size at a time. A width followed by `x` keeps the aspect ratio:
+
+```bash
+magick photo.jpg -resize 1600x -quality 82 photo-1600.jpg
+```
+
+Many frameworks and image CDNs generate these variants for you on request, which is worth using if your platform offers it.
+
+## How do you keep file size down after resizing?
+
+Resizing removes most of the excess, and compression handles the rest. A few habits help:
+
+- **Pick a sensible quality.** For JPEG and WebP photos, settings around 75 to 85 are a common starting point; compare against the original at 100 percent zoom before going lower.
+- **Strip metadata.** Camera EXIF data, embedded thumbnails and color profiles you do not need add bytes to every file.
+- **Do not upscale.** Enlarging a small image makes a bigger file that looks no sharper.
+- **Use PNG only where it fits.** Screenshots, logos and flat graphics suit PNG or lossless WebP; photos almost never do.
+
+For the compression step on its own, the [Image Compressor](/tools/image/image-compressor/) lets you dial in quality or a target file size and compare before and after. Our guide to [reducing image size without visible quality loss](/blog/reduce-image-size/) goes deeper.
+
+## Do it in your browser
+
+To prepare a batch of images by hand, open the [Image Resizer](/tools/image/image-resizer/), add your files, set the width you need, and download them all as a zip. It keeps proportions, never enlarges unless you allow it, and can convert to WebP and compress in the same pass. The images are processed on your own device and never uploaded.

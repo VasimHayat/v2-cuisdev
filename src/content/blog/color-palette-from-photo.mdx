@@ -1,0 +1,147 @@
+---
+title: How to build a color palette from a photo
+description: "How to make a color palette from an image: pick dominant and accent colors, balance them with the 60-30-10 rule, and check contrast for readable text."
+publishDate: 2027-02-09
+author: Cuisdev Team
+tags: [Design, Images]
+tools: [color-picker-from-image, color-converter]
+---
+
+To build a color palette from a photo, extract its dominant colors automatically, then hand-pick one or two accent colors from small but striking details, and finish by checking which combinations have enough contrast for text. A good photo palette usually has a dark color, a light color, one or two mid-tones and an accent. The [Color Picker from Image](/tools/image/color-picker-from-image/) does both halves: it extracts a dominant palette and lets you click any pixel for exact values.
+
+This guide covers how automatic extraction works, how to choose colors a computer would miss, how to balance them, and how to turn the result into something a website or brand can use.
+
+## Why start from a photo?
+
+Colors taken from a real scene tend to belong together. They share the same light, the same time of day and often the same underlying hues, so a palette pulled from a good photo has a built-in harmony that is hard to invent from scratch. It also ties a design to its imagery: a site whose buttons and headings echo the colors of its hero photo looks deliberate.
+
+The catch is that a photo contains thousands of distinct colors. Turning it into five or six usable ones is the real work.
+
+## How do tools extract a palette from an image?
+
+Automatic palette extraction is a clustering problem. Each pixel is a point in a three-dimensional color space, and the goal is to find a handful of points that represent the crowd.
+
+### k-means clustering
+
+The most common method is k-means:
+
+1. Choose how many colors you want, say six.
+2. Pick six starting colors, often at random from the image.
+3. Assign every pixel to whichever of the six it is closest to.
+4. Move each of the six to the average of the pixels assigned to it.
+5. Repeat steps 3 and 4 until the colors stop moving.
+
+The result is six colors that each stand for a group of similar pixels, along with how many pixels each group contains. That count is the color's share of the image.
+
+### Median cut
+
+Median cut takes a different route. It treats all pixels as one box in color space, splits the box at the median along its longest side, and keeps splitting the biggest boxes until it has as many as you asked for. The average color of each box becomes a palette entry. It is fast and was popular for reducing images to 256 colors in early graphics formats.
+
+### Why automatic palettes look a bit dull
+
+Both methods favor colors that cover large areas. In a beach photo they will happily return several shades of sand and sky, and miss the red umbrella that makes the picture interesting. Averaging also pulls colors toward gray, because a cluster of slightly different blues averages to a less saturated blue.
+
+That is why the best workflow combines extraction with picking by hand.
+
+## Step 1: Extract the dominant colors
+
+Run the photo through an extractor and ask for six to eight colors. Look at the shares:
+
+- The one or two largest are your candidates for backgrounds and large surfaces.
+- The darkest color with a meaningful share is a candidate for text.
+- Similar colors that differ only slightly can be merged into one.
+
+If two extracted colors are nearly identical, ask for fewer clusters, or simply drop one.
+
+## Step 2: Pick accent colors by hand
+
+Now look for what the algorithm missed: a small saturated detail such as a flower, a sign, clothing or a reflection. Zoom in and sample it directly, ideally from the middle of the area rather than its edge, where pixels blend with the background.
+
+Sample a few neighboring pixels rather than one. Photos contain noise and JPEG compression artifacts, so a single pixel can be noticeably off. A color picker with a magnifier that shows the surrounding pixels makes this easy.
+
+Aim for one accent, two at most. Accents work because they are rare.
+
+## Step 3: Balance the palette with 60-30-10
+
+A widely used rule of thumb from interior design is 60-30-10:
+
+| Share | Role | Typical use |
+| --- | --- | --- |
+| 60% | Dominant | Page background, large panels |
+| 30% | Secondary | Cards, sections, imagery, secondary buttons |
+| 10% | Accent | Primary buttons, links, highlights |
+
+It is not a law, but it explains why a palette of five equally used colors feels noisy. Map your extracted colors onto these roles: the largest, calmest color as dominant, a mid-tone as secondary, and the hand-picked accent for the 10 percent that should catch the eye.
+
+Add a dark neutral for text if the photo did not give you one. Near-black tinted with the photo's main hue looks more natural than pure black.
+
+## Step 4: Check contrast before you commit
+
+A palette can look beautiful as swatches and still fail as a website, because text needs enough contrast against its background. The Web Content Accessibility Guidelines (WCAG 2) define contrast as a ratio from 1:1 (no contrast) to 21:1 (black on white). Level AA requires at least 4.5:1 for normal text and 3:1 for large text and interface components.
+
+The ratio comes from each color's relative luminance. Here is the WCAG formula in Python, applied to a palette taken from a sunset photo:
+
+```python
+def relative_luminance(hex_color):
+    r, g, b = (int(hex_color[i:i + 2], 16) / 255 for i in (1, 3, 5))
+
+    def channel(c):
+        return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
+
+    return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
+
+def contrast_ratio(a, b):
+    la, lb = sorted((relative_luminance(a), relative_luminance(b)), reverse=True)
+    return (la + 0.05) / (lb + 0.05)
+
+palette = {"navy": "#2b4a8f", "coral": "#e98a6b", "sand": "#f7c87b", "cream": "#fff4d6", "pine": "#3c5a3f"}
+pairs = [("cream", "navy"), ("navy", "sand"), ("coral", "cream"), ("pine", "cream"), ("coral", "navy")]
+for fg, bg in pairs:
+    print(f"{fg:5} on {bg:5}: {contrast_ratio(palette[fg], palette[bg]):.2f}:1")
+```
+
+```text
+cream on navy : 7.73:1
+navy  on sand : 5.45:1
+coral on cream: 2.31:1
+pine  on cream: 7.03:1
+coral on navy : 3.35:1
+```
+
+The results say a lot about how to use this palette:
+
+- **Cream on navy** and **pine on cream** pass AA comfortably for body text.
+- **Navy on sand** passes for normal text.
+- **Coral on navy** reaches 3:1, enough for large headings and icons, not for paragraphs.
+- **Coral on cream** fails even the large-text threshold. Coral works here as a fill color for a button with dark text on it, not as text on the light background.
+
+Mid-tone accents often behave like this coral. If an accent fails, darken or lighten it slightly rather than abandoning it. A small shift in lightness can move a color across the threshold while keeping its character.
+
+## Step 5: Convert and export the palette
+
+Designers and developers need colors in different formats. HEX is universal, RGB and HSL are common in CSS, and OKLCH is useful for generating lighter and darker variants that look evenly spaced. The [Color Converter](/tools/converters/color-converter/) translates any of these, generates tints and shades in OKLCH, and checks contrast against a second color. Our guide to [CSS color formats](/blog/css-color-formats-oklch/) explains the differences.
+
+A palette is easiest to use as variables:
+
+```css
+:root {
+  --color-bg: #fff4d6;
+  --color-surface: #f7c87b;
+  --color-text: #2b4a8f;
+  --color-accent: #e98a6b;
+  --color-success: #3c5a3f;
+}
+```
+
+Name variables by role, not by color. `--color-accent` survives a rebrand, while `--coral` does not.
+
+## Tips for better photo palettes
+
+- **Choose the photo carefully.** Images with clear light and a limited range of hues give cleaner palettes than busy, evenly lit scenes.
+- **Crop before extracting.** If only part of the photo matters, crop to it so background colors do not dominate.
+- **Mind the lighting.** Warm evening light tints every color orange. That can be the point, but it can also leave you without a usable neutral.
+- **Test on real content.** Put a heading, a paragraph and a button in your colors before deciding.
+
+## Extract a palette in your browser
+
+The [Color Picker from Image](/tools/image/color-picker-from-image/) extracts a dominant palette with each color's share of the image, and lets you zoom in and click any pixel with a magnifier to sample accents precisely. It shows HEX, RGB, HSL, HSV and CMYK, the nearest CSS color name, and contrast against white and black, then exports the palette as CSS variables, JSON or a Tailwind snippet. The image never leaves your device.

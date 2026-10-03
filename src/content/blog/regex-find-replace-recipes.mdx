@@ -1,0 +1,242 @@
+---
+title: "Find and replace with regex: 12 recipes for cleaning text"
+description: Twelve tested regex find and replace examples for cleaning text, from trailing spaces and blank lines to swapping names, reformatting dates and masking emails.
+publishDate: 2027-02-25
+author: Cuisdev Team
+tags: [Regex, Text]
+tools: [find-and-replace, regex-tester]
+---
+
+Regex find and replace works by matching a pattern and rebuilding each match from its parts. You capture pieces of the match with parentheses, then refer to them in the replacement as `$1`, `$2` or, with named groups, `$<name>`. The twelve recipes below cover the cleanups people do most often, and every one was run in JavaScript to produce the output shown.
+
+You can try any of them in the [Find and Replace](/tools/text/find-and-replace/) tool with regex mode turned on. To understand why a pattern matches what it does, paste it into the [Regex Tester](/tools/developer/regex-tester/), which highlights each match and its groups.
+
+## How do regex replacements work?
+
+Three pieces of syntax do most of the work:
+
+- **Capture groups.** Parentheses around part of a pattern, like `(\d{4})`, remember what they matched.
+- **Back-references in the replacement.** `$1` inserts the first group, `$2` the second, and `$&` the whole match.
+- **Flags.** `g` replaces every match instead of only the first, `m` makes `^` and `$` match at the start and end of each line, and `i` ignores case.
+
+The flags matter more than people expect. Most of the recipes below use `g`, and the line-based ones need `m` as well.
+
+## 1. Remove trailing whitespace
+
+Pattern, flags `gm`, replace with nothing:
+
+```text
+[ \t]+$
+```
+
+```text
+Before: "alpha   \nbeta\t\ngamma"
+After:  "alpha\nbeta\ngamma"
+```
+
+`[ \t]+` matches one or more spaces or tabs, and `$` anchors it to the end of each line thanks to the `m` flag.
+
+## 2. Collapse repeated spaces
+
+Pattern, flag `g`, replace with a single space:
+
+```text
+ {2,}
+```
+
+```text
+Before: "too    many   spaces"
+After:  "too many spaces"
+```
+
+The pattern starts with a literal space. `{2,}` means "two or more", so single spaces are left alone.
+
+## 3. Reduce runs of blank lines to one
+
+Pattern, flag `g`, replace with `$1`:
+
+```text
+(\n\n)\n+
+```
+
+```text
+Before: "one\n\n\n\ntwo\n\n\nthree\n\nfour"
+After:  "one\n\ntwo\n\nthree\n\nfour"
+```
+
+Three or more newlines in a row means at least two empty lines. The group keeps the first two newlines and the replacement writes only those back, leaving exactly one blank line between paragraphs. Paragraphs that already had a single blank line are not matched at all. Capturing the newlines also avoids a common trap: many tools insert a replacement as typed, so writing `\n\n` there would produce a literal backslash and n instead of line breaks.
+
+## 4. Swap "Last, First" to "First Last"
+
+Pattern, flags `gm`, replace with `$2 $1`:
+
+```text
+^(\w+), (\w+)$
+```
+
+```text
+Before: "Lovelace, Ada\nHopper, Grace"
+After:  "Ada Lovelace\nGrace Hopper"
+```
+
+Group 1 captures the surname and group 2 the first name, and the replacement writes them back in the other order. `\w` only matches letters, digits and underscores, so names with hyphens or accents need a broader class such as `[^,]+`.
+
+## 5. Reformat dates from YYYY-MM-DD to DD/MM/YYYY
+
+Pattern, flag `g`, replace with `$3/$2/$1`:
+
+```text
+(\d{4})-(\d{2})-(\d{2})
+```
+
+```text
+Before: "Due 2027-02-25 and 2027-03-04"
+After:  "Due 25/02/2027 and 04/03/2027"
+```
+
+## 6. The same, with named groups
+
+Numbered groups get confusing once a pattern has more than three. Named groups make the replacement readable. Pattern, flag `g`, replace with `$<d>.$<m>.$<y>`:
+
+```text
+(?<y>\d{4})-(?<m>\d{2})-(?<d>\d{2})
+```
+
+```text
+Before: "Due 2027-02-25"
+After:  "Due 25.02.2027"
+```
+
+## 7. Strip HTML tags from a snippet
+
+Pattern, flag `g`, replace with nothing:
+
+```text
+<[^>]+>
+```
+
+```text
+Before: "<p>Hello <b>world</b></p>"
+After:  "Hello world"
+```
+
+This is fine for cleaning a short, known snippet. It is not a safe way to sanitize untrusted HTML, because attributes can contain `>` characters and browsers forgive broken markup in ways a regex cannot predict. Use a proper HTML parser or sanitizer for anything that will be shown to other people.
+
+## 8. Quote unquoted object keys
+
+Turning a JavaScript object literal into valid JSON often starts with quoting the keys. Pattern, flag `g`, replace with `$1"$2":`:
+
+```text
+([{,]\s*)([A-Za-z_]\w*)\s*:
+```
+
+```text
+Before: {name: "Ada", age: 36}
+After:  {"name": "Ada", "age": 36}
+```
+
+Group 1 keeps the opening brace or comma and any space after it, so only the key changes. Single-quoted strings and trailing commas still need fixing before the result is valid JSON.
+
+## 9. Add thousands separators
+
+Pattern, flag `g`, replace with `,`:
+
+```text
+\B(?=(\d{3})+(?!\d))
+```
+
+```text
+Before: "Total 1234567 and 9876543210"
+After:  "Total 1,234,567 and 9,876,543,210"
+```
+
+This one matches positions rather than characters. The lookahead `(?=(\d{3})+(?!\d))` finds every spot followed by a multiple of three digits, and `\B` keeps it from matching at the start of a number.
+
+Be careful where you use it: it also changes years and IDs, so `"Order 2027"` becomes `"Order 2,027"`. Apply it only to text where every number is an amount.
+
+## 10. Replace curly quotes with straight quotes
+
+Text pasted from word processors often contains typographic quotes that break code and CSV files. Two passes, both with flag `g`.
+
+Double quotes, replace with `"`:
+
+```text
+[“”]
+```
+
+Single quotes and apostrophes, replace with `'`:
+
+```text
+[‘’]
+```
+
+```text
+Before: “Hello,” she said. ‘Hi’ it’s
+After:  "Hello," she said. 'Hi' it's
+```
+
+## 11. Mask email addresses
+
+Keep the first character of each address and hide the rest of the name. Pattern, flag `g`, replace with `$1***@`:
+
+```text
+\b([A-Za-z0-9._%+-])[A-Za-z0-9._%+-]*@
+```
+
+```text
+Before: "Contact ada@example.com or grace.hopper@navy.mil"
+After:  "Contact a***@example.com or g***@navy.mil"
+```
+
+Handy before pasting logs into a ticket. Check the result by eye: masking is a convenience, not a guarantee that no personal data remains.
+
+## 12. Remove accidentally doubled words
+
+Pattern, flags `gi`, replace with `$1`:
+
+```text
+\b(\w+)\s+\1\b
+```
+
+```text
+Before: "This is the the best way to to fix it. The the end."
+After:  "This is the best way to fix it. The end."
+```
+
+`\1` inside the pattern is a back-reference: it matches the same text group 1 matched, so the pattern only finds a word followed by itself. The `i` flag catches "The the" at the start of a sentence too.
+
+## Why does my replacement work in one tool but not another?
+
+The patterns above work in most modern engines, but replacement syntax varies:
+
+| Environment | Group 1 | Named group |
+| --- | --- | --- |
+| JavaScript, VS Code, this site's tools | `$1` | `$<name>` |
+| Python `re.sub` | `\1` | `\g<name>` |
+| `sed -E` | `\1` | not supported |
+
+For example, recipe 4 in Python and `sed`:
+
+```python
+import re
+print(re.sub(r'^(\w+), (\w+)$', r'\2 \1', 'Lovelace, Ada\nHopper, Grace', flags=re.M))
+```
+
+```bash
+printf 'Lovelace, Ada\nHopper, Grace\n' | sed -E 's/^([A-Za-z]+), ([A-Za-z]+)$/\2 \1/'
+```
+
+Both print `Ada Lovelace` and `Grace Hopper` on separate lines. Note that `sed` does not understand `\w` in every version, so the example spells out the letter class.
+
+## How do you avoid breaking your text?
+
+- **Test on a sample first.** Paste a few representative lines into the [Regex Tester](/tools/developer/regex-tester/) and confirm the matches before running a replacement on a whole file.
+- **Count the matches.** If a recipe should touch 40 lines and reports 4,000 replacements, the pattern is too broad.
+- **Anchor where you can.** `^` and `$` with the `m` flag stop a pattern from matching in the middle of a line.
+- **Keep the original.** Work on a copy, or use a tool with undo, so a bad pattern costs nothing.
+
+For a reference of the building blocks used here, see our [regex cheat sheet](/blog/regex-cheat-sheet-practical/).
+
+## Do it in your browser
+
+The [Find and Replace](/tools/text/find-and-replace/) tool lets you stack several of these recipes as rules that run in order, so a whole cleanup, such as trimming spaces, collapsing blank lines and straightening quotes, happens in one pass. It shows how many replacements each rule made, keeps the original text until you apply the result, and runs entirely on your device.

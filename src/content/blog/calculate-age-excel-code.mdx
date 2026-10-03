@@ -1,0 +1,196 @@
+---
+title: How to calculate age in Excel, Google Sheets and code
+description: "How to calculate age in Excel with DATEDIF, in Google Sheets, Python, JavaScript and SQL, plus why dividing days by 365.25 gives wrong answers on birthdays."
+publishDate: 2027-02-02
+author: Cuisdev Team
+tags: [Spreadsheets, Time]
+tools: [age-calculator, date-difference-calculator]
+---
+
+To calculate age in Excel, use `=DATEDIF(A2,TODAY(),"Y")`, where A2 holds the date of birth. It returns completed years, which is what people mean by age. Google Sheets uses the same formula. In code, subtract the birth year from the current year and take one off if this year's birthday has not happened yet. If you just need one person's exact age in years, months and days, the [Age Calculator](/tools/calculators/age-calculator/) does it instantly.
+
+The formulas are short, but there are a few traps: leap-day birthdays, the "MD" quirk in DATEDIF, and the popular shortcut of dividing by 365.25. This guide covers each environment and those edge cases.
+
+## How to calculate age in Excel
+
+### Age in years with DATEDIF
+
+With the date of birth in cell A2:
+
+```text
+=DATEDIF(A2, TODAY(), "Y")
+```
+
+`DATEDIF` returns the number of complete years between the two dates. Someone born on 15 May 1990 is 36 on 2 February 2027 and turns 37 on 15 May 2027.
+
+`DATEDIF` is a legacy function that Excel keeps for compatibility. It works in every current version, but it does not appear in the formula autocomplete list, so you need to type it in full.
+
+### Age on a specific date
+
+Replace `TODAY()` with a cell reference or a `DATE` function to get age on any date, such as an enrollment cutoff:
+
+```text
+=DATEDIF(A2, DATE(2027,9,1), "Y")
+```
+
+### Years, months and days
+
+`DATEDIF` takes other units too:
+
+| Unit | Returns |
+| --- | --- |
+| `"Y"` | Complete years |
+| `"M"` | Complete months |
+| `"D"` | Days |
+| `"YM"` | Months left over after complete years |
+| `"MD"` | Days left over after complete months |
+| `"YD"` | Days left over after complete years |
+
+Combine them into a readable result:
+
+```text
+=DATEDIF(A2,TODAY(),"Y") & " years, " & DATEDIF(A2,TODAY(),"YM") & " months, " & DATEDIF(A2,TODAY(),"MD") & " days"
+```
+
+Microsoft's documentation warns that the `"MD"` unit can return inaccurate results in some cases, especially around the ends of months. If the days figure matters, calculate it another way: take the date of the last "month birthday" with `EDATE` and subtract.
+
+### The YEARFRAC alternative
+
+`YEARFRAC` returns the fraction of a year between two dates, so the integer part is the age:
+
+```text
+=INT(YEARFRAC(A2, TODAY(), 1))
+```
+
+The `1` selects the actual/actual day-count basis. Other bases, such as the default 30/360 used in finance, can be off by one near a birthday. `DATEDIF` with `"Y"` is the more reliable choice for age.
+
+## How to calculate age in Google Sheets
+
+Google Sheets supports the same function, with the same arguments:
+
+```text
+=DATEDIF(A2, TODAY(), "Y")
+```
+
+To fill a whole column at once, wrap it in `ARRAYFORMULA` and guard against empty cells:
+
+```text
+=ARRAYFORMULA(IF(A2:A = "", "", DATEDIF(A2:A, TODAY(), "Y")))
+```
+
+One difference to keep in mind: `TODAY()` recalculates in the spreadsheet's time zone, set in **File, Settings**. A sheet set to a different zone from yours can flip someone's age a few hours early or late on their birthday.
+
+## Why dividing by 365.25 gives the wrong age
+
+A common shortcut is to count the days and divide by the average year length:
+
+```text
+=INT((TODAY() - A2) / 365.25)
+```
+
+It is right most of the time, which is why it spreads. It goes wrong on and around birthdays. For someone born on 1 January 1990, on 1 January 2027 the day count is 13,514. Divided by 365.25 that is 36.999, so the formula says 36 on the day they turn 37.
+
+The cause is that leap years do not fall evenly through a person's life. Use a method that compares the calendar dates directly, which is what `DATEDIF` and the code below do.
+
+## How to calculate age in Python
+
+The standard library is enough. Compare the month and day of the birthday with the target date:
+
+```python
+from datetime import date
+
+def age_in_years(born: date, on: date) -> int:
+    had_birthday = (on.month, on.day) >= (born.month, born.day)
+    return on.year - born.year - (0 if had_birthday else 1)
+
+print(age_in_years(date(1990, 5, 15), date(2027, 2, 2)))
+print(age_in_years(date(1990, 5, 15), date(2027, 5, 15)))
+print(age_in_years(date(2000, 2, 29), date(2027, 2, 28)))
+print(age_in_years(date(2000, 2, 29), date(2027, 3, 1)))
+```
+
+```text
+36
+37
+26
+27
+```
+
+Comparing `(month, day)` tuples avoids every leap-year calculation. For years, months and days, the widely used `python-dateutil` package has `relativedelta`:
+
+```python
+from datetime import date
+from dateutil.relativedelta import relativedelta
+
+d = relativedelta(date(2027, 2, 2), date(1990, 5, 15))
+print(d.years, "years,", d.months, "months,", d.days, "days")
+```
+
+```text
+36 years, 8 months, 18 days
+```
+
+## How to calculate age in JavaScript
+
+JavaScript `Date` objects carry a time and a time zone, which is how age calculations end up off by a day. Work with the calendar parts instead:
+
+```js
+function ageInYears(born, on) {
+  const [by, bm, bd] = born.split('-').map(Number);
+  const [y, m, d] = on.split('-').map(Number);
+  const hadBirthday = m > bm || (m === bm && d >= bd);
+  return y - by - (hadBirthday ? 0 : 1);
+}
+
+console.log(ageInYears('1990-05-15', '2027-02-02'));
+console.log(ageInYears('2000-02-29', '2027-02-28'));
+```
+
+```text
+36
+26
+```
+
+Passing ISO date strings such as `2027-02-02` keeps the logic free of time zones. If you start from a `Date` object, read its parts with `getFullYear()`, `getMonth() + 1` and `getDate()` in the zone you mean.
+
+## How to calculate age in SQL
+
+Each database has its own date functions. Two common ones:
+
+```sql
+-- PostgreSQL: AGE returns an interval such as "36 years 8 mons 18 days"
+SELECT date_part('year', age(DATE '2027-02-02', birth_date)) AS age
+FROM people;
+
+-- MySQL: TIMESTAMPDIFF counts complete years
+SELECT TIMESTAMPDIFF(YEAR, birth_date, CURDATE()) AS age
+FROM people;
+```
+
+Both count completed years correctly across leap years. Avoid `DATEDIFF(...) / 365` patterns for the same reason as the 365.25 shortcut.
+
+## What about leap-day birthdays?
+
+Someone born on 29 February has a real birthday only in leap years. In other years, there are two conventions:
+
+- **1 March**, which is what the month-and-day comparison above produces, and what some jurisdictions use for reaching a legal age.
+- **28 February**, which many people celebrate and some jurisdictions use.
+
+Neither is wrong, but your code should pick one on purpose. The Python and JavaScript functions above treat a 29 February birthday as reached on 1 March in non-leap years. If you need 28 February instead, compare against 28 February whenever the target year is not a leap year.
+
+## Calculating ages for a whole list
+
+The same formulas scale to a full table, such as a member list or a class roster. A few habits keep the results trustworthy:
+
+- **Store real dates, not text.** A cell that shows `15/05/1990` may be text if it was pasted from another system, and date functions will return errors or wrong values. In Excel, `=ISNUMBER(A2)` returns `TRUE` for a real date.
+- **Watch day and month order.** `03/04/2001` is 3 April in most of the world and March 4 in the United States. Import data with an explicit format, or use ISO dates such as `2001-04-03`.
+- **Fix the reference date.** `TODAY()` changes every day, so a report printed next month will show different ages. For an age "as of" a cutoff, put that date in a cell and refer to it.
+- **Flag impossible values.** A birth date in the future or more than 120 years ago usually means a typing error.
+
+## Age vs date difference
+
+Age is a special case of the difference between two dates, counted in completed years. If you need the gap in days, weeks or business days, for example the length of a contract, the logic changes: you may want to include the end date, skip weekends, or exclude holidays. The [Date Difference Calculator](/tools/calculators/date-difference-calculator/) handles those, and our guide to [counting business days](/blog/count-business-days/) covers the formulas.
+
+## Check an age in your browser
+
+For a single result, or to double-check a spreadsheet, the [Age Calculator](/tools/calculators/age-calculator/) gives exact age in years, months and days on any date, the next birthday, and lets you choose 28 February or 1 March for leap-day birthdays. The date of birth stays on your device.

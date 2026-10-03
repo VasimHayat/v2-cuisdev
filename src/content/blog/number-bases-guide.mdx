@@ -1,0 +1,183 @@
+---
+title: "Binary, hex and octal: a practical guide to number bases"
+description: "Number bases explained for developers: how binary, hexadecimal and octal work, how to convert binary to hex by hand and in code, and where each one shows up."
+publishDate: 2027-01-12
+author: Cuisdev Team
+tags: [Math, Developer]
+tools: [number-base-converter, text-to-binary]
+---
+
+A number base is how many different digits a counting system uses before it carries to the next position. Decimal uses ten digits (0 to 9), binary uses two (0 and 1), octal uses eight (0 to 7) and hexadecimal uses sixteen (0 to 9 and then A to F). The value is the same in every base; only the way it is written changes, so decimal 255 is `11111111` in binary, `377` in octal and `FF` in hex.
+
+Converting binary to hex is the conversion developers need most, and it is easy once you see that each hex digit is exactly four binary digits. You can check any example below in the [Number Base Converter](/tools/converters/number-base-converter/), which shows a value in all bases at once.
+
+## How positional bases work
+
+In decimal, each position is worth ten times the one to its right: ones, tens, hundreds, thousands. The number 2026 means 2 thousands, 0 hundreds, 2 tens and 6 ones.
+
+Every base works the same way with a different multiplier. In binary each position is worth twice the one to its right: 1, 2, 4, 8, 16, 32 and so on. In hexadecimal each is worth sixteen times as much: 1, 16, 256, 4096.
+
+So binary `1011` is 8 + 0 + 2 + 1 = 11, and hex `2F` is 2 × 16 + 15 = 47. Hex needs single symbols for the values 10 to 15, so it borrows the letters A to F.
+
+| Decimal | Binary | Octal | Hex |
+| --- | --- | --- | --- |
+| 0 | 0000 | 0 | 0 |
+| 1 | 0001 | 1 | 1 |
+| 2 | 0010 | 2 | 2 |
+| 3 | 0011 | 3 | 3 |
+| 4 | 0100 | 4 | 4 |
+| 5 | 0101 | 5 | 5 |
+| 6 | 0110 | 6 | 6 |
+| 7 | 0111 | 7 | 7 |
+| 8 | 1000 | 10 | 8 |
+| 9 | 1001 | 11 | 9 |
+| 10 | 1010 | 12 | A |
+| 11 | 1011 | 13 | B |
+| 12 | 1100 | 14 | C |
+| 13 | 1101 | 15 | D |
+| 14 | 1110 | 16 | E |
+| 15 | 1111 | 17 | F |
+
+That table is worth memorizing, at least the binary and hex columns. Almost every conversion below reduces to looking up four-bit groups in it.
+
+## How to convert decimal to binary
+
+Divide by 2 repeatedly and write down the remainders. Read them from the last to the first. Converting 2026:
+
+```text
+2026 ÷ 2 = 1013  remainder 0
+1013 ÷ 2 =  506  remainder 1
+ 506 ÷ 2 =  253  remainder 0
+ 253 ÷ 2 =  126  remainder 1
+ 126 ÷ 2 =   63  remainder 0
+  63 ÷ 2 =   31  remainder 1
+  31 ÷ 2 =   15  remainder 1
+  15 ÷ 2 =    7  remainder 1
+   7 ÷ 2 =    3  remainder 1
+   3 ÷ 2 =    1  remainder 1
+   1 ÷ 2 =    0  remainder 1
+```
+
+Reading the remainders from the bottom up gives `11111101010`. The same method works for any base: divide by 8 for octal or by 16 for hex.
+
+## How to convert binary to hex by hand
+
+Split the binary number into groups of four digits starting from the right, pad the leftmost group with zeros, then replace each group with its hex digit from the table:
+
+```text
+binary   111 1110 1010
+padded  0111 1110 1010
+hex        7    E    A
+```
+
+So `11111101010` is `7EA`. Going the other way is just as quick: expand each hex digit into its four bits. `CAFE` becomes `1100 1010 1111 1110`.
+
+Octal works the same way with groups of three: `011 111 101 010` is `3752`.
+
+This shortcut only works because 16 and 8 are powers of 2. That is the whole reason hex and octal exist in computing: they are compact ways of writing binary that convert to and from it without arithmetic.
+
+## How to convert between bases in code
+
+Every mainstream language has built-in conversions. In JavaScript:
+
+```js
+const n = 2026;
+n.toString(2);              // "11111101010"
+n.toString(8);              // "3752"
+n.toString(16).toUpperCase(); // "7EA"
+
+parseInt('7EA', 16);        // 2026
+parseInt('11111101010', 2); // 2026
+
+0b1111_1111;                // 255, binary literal
+0o377;                      // 255, octal literal
+0xff;                       // 255, hex literal
+```
+
+In Python:
+
+```python
+bin(2026)                # '0b11111101010'
+oct(2026)                # '0o3752'
+hex(2026)                # '0x7ea'
+int('7ea', 16)           # 2026
+int('0b11111101010', 0)  # 2026, base 0 reads the prefix
+format(2026, '016b')     # '0000011111101010', padded to 16 bits
+```
+
+The prefixes `0b`, `0o` and `0x` are the standard way to mark a base in source code. Without them, `10` is ambiguous: it is ten in decimal, two in binary, eight in octal and sixteen in hex.
+
+## Where you will see each base
+
+### Binary: bits and flags
+
+Binary shows up wherever individual bits matter. Bitmasks store several on/off settings in one integer, network masks such as 255.255.255.0 are runs of ones followed by zeros, and file formats are specified bit by bit.
+
+### Hexadecimal: bytes, colors and memory
+
+A byte is 8 bits, which is exactly two hex digits, so hex is the natural way to display bytes. You will see it in:
+
+- **Colors:** `#FF8800` is three bytes, red FF (255), green 88 (136) and blue 00 (0).
+- **Hashes and IDs:** a SHA-256 hash is 32 bytes shown as 64 hex digits, and UUIDs are written in hex.
+- **Character codes:** Unicode code points are written in hex, such as `U+20AC` for the euro sign. The guide on [how text becomes binary](/blog/text-to-binary-utf8/) shows how those become bytes.
+- **Memory addresses and debuggers:** hex keeps long addresses readable.
+
+### Octal: Unix permissions
+
+Octal survives mainly in Unix file permissions. Each permission set (owner, group, others) has three bits for read, write and execute, and three bits are exactly one octal digit. `chmod 755` means:
+
+```text
+7 = 111 = rwx   owner can read, write, execute
+5 = 101 = r-x   group can read and execute
+5 = 101 = r-x   others can read and execute
+```
+
+That is why permissions are almost always written in octal: each digit maps directly to one `rwx` triple.
+
+## Working with bits: masks and flags
+
+Binary is easiest to appreciate when you use it to pack several yes or no values into one number. Give each flag its own bit, then combine and test them with bitwise operators:
+
+```js
+const READ = 4;  // 100
+const WRITE = 2; // 010
+const EXEC = 1;  // 001
+
+let p = READ | WRITE;    // 6, binary 110
+(p & WRITE) !== 0;       // true, the write bit is set
+(p & EXEC) !== 0;        // false, the execute bit is not set
+(p | EXEC).toString(2);  // "111", turn execute on
+(p & ~WRITE).toString(2); // "100", turn write off
+```
+
+`|` sets bits, `&` tests or keeps them and `~` flips them. This is exactly how the octal permission digits above work: 7 is `111`, all three flags set. Once you read flags in binary, values like `0x80` (the top bit of a byte) and `0x0F` (the low four bits) stop looking arbitrary.
+
+## Reading a hex dump
+
+When you open a file in a hex viewer or inspect network traffic, you see bytes as pairs of hex digits. The text `Hi!` appears as `48 69 21`: `48` is 72, the code for `H`, `69` is 105 for `i`, and `21` is 33 for `!`. Two hex digits per byte make it easy to count bytes and to spot patterns, such as the `EF BB BF` that starts some UTF-8 files or the `89 50 4E 47` that starts every PNG image.
+
+## Negative numbers: two's complement
+
+Computers usually store signed integers in two's complement. In a fixed width, say 8 bits, the highest bit means a negative value, and -1 is stored as all ones: `11111111`, the same bits as unsigned 255. That is why a byte read as unsigned can show 255 where you expected -1, and why the width matters when you convert a negative number. In JavaScript, `(-1 >>> 0).toString(16)` gives `ffffffff`, the 32-bit pattern.
+
+## Fractions do not always convert neatly
+
+Some decimal fractions have no exact binary form, the way one third has no exact decimal form. Decimal 0.1 is a repeating fraction in binary, so it is stored approximately, which is why `0.1 + 0.2` prints `0.30000000000000004` in JavaScript and most other languages. For money, use integers (cents) or a decimal type rather than binary floating point.
+
+## Common questions about number bases
+
+### Why do programmers count from zero in hex dumps and arrays?
+
+Addresses and indexes measure an offset from the start. The first byte is zero bytes from the start, so it is at offset 0. Hex offsets in a dump follow the same rule, which is why a line starting at `0x10` begins with the seventeenth byte.
+
+### Is hexadecimal case-sensitive?
+
+No. `0xFF`, `0xff` and `0xFf` are the same value. Pick one style for readability; uppercase is common in documentation and lowercase in code and hashes.
+
+### What is the largest number in 8, 16 and 32 bits?
+
+Unsigned, the maximum is two to the power of the width, minus one: 255 for 8 bits (`FF`), 65,535 for 16 bits (`FFFF`) and 4,294,967,295 for 32 bits (`FFFFFFFF`). Signed two's complement ranges are half that on each side, so 8 bits holds -128 to 127.
+
+## Do it in your browser
+
+The [Number Base Converter](/tools/converters/number-base-converter/) keeps binary, octal, decimal, hex and any base from 2 to 36 in sync as you type, handles numbers of any size, shows two's complement for a chosen bit width and has a clickable bit grid for flipping individual bits. When the numbers you are looking at are character codes, the [Text to Binary](/tools/converters/text-to-binary/) converter shows the same bytes alongside the characters they represent.

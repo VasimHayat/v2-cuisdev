@@ -1,0 +1,135 @@
+---
+title: How to reduce image size without losing visible quality
+description: How to reduce image size without losing visible quality, using the four levers that matter, dimensions, format, quality and metadata, in the right order.
+publishDate: 2026-10-08
+author: Cuisdev Team
+tags: [Images, Performance]
+tools: [image-compressor, image-resizer, image-converter]
+---
+
+To reduce an image's file size without visible quality loss, work through four levers in order: resize it to the dimensions it will actually be shown at, convert it to an efficient format such as WebP or AVIF, lower the compression quality until just before you can see a difference, and strip metadata you do not need. Resizing alone often removes most of the weight, because a photo straight from a camera usually has many times more pixels than any screen will show.
+
+This guide explains why each step works, how far you can push it, and how to do it in common apps and on the command line. To try it as you read, open the [Image Compressor](/tools/image/image-compressor/) and drop in one of your own photos.
+
+## Why are images so large in the first place?
+
+File size is driven by two things: how many pixels the image has and how much information each pixel carries after compression.
+
+A typical 12-megapixel phone photo is 4,000 by 3,000 pixels. Even on a high-density laptop screen, an image in an article column is rarely displayed wider than about 1,600 physical pixels. At 1,600 by 1,200, the image has 1.92 megapixels, which is 6.25 times fewer pixels than the original. Every one of those extra pixels has to be compressed, stored, downloaded and decoded, and then thrown away by the browser when it scales the image down.
+
+There is also a hidden cost: once decoded, an image takes about four bytes per pixel in memory regardless of its file size. The 12-megapixel photo occupies around 48 MB of memory while it is on screen, which matters on phones and on pages with many images.
+
+## Step 1: Resize to the size you actually need
+
+Find the largest size the image will be displayed at, then allow for high-density screens:
+
+- An image shown 800 CSS pixels wide on a site where many visitors use 2x screens needs to be about 1,600 pixels wide.
+- A thumbnail shown at 200 pixels needs about 400.
+- An email header 600 pixels wide needs 1,200 at most.
+
+Going above 2x rarely produces a visible improvement and costs bytes. Resizing first also makes every later step faster.
+
+In our tests on a 1,600 by 1,000 pixel illustration, halving the width to 800 pixels took the JPEG from 18.7 KB to 8.4 KB at the same quality setting. The saving on full-resolution camera photos is usually far larger, because the starting point is much bigger.
+
+The [Image Resizer](/tools/image/image-resizer/) handles this in batches, with presets and a "never upscale" option so small images are left alone.
+
+## Step 2: Choose an efficient format
+
+The format sets how efficiently the remaining pixels are stored:
+
+- **Photos:** WebP or AVIF are typically much smaller than JPEG at similar visual quality. Keep JPEG only where something cannot read the newer formats, such as some email clients.
+- **Screenshots, logos and text:** PNG or lossless WebP. Lossy formats blur text edges.
+- **Icons and illustrations made of shapes:** SVG, when the source is vector.
+
+Our comparison of [WebP, AVIF, JPEG and PNG](/blog/webp-vs-avif-vs-jpeg/) goes deeper into the trade-offs. The [Image Converter](/tools/image/image-converter/) switches formats in bulk.
+
+## Step 3: Lower the quality until just before you notice
+
+Lossy formats have a quality setting, usually from 0 to 100. The relationship between quality and size is far from linear: the top of the scale is very expensive. Here is the same 1,600 by 1,000 pixel illustration saved as JPEG at different qualities with one encoder:
+
+| JPEG quality | File size |
+| --- | --- |
+| 95 | 50.0 KB |
+| 85 | 27.5 KB |
+| 75 | 18.7 KB |
+| 60 | 13.7 KB |
+
+Going from 95 to 85 nearly halved the file, and most people cannot tell those two apart at normal viewing size. Below about 60, artifacts such as blocky skies and smeared fine detail usually start to show. The exact numbers depend on the image and the encoder, so use them as a pattern, not a rule.
+
+A practical method:
+
+1. Start around quality 80 for JPEG or WebP.
+2. Compare the result with the original at 100 percent zoom, looking at skin, skies, gradients and fine text.
+3. Lower the quality in steps of five until you see a difference, then go back one step.
+
+For many images, a "target size" approach is easier: decide that hero images should be under 200 KB, for example, and let a tool find the highest quality that fits.
+
+### Watch out for repeated lossy saves
+
+Every time you open a JPEG, edit it and save it again as JPEG, a little more detail is lost. Keep the original file and always export from it.
+
+## Step 4: Strip metadata
+
+Photos carry EXIF metadata: camera model, lens settings, sometimes a thumbnail, and often GPS coordinates of where the photo was taken. It adds kilobytes to each file and can reveal your location. Unless you need it, such as a photographer's copyright notice, remove it.
+
+Re-encoding through a canvas-based tool, which is how browser image tools work, drops this metadata automatically.
+
+## How to reduce image size in common apps
+
+### On Windows
+
+The Photos app can resize from the "..." menu on an image, and Paint can resize and save as JPEG or PNG. For batches, a dedicated tool is quicker.
+
+### On a Mac
+
+Open the image in Preview, choose Tools, then Adjust Size to change dimensions, and File, then Export to pick a format and quality slider. Preview can do this for several images at once if you select them all in the sidebar.
+
+### On the command line
+
+For automated pipelines, ImageMagick and the dedicated encoders work well:
+
+```bash
+# Resize to 1600 px wide, keep aspect ratio, quality 80, remove metadata
+magick input.jpg -resize 1600x -quality 80 -strip output.jpg
+
+# Same, straight to WebP
+magick input.jpg -resize 1600x -quality 80 -strip output.webp
+```
+
+In Node.js projects, the `sharp` library does the same in code:
+
+```js
+import sharp from 'sharp';
+
+await sharp('input.jpg')
+  .resize({ width: 1600, withoutEnlargement: true })
+  .webp({ quality: 80 })
+  .toFile('output.webp');
+```
+
+`sharp` drops metadata by default unless you ask to keep it.
+
+## How much smaller should you aim for?
+
+There is no universal number, but these targets work for most websites:
+
+| Image type | Typical target |
+| --- | --- |
+| Full-width hero image | Under 200 KB |
+| Image in an article | Under 100 KB |
+| Thumbnail or avatar | Under 20 KB |
+| Logo or icon | A few KB, ideally SVG |
+
+These are starting points, not standards. A photography portfolio can justify larger files; a news site with dozens of images per page should aim lower.
+
+## Mistakes that waste the effort
+
+- **Compressing before resizing.** You spend quality on pixels you then throw away. Resize first.
+- **Uploading full-size photos and relying on CSS to shrink them.** The browser still downloads every byte.
+- **Using PNG for photos.** PNG is lossless and can be several times larger than a good JPEG or WebP of the same photo.
+- **Squeezing screenshots with lossy compression.** Text and UI edges degrade quickly; keep them lossless.
+- **Forgetting width and height attributes.** They do not change file size, but without them the page jumps as images load.
+
+## Do it in your browser
+
+The [Image Compressor](/tools/image/image-compressor/) takes a batch of photos and applies all four steps in one pass: optional resizing, format conversion, a quality slider or a target file size, and metadata removal. It shows before and after sizes for every file with a side-by-side comparison, and downloads the results individually or as a zip. Your images are processed on your device and never uploaded.

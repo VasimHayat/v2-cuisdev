@@ -4,11 +4,16 @@ import preact from '@astrojs/preact';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
+import rehypeUnpublishedLinks from './src/lib/rehype-unpublished-links.mjs';
 
 // https://astro.build/config
 export default defineConfig({
   site: 'https://cuisdev.com',
   output: 'static',
+  markdown: {
+    // Links to blog posts that are not published yet render as plain text until they are.
+    rehypePlugins: [rehypeUnpublishedLinks],
+  },
   trailingSlash: 'always',
   build: {
     format: 'directory',

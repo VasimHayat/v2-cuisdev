@@ -1,0 +1,221 @@
+---
+title: "SQL style guide: formatting queries your team can read"
+description: "SQL formatting best practices for teams: keyword case, one clause per line, CTEs over nesting, explicit joins and aliases, with before and after examples."
+publishDate: 2026-12-24
+author: Cuisdev Team
+tags: [SQL, Developer]
+tools: [sql-formatter, code-formatter]
+---
+
+Good SQL formatting puts each clause on its own line, indents everything that belongs to a clause, uses explicit `JOIN ... ON` syntax, gives tables short meaningful aliases and replaces deep nesting with named common table expressions. Pick one keyword case and apply it everywhere. The specific choices matter less than consistency, which is why most teams adopt a written style and let a formatter enforce it.
+
+This guide collects the conventions that make queries easier to review, with the reasoning behind each, so you can agree on them once. To apply them to an existing query in seconds, paste it into the [SQL Formatter](/tools/developer/sql-formatter/).
+
+## Why does SQL formatting matter?
+
+SQL is read far more often than it is written. Analysts reopen last quarter's report, reviewers check a migration before it runs in production, and an engineer debugging a slow page reads the query the ORM generated. A query that fits on one line in an editor can hide a missing join condition or a filter that applies to the wrong table, and both are expensive mistakes.
+
+Consistent formatting also keeps version control useful. When everyone formats the same way, a diff of a changed query shows the logic that changed, not a reshuffle of whitespace.
+
+## Rule 1: one clause per line
+
+Start each major clause on a new line at the same indentation: `SELECT`, `FROM`, each `JOIN`, `WHERE`, `GROUP BY`, `HAVING`, `ORDER BY` and `LIMIT`. The clauses then form a column down the left edge that you can scan like a table of contents.
+
+Before:
+
+```sql
+select o.id, c.name, sum(l.qty*l.unit_price) as total from orders o join customers c on c.id=o.customer_id join order_lines l on l.order_id=o.id where o.status='paid' and o.created_at>='2026-01-01' group by o.id, c.name having sum(l.qty*l.unit_price)>1000 order by total desc
+```
+
+After:
+
+```sql
+SELECT
+  o.id,
+  c.name AS customer,
+  SUM(l.qty * l.unit_price) AS total
+FROM orders AS o
+JOIN customers AS c
+  ON c.id = o.customer_id
+JOIN order_lines AS l
+  ON l.order_id = o.id
+WHERE o.status = 'paid'
+  AND o.created_at >= '2026-01-01'
+GROUP BY o.id, c.name
+HAVING SUM(l.qty * l.unit_price) > 1000
+ORDER BY total DESC;
+```
+
+Nothing about the query changed, but the second version answers "which tables, joined how, filtered by what" in a few seconds.
+
+## Rule 2: pick a keyword case and never mix
+
+Uppercase keywords (`SELECT`, `FROM`, `WHERE`) are the traditional choice because they stand out from table and column names, especially without syntax highlighting. Lowercase keywords are common in teams that live in editors with good highlighting, and they are easier to type. Both are fine. Mixing them in one codebase is not, because readers start to wonder whether the difference means something.
+
+Keep identifiers lowercase with underscores (`order_lines`, `created_at`). Many databases fold unquoted identifiers to one case, and PostgreSQL folds them to lowercase, so `CreatedAt` silently becomes `createdat` unless you quote it everywhere. The guide to [naming conventions](/blog/naming-conventions-camel-snake-kebab/) covers why snake_case dominates in databases.
+
+## Rule 3: one column per line in long select lists
+
+Put each selected column on its own line, indented under `SELECT`. Adding or removing a column then changes exactly one line in a diff, and it is easy to spot a column that has no alias or one that is duplicated.
+
+There is a long-running debate about leading versus trailing commas:
+
+```sql
+-- Trailing commas
+SELECT
+  id,
+  name,
+  email
+FROM users;
+
+-- Leading commas
+SELECT
+    id
+  , name
+  , email
+FROM users;
+```
+
+Leading commas make it harder to leave a stray comma when you comment out the last column. Trailing commas read more naturally. Choose one; most formatters default to trailing.
+
+## Rule 4: explicit joins with conditions next to them
+
+Always write `JOIN ... ON` rather than listing tables in `FROM` and joining them in `WHERE`:
+
+```sql
+-- Avoid: implicit join, condition far from the tables
+SELECT o.id, c.name
+FROM orders o, customers c
+WHERE c.id = o.customer_id
+  AND o.status = 'paid';
+
+-- Prefer: the join condition sits with the join
+SELECT o.id, c.name
+FROM orders AS o
+JOIN customers AS c
+  ON c.id = o.customer_id
+WHERE o.status = 'paid';
+```
+
+With the condition next to the join, a forgotten condition is obvious, and the `WHERE` clause only contains real filters. Write the join type you mean: `JOIN` for inner joins, `LEFT JOIN` when unmatched rows must survive. Avoid `RIGHT JOIN`; rewrite it as a `LEFT JOIN` with the tables swapped so every query reads in the same direction.
+
+## Rule 5: short, meaningful aliases
+
+Alias every table when a query has more than one, and use the alias on every column reference, even when the column name is unique today. A column added to another table next month would otherwise make the query ambiguous, or worse, silently change its meaning.
+
+Use short abbreviations of the table name (`o` for `orders`, `ol` for `order_lines`) rather than `a`, `b`, `c`. Write `AS` explicitly for both table and column aliases; it costs two characters and removes any doubt about what is an alias.
+
+## Rule 6: CTEs instead of deep nesting
+
+A subquery inside a subquery inside a join is hard to follow because you have to read it from the inside out. A common table expression (`WITH`) names each step, so the query reads from top to bottom:
+
+```sql
+WITH paid_orders AS (
+  SELECT
+    o.id,
+    o.customer_id,
+    SUM(l.qty * l.unit_price) AS total
+  FROM orders AS o
+  JOIN order_lines AS l
+    ON l.order_id = o.id
+  WHERE o.status = 'paid'
+  GROUP BY o.id, o.customer_id
+),
+
+big_spenders AS (
+  SELECT customer_id
+  FROM paid_orders
+  GROUP BY customer_id
+  HAVING SUM(total) > 10000
+)
+
+SELECT
+  c.id,
+  c.name
+FROM customers AS c
+JOIN big_spenders AS b
+  ON b.customer_id = c.id
+ORDER BY c.name;
+```
+
+Each CTE can be tested on its own by selecting from it, which makes debugging much faster. Name CTEs for what they contain, not for their position (`paid_orders`, not `step1`).
+
+## Rule 7: indent conditions and line up boolean logic
+
+Put each condition in a `WHERE` or `ON` clause on its own line, starting with `AND` or `OR`. When you mix them, use parentheses even where operator precedence would make them unnecessary:
+
+```sql
+WHERE o.status = 'paid'
+  AND (
+    o.country = 'GB'
+    OR o.country = 'IE'
+  )
+  AND o.created_at >= '2026-01-01'
+```
+
+`AND` binds tighter than `OR`, so without the parentheses this filter would mean something different. Readers should never have to recall precedence rules to understand a filter.
+
+## Rule 8: comment the why, not the what
+
+The query already says what it does. Comments should explain business rules and surprises:
+
+```sql
+-- Refunds are stored as negative order lines, so SUM already nets them out.
+-- Orders before 2024 used a different status column; see migration 0042.
+```
+
+Use `--` line comments for notes inside queries. Block comments are fine for a header that explains the purpose of a long report query.
+
+## Rule 9: format window functions and CASE expressions consistently
+
+Window functions and `CASE` expressions are where long lines tend to creep back in. Break them at their natural parts so each piece can be read on its own:
+
+```sql
+SELECT
+  o.customer_id,
+  o.created_at,
+  ROW_NUMBER() OVER (
+    PARTITION BY o.customer_id
+    ORDER BY o.created_at DESC
+  ) AS order_rank,
+  CASE
+    WHEN o.total >= 1000 THEN 'large'
+    WHEN o.total >= 100 THEN 'medium'
+    ELSE 'small'
+  END AS size_band
+FROM orders AS o;
+```
+
+Each `WHEN` on its own line makes it obvious which conditions overlap and whether an `ELSE` is missing, and splitting the `OVER` clause shows the partition and the ordering at a glance. Order `WHEN` branches from the most specific to the least specific, because the first match wins.
+
+## What not to fight about
+
+Some choices have no right answer, and a team can lose hours to them. Indentation width, leading versus trailing commas, and whether short queries may stay on one line are all reasonable either way. Settle them once, write them in the style guide, configure the formatter to match, and move on. Spend review time on what affects correctness: join conditions, filters, and whether a query will scale as the tables grow.
+
+## Formatting conventions at a glance
+
+| Topic | Recommended convention |
+| --- | --- |
+| Clause layout | One major clause per line, clauses aligned on the left |
+| Keyword case | One case for the whole codebase, uppercase is the traditional default |
+| Identifiers | lowercase snake_case, no quoting needed |
+| Select lists | One column per line once there are more than two or three |
+| Joins | Explicit `JOIN ... ON`, condition on the next line, no `RIGHT JOIN` |
+| Aliases | Short table abbreviations with explicit `AS` |
+| Nesting | CTEs with descriptive names instead of nested subqueries |
+| Boolean logic | One condition per line, parentheses whenever `AND` and `OR` mix |
+| Indentation | Two or four spaces, never tabs mixed with spaces |
+
+## How do you enforce a SQL style on a team?
+
+Writing the rules down is the start. Enforcing them by hand in code review does not last, because reviewers end up arguing about spaces instead of logic. Use a formatter instead:
+
+1. Agree on the few choices a formatter exposes: keyword case, indentation and line width.
+2. Format every query file the same way before committing.
+3. In code review, only discuss what a formatter cannot decide: naming, CTE structure and comments.
+
+The same approach works for every language in a repository, which the guide on [how code formatters work](/blog/how-code-formatters-work/) explains in more detail.
+
+## Do it in your browser
+
+The [SQL Formatter](/tools/developer/sql-formatter/) applies these conventions to any query as you paste it: one clause per line, consistent indentation and your choice of keyword case, for MySQL, PostgreSQL, SQL Server, SQLite, BigQuery, Snowflake and more. If the same change set includes application code, the [Code Formatter](/tools/developer/code-formatter/) handles JavaScript, TypeScript, HTML, CSS, JSON and SQL in one place, so a whole pull request can follow one style.

@@ -1,0 +1,128 @@
+---
+title: "How text becomes binary: ASCII, Unicode and UTF-8 explained"
+description: "How text is stored in binary: characters become Unicode code points, and UTF-8 turns those into 1 to 4 bytes. Worked examples for A, é, € and emoji."
+publishDate: 2026-12-29
+author: Cuisdev Team
+tags: [Encoding, Developer]
+tools: [text-to-binary, number-base-converter]
+---
+
+Computers store text as numbers. Every character is first given a number called a code point by the Unicode standard, then an encoding such as UTF-8 turns that number into one or more bytes, and each byte is eight bits of binary. The letter `A` is code point 65, which UTF-8 stores as the single byte `01000001`. The euro sign `€` is code point 8364, which takes three bytes.
+
+Two separate steps, a character table and an encoding, explain almost every text bug you will meet, from garbled accents to emoji that count as two characters. You can watch both steps happen by typing into the [Text to Binary converter](/tools/converters/text-to-binary/) with its byte table switched on.
+
+## Step 1: characters become code points
+
+A character set is a table that maps characters to numbers. The first widely used one, ASCII, defined 128 characters numbered 0 to 127: the English letters, digits, punctuation and some control codes such as newline (10) and tab (9). Uppercase `A` is 65, lowercase `a` is 97, and the digit `0` is 48, not 0.
+
+ASCII had no room for `é`, `ß`, `ñ` or any non-Latin script. For decades every region extended it differently, using the numbers 128 to 255 for its own letters, which is why a document written on one system often turned into nonsense on another.
+
+Unicode replaced that patchwork with one table for every writing system, numbered from 0 up to `0x10FFFF`, which leaves room for over a million code points. Code points are written as `U+` followed by hexadecimal. The first 128 match ASCII exactly, so `A` is still 65, written `U+0041`.
+
+| Character | Name | Code point | Decimal |
+| --- | --- | --- | --- |
+| A | Latin capital letter A | U+0041 | 65 |
+| é | Latin small letter e with acute | U+00E9 | 233 |
+| € | Euro sign | U+20AC | 8364 |
+| 😀 | Grinning face | U+1F600 | 128512 |
+
+A code point is just a number. It says nothing yet about how many bytes are used to store it. That is the encoding's job.
+
+## Step 2: code points become bytes
+
+An encoding decides how each code point is written as bytes. Unicode defines three main ones, and you will meet all of them.
+
+### UTF-8: one to four bytes
+
+UTF-8, specified in RFC 3629, uses a variable number of bytes. The ranges are fixed:
+
+| Code points | Bytes | Bit pattern |
+| --- | --- | --- |
+| U+0000 to U+007F | 1 | `0xxxxxxx` |
+| U+0080 to U+07FF | 2 | `110xxxxx 10xxxxxx` |
+| U+0800 to U+FFFF | 3 | `1110xxxx 10xxxxxx 10xxxxxx` |
+| U+10000 to U+10FFFF | 4 | `11110xxx 10xxxxxx 10xxxxxx 10xxxxxx` |
+
+The `x` positions hold the bits of the code point. The leading bits of the first byte say how many bytes follow, and every continuation byte starts with `10`, so a program reading from the middle of a file can always find the start of the next character.
+
+Here are the four characters from the table, encoded:
+
+```text
+A   U+0041   41           01000001
+é   U+00E9   C3 A9        11000011 10101001
+€   U+20AC   E2 82 AC     11100010 10000010 10101100
+😀  U+1F600  F0 9F 98 80  11110000 10011111 10011000 10000000
+```
+
+Working through `é` by hand shows the pattern. Its code point 233 is `11101001` in binary, which needs more than 7 bits, so it goes into the two-byte form. The 11 available bits are filled from the right: `000 1110 1001` splits into `00011` and `101001`, giving `110` + `00011` and `10` + `101001`, which is `11000011 10101001`, or `C3 A9` in hexadecimal.
+
+UTF-8 has three properties that made it the default on the web and in most modern systems:
+
+- **ASCII is unchanged.** An ASCII file is already valid UTF-8, byte for byte.
+- **No zero bytes inside characters.** C strings and older tools that treat a zero byte as "end of text" keep working.
+- **It is self-synchronizing.** Continuation bytes are recognizable, so a damaged byte only corrupts one character.
+
+### UTF-16: two or four bytes
+
+UTF-16 stores most characters in one 16-bit unit (two bytes). Code points above `U+FFFF`, which include emoji and many historic scripts, need two units called a surrogate pair. JavaScript strings, Java strings and the Windows API use UTF-16 internally, and that is the source of a famous surprise:
+
+```js
+'😀'.length;              // 2
+[...'😀'].length;         // 1
+'😀'.charCodeAt(0).toString(16); // "d83d"
+'😀'.charCodeAt(1).toString(16); // "de00"
+```
+
+`length` counts UTF-16 units, not characters, so the emoji counts as two. Spreading the string iterates by code point and gives one. Python 3 strings are sequences of code points, so `len('😀')` is 1 there, while `len('😀'.encode('utf-8'))` is 4.
+
+### UTF-32: always four bytes
+
+UTF-32 stores every code point in exactly four bytes. It is simple to index but wasteful, so it is rarely used for storage or transfer.
+
+## Why text turns into garbage: mojibake
+
+Garbled text, often called mojibake, happens when bytes written in one encoding are read as another. The bytes themselves are fine; the interpretation is wrong.
+
+The classic example is `é` written as UTF-8 and read as Latin-1. UTF-8 stores it as `C3 A9`. Latin-1 is a one-byte-per-character encoding where `C3` is `Ã` and `A9` is `©`, so the reader shows `Ã©`. If you have ever seen "cafÃ©" on a menu or in a spreadsheet, this is what happened.
+
+```python
+'é'.encode('utf-8')                    # b'\xc3\xa9'
+'é'.encode('utf-8').decode('latin-1')  # 'Ã©'
+```
+
+The fixes follow from the cause:
+
+1. **Declare the encoding.** Send `Content-Type: text/html; charset=utf-8` from servers, and put `<meta charset="utf-8">` early in HTML documents.
+2. **Read files with the encoding they were written in.** In Python, pass `encoding='utf-8'` to `open()` rather than relying on the platform default.
+3. **Use UTF-8 end to end.** Database connections, CSV exports and API payloads should all agree. Mixed encodings in one pipeline are where mojibake creeps in.
+
+## What is a byte order mark?
+
+A byte order mark (BOM) is the code point `U+FEFF` placed at the very start of a file to signal its encoding. In UTF-16 it also tells the reader which byte comes first, because a 16-bit unit can be stored with the high byte first (big-endian) or the low byte first (little-endian). In UTF-8 there is no byte order to signal, but some programs still write the three bytes `EF BB BF` at the start of a file as a marker.
+
+The UTF-8 BOM is a common source of small, confusing bugs. A script that reads the first column of a CSV file may find its header named `﻿name` instead of `name`, and a configuration file can fail to parse because of three invisible bytes at the start. In the other direction, some spreadsheet software uses the BOM to recognize UTF-8 when opening a CSV file, and without it shows accented letters as mojibake.
+
+The practical rules:
+
+- **Do not add a BOM to UTF-8 files by default.** Most tools on the web and in programming expect UTF-8 without one.
+- **Strip it when reading untrusted input.** In Python, open files with `encoding='utf-8-sig'`, which reads UTF-8 and removes a BOM if one is present.
+- **Add it deliberately when a consumer needs it,** such as a CSV export that will be opened by double-clicking in a spreadsheet application.
+
+```python
+with open('export.csv', 'w', encoding='utf-8-sig') as f:   # writes EF BB BF first
+    f.write('name\ncafé\n')
+```
+
+## Characters, code points and what you see
+
+One more layer causes confusion: what a reader sees as one character can be several code points. A family emoji such as 👨‍👩‍👧 is five code points (three people joined by two zero-width joiners), which is eight UTF-16 units and eighteen UTF-8 bytes. An accented letter can be one precomposed code point (`é`, U+00E9) or two (`e` followed by a combining accent, U+0301), and they look identical.
+
+Unicode calls a user-perceived character a grapheme cluster. When you count characters for a user, such as a character limit on a form, count graphemes. When you allocate storage or check a byte limit, count bytes in the encoding you will store.
+
+## How binary relates to hexadecimal
+
+Long runs of ones and zeros are hard to read, so bytes are usually shown in hexadecimal: each hex digit is exactly four bits, so a byte is always two hex digits. `11000011` is `C3`, and `10101001` is `A9`. The guide to [binary, hex and octal](/blog/number-bases-guide/) covers converting between them, and the [Number Base Converter](/tools/converters/number-base-converter/) shows any value in all three bases at once.
+
+## Do it in your browser
+
+Type any text into the [Text to Binary converter](/tools/converters/text-to-binary/) and switch on the byte table to see each character's code point, its UTF-8 bytes in hex and its binary. Try `é`, `€` and an emoji to watch the byte count grow from one to four, then switch the encoding to UTF-16 or Latin-1 to see how the same text produces different bytes. Decoding works too: paste a run of binary or hex bytes and it tells you exactly which byte is not valid UTF-8.

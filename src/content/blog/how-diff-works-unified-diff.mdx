@@ -1,0 +1,118 @@
+---
+title: "How diff works: reading unified diffs and patch files"
+description: "Learn how to read a unified diff: what the ---, +++ and @@ lines mean, how diff algorithms find changes, and how to apply a patch file safely."
+publishDate: 2026-11-24
+author: Cuisdev Team
+tags: [Git, Developer]
+tools: [text-diff-checker, code-formatter]
+---
+
+A unified diff shows the changes between two versions of a file as a list of lines: lines starting with `-` were removed, lines starting with `+` were added, and lines starting with a space are unchanged context. Each group of changes starts with an `@@` header that says where it sits in each file. Once you can read those three markers, you can read any diff from Git, a code review tool or a patch file. If you want to compare two texts right now and see the result highlighted, paste them into the [Text Diff Checker](/tools/developer/text-diff-checker/).
+
+## What does a unified diff look like?
+
+Here are two versions of a small web server configuration. The new version switches to HTTPS, adds a second server name and moves the API to a different port. Running `diff -u old.conf new.conf` produces this:
+
+```diff
+--- old.conf
++++ new.conf
+@@ -1,9 +1,9 @@
+ server {
+-  listen 80;
+-  server_name example.com;
++  listen 443 ssl;
++  server_name example.com www.example.com;
+   root /var/www/html;
+ 
+   location /api/ {
+-    proxy_pass http://127.0.0.1:3000;
++    proxy_pass http://127.0.0.1:4000;
+   }
+ }
+```
+
+(The real output also prints a timestamp after each file name; it is trimmed here.)
+
+## How do I read each part of a diff?
+
+### The file headers
+
+`--- old.conf` names the original file and `+++ new.conf` names the changed one. Git writes them as `--- a/old.conf` and `+++ b/new.conf`, and adds a `diff --git` line and an `index` line with object hashes above them. The `a/` and `b/` prefixes matter when you apply the patch, as we will see.
+
+### The hunk header
+
+`@@ -1,9 +1,9 @@` introduces a hunk, which is one block of nearby changes. Read it as two ranges:
+
+- `-1,9` means "starting at line 1 of the old file, this hunk covers 9 lines".
+- `+1,9` means "starting at line 1 of the new file, it covers 9 lines".
+
+If a hunk adds three lines, the new count is three higher than the old count. When the count is 1 it is often omitted, so `@@ -5 +5 @@` is a one-line change. Git may also print the enclosing function name after the closing `@@`, which helps you find your place in long files.
+
+### The body lines
+
+| Prefix | Meaning |
+| --- | --- |
+| space | Unchanged context line, present in both files |
+| `-` | Line only in the old file (removed) |
+| `+` | Line only in the new file (added) |
+| `\` | A note, usually `\ No newline at end of file` |
+
+There is no separate marker for a "changed" line. A modification is shown as the old line removed followed by the new line added, which is why `listen 80;` appears as a `-` line followed by a `+` line.
+
+### Context lines
+
+By default, GNU diff and Git show three unchanged lines around each change. Context makes the diff readable and lets the patch tool find the right place even if the file has shifted slightly. When two changes are close enough that their context overlaps, they merge into one hunk, which is why the example above is a single hunk covering the whole file.
+
+## How does diff find the changes?
+
+Comparing two files line by line sounds simple, but the interesting question is which lines to pair up. Diff tools solve it by finding the **longest common subsequence**: the largest set of lines that appear in both files in the same order. Everything outside that subsequence is a deletion or an insertion.
+
+The algorithm most tools use was published by Eugene Myers in 1986 in the paper "An O(ND) Difference Algorithm and Its Variations". Its key property is speed when files are similar: the running time grows with the size of the files multiplied by the number of differences, so small edits to big files are fast.
+
+The longest common subsequence is not always unique, and the choice affects readability. If a file has many identical lines, such as closing braces, an algorithm can align the wrong braces and produce a diff that is technically correct but confusing. Git offers alternatives for those cases:
+
+```bash
+git diff --diff-algorithm=myers      # the default
+git diff --diff-algorithm=patience   # anchors on lines that appear only once
+git diff --diff-algorithm=histogram  # a faster relative of patience
+```
+
+If a Git diff looks scrambled, try `--histogram`. It often produces hunks that match how a person would describe the change.
+
+## What other diff formats exist?
+
+| Format | Looks like | Where you see it |
+| --- | --- | --- |
+| Unified | `-`/`+` lines with `@@` hunks | Git, code review, patch files |
+| Side by side | Two columns, old left and new right | Review tools, the Text Diff Checker |
+| Context | `***` and `---` sections with `!` for changes | Older tools, `diff -c` |
+| Normal | Commands such as `2,3c2,3` | Plain `diff` with no options |
+| Word diff | Changes marked inside lines | `git diff --word-diff`, prose |
+
+Unified diffs won because they are compact and readable and every patch tool understands them. Side-by-side views are easier on the eyes for reviewing, and word-level highlighting is better for prose, where one changed word should not mark a whole paragraph as different.
+
+## How do I apply a patch file?
+
+Save a unified diff to a file, conventionally with a `.diff` or `.patch` extension, and apply it to an unchanged copy of the original:
+
+```bash
+git apply changes.diff           # inside a Git repository
+patch -p1 < changes.diff         # anywhere, for diffs with a/ and b/ prefixes
+patch -p0 < changes.diff         # for diffs whose paths have no prefix
+```
+
+The `-p` number tells `patch` how many leading path components to strip. Git-style diffs name files `a/src/app.js` and `b/src/app.js`, so `-p1` removes the `a/` or `b/`. Plain `diff -u` output names the files exactly, so `-p0` is right.
+
+Before applying a patch from someone else, check it first. `git apply --check changes.diff` reports whether it would apply cleanly without changing anything, and `git apply --stat changes.diff` summarizes which files it touches.
+
+## Why is my diff full of changes I did not make?
+
+Three causes account for most noisy diffs.
+
+1. **Whitespace and line endings.** Reindenting a block or converting line endings from CRLF to LF changes every affected line. Use `git diff -w` to ignore whitespace, and set line-ending rules in `.gitattributes` so they stop changing.
+2. **Formatting differences.** If two people format code differently, every save reshuffles lines. Running both versions through the same [Code Formatter](/tools/developer/code-formatter/) before comparing removes that noise, and adopting one formatter for the team prevents it.
+3. **Reordered content.** Moving a function shows up as a deletion and an insertion. Git can detect moves with `git diff --color-moved`, which colors moved blocks differently from real changes.
+
+## Do it in your browser
+
+When you need to compare two texts that are not in a repository, such as two config files, two drafts of a document or an API response before and after a change, paste them into the [Text Diff Checker](/tools/developer/text-diff-checker/). It shows the changes side by side or inline, highlights the words or characters that changed within each line, and can export a unified diff that `git apply` and `patch` understand.

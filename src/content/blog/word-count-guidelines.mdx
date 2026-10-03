@@ -1,0 +1,109 @@
+---
+title: Word counts for essays, articles, meta tags and social posts
+description: How many words and characters to aim for in essays, articles, title tags, meta descriptions, social posts and SMS, and why counting tools disagree.
+publishDate: 2027-01-05
+author: Cuisdev Team
+tags: [Writing, SEO]
+tools: [word-counter, case-converter]
+---
+
+Most length limits you meet are measured in characters, not words, and most "ideal word counts" are guidelines rather than rules. Hard limits come from systems: an SMS is 160 characters, a post on X is 280 characters for a standard account at the time of writing, and a form field may cut you off at its maximum. Soft limits come from readers and search engines, such as a page title of about 50 to 60 characters so it is not truncated in results.
+
+The quickest way to check a draft against all of them at once is to paste it into the [Word Counter](/tools/text/word-counter/), which shows words, characters, reading time and remaining space for common targets. The rest of this guide explains where those numbers come from and why different tools sometimes give different counts.
+
+## Character limits that are actually enforced
+
+These limits are set by a system. Go over them and your text is cut, split or rejected.
+
+| Where | Limit | Measured in |
+| --- | --- | --- |
+| SMS, plain Latin text (GSM-7) | 160 per message | characters |
+| SMS containing emoji or non-Latin letters (UCS-2) | 70 per message | characters |
+| Multi-part SMS | 153 (GSM-7) or 67 (UCS-2) per part | characters |
+| Post on X, standard account, at the time of writing | 280 | characters, with some counted double |
+| Common App personal essay, at the time of writing | 650 | words |
+
+The SMS numbers surprise people. A single emoji switches the whole message to a 16-bit encoding, so the limit drops from 160 to 70 characters, and a long message is split into parts of 153 or 67 characters because each part carries a small header. If you write SMS templates, test them with the exact characters you will send.
+
+Platform limits change, so confirm the current numbers in each platform's own documentation before you build a template around them.
+
+## Lengths that matter for search results
+
+Search engines do not enforce a character limit on titles or descriptions. They truncate what does not fit the space in the results page, and that space is measured in pixels, not characters. Wide letters such as `W` and `M` use more of it than narrow ones such as `i` and `l`. That is why the guidance below is a range.
+
+| Element | Practical target | Why |
+| --- | --- | --- |
+| Title tag | about 50 to 60 characters | Longer titles are often cut off with an ellipsis |
+| Meta description | about 120 to 160 characters | Longer descriptions are often truncated on desktop, sooner on mobile |
+| URL slug | 3 to 6 meaningful words | Short slugs are easier to read and share |
+| H1 heading | short enough to read at a glance | It should match the promise of the title |
+
+Search engines may also rewrite your title or description if they think another part of the page answers the query better, so treat these targets as a way to control the common case. For slugs specifically, the guide on [what makes a good URL slug](/blog/url-slug-best-practices/) goes further.
+
+## How long should an essay or article be?
+
+For assignments, the answer is whatever the brief says. Instructors set word counts to test how well you can select and structure material, and many treat a limit as a ceiling, with some allowing a small margin either side. When a brief gives a range, aim for the middle of it, and check whether footnotes, references and headings count. Rules differ between institutions, so the brief is the only reliable source.
+
+For articles and blog posts, there is no length that guarantees anything. A post should be as long as it takes to fully answer the question it targets, and no longer. A definition might need 300 words; a tutorial with code might need 2,000. Padding a short answer to hit a number makes it worse for readers and does not help it rank. Useful checks instead:
+
+- Does the first paragraph answer the question directly?
+- Would a reader still have an obvious follow-up question at the end?
+- Can any section be removed without the reader noticing?
+
+## Reading time and speaking time
+
+Reading time estimates divide the word count by an average reading speed. A large 2019 review of reading-speed research put the average for silent reading of non-fiction in English at about 238 words per minute, which is the figure most estimates use. A 1,200 word article is therefore about a five-minute read.
+
+Speaking is slower. Presenters and narrators commonly plan on about 130 to 150 words per minute, so a 5-minute talk is roughly 650 to 750 words. If you are writing a script with a hard time limit, rehearse it aloud; your own pace is the only number that matters.
+
+## Why do word counters disagree?
+
+Paste the same text into three tools and you may get three different numbers. The differences come from a few decisions.
+
+### What counts as a word
+
+The simplest method splits text on spaces. A smarter one follows Unicode's rules for word boundaries, which treat punctuation and hyphens differently:
+
+```js
+const text = "It's a state-of-the-art café.  Really!";
+
+text.trim().split(/\s+/).length; // 5
+
+[...new Intl.Segmenter('en', { granularity: 'word' }).segment(text)]
+  .filter((s) => s.isWordLike).length; // 8
+```
+
+Splitting on spaces counts `state-of-the-art` as one word, giving 5. The Unicode segmenter splits it into four words, giving 8. Neither is wrong; they answer slightly different questions. Word processors usually count hyphenated compounds as one word.
+
+Languages without spaces make the difference dramatic. The Japanese sentence 今日は良い天気です ("the weather is nice today") has no spaces, so splitting on spaces counts it as one word, while a Unicode-aware segmenter finds five.
+
+### What counts as a character
+
+Programming languages often count storage units rather than visible characters. In JavaScript, a family emoji such as 👨‍👩‍👧 has a `length` of 8, is five Unicode code points, and is one character to a reader. Social platforms and form validators each pick one of these definitions, which is why a post can fit in one tool and be over the limit in another. The guide on [how text becomes binary](/blog/text-to-binary-utf8/) explains the layers.
+
+### Counting in a spreadsheet or in code
+
+To count words in a cell in Excel or Google Sheets, compare the length of the text with and without spaces:
+
+```text
+=IF(LEN(TRIM(A1))=0, 0, LEN(TRIM(A1)) - LEN(SUBSTITUTE(A1, " ", "")) + 1)
+```
+
+`TRIM` collapses repeated spaces first, so double spaces do not inflate the count. In Python, `len(text.split())` gives the space-based count; for the example above it returns 5.
+
+## Getting a draft to length
+
+When you are over a limit:
+
+1. Cut the opening throat-clearing; the first sentence is often removable.
+2. Replace phrases with words: "in order to" becomes "to", "due to the fact that" becomes "because".
+3. Remove qualifiers such as "very", "really" and "quite".
+4. Check headings and titles separately, since they have their own targets.
+
+When you are under a limit, add substance rather than words: an example, a step you skipped, or the answer to the reader's next question.
+
+Decide on capitalization before you measure, too. Changing case does not change the count, but a house style for headings (title case or sentence case) saves a round of edits later. The [Case Converter](/tools/text/case-converter/) switches between the two in one click.
+
+## Do it in your browser
+
+The [Word Counter](/tools/text/word-counter/) shows words, characters with and without spaces, sentences, paragraphs, reading and speaking time, and how much room is left for common targets such as a post, a title tag, a meta description and an SMS. It counts words with Unicode-aware rules, so hyphenated phrases, contractions and languages without spaces are handled sensibly, and your text never leaves the browser.

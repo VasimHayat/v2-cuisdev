@@ -1,0 +1,126 @@
+---
+title: "Aspect ratios explained: 16:9, 4:3, 1:1 and when to use each"
+description: "Aspect ratio explained in plain terms: what 16:9, 4:3, 3:2, 1:1 and 4:5 mean, how to work them out from pixels, and how to crop without stretching."
+publishDate: 2026-12-17
+author: Cuisdev Team
+tags: [Images, Design]
+tools: [image-editor, image-resizer]
+---
+
+An aspect ratio is the shape of an image, written as width to height. A 16:9 image is 16 units wide for every 9 units tall, whatever its actual size, so a 1920 by 1080 video frame and a 1280 by 720 thumbnail share the same shape. Changing the size keeps the ratio; changing the ratio means cropping or adding bars, never stretching.
+
+That one idea explains most of the frustrations people have with images: the photo that gets its head cut off when uploaded, the video with black bars down the sides, the slide that looks squashed on a widescreen projector. If you can [crop to an exact ratio](/tools/image/image-editor/) before you upload, the platform has nothing left to guess.
+
+## How do you work out the aspect ratio of an image?
+
+Divide both dimensions by their greatest common divisor. For 1920 by 1080, the largest number that divides both is 120, which gives 16 by 9. In code that is a few lines:
+
+```js
+const gcd = (a, b) => (b === 0 ? a : gcd(b, a % b));
+function simplify(w, h) {
+  const g = gcd(w, h);
+  return `${w / g}:${h / g}`;
+}
+
+simplify(1920, 1080); // "16:9"
+simplify(1080, 1350); // "4:5"
+simplify(1024, 768);  // "4:3"
+simplify(3000, 2000); // "3:2"
+simplify(2560, 1080); // "64:27"
+```
+
+The last result is worth a second look. Monitors sold as "21:9 ultrawide" at 2560 by 1080 are really 64:27, which is about 2.37 to 1. Marketing rounds ratios to familiar names, so when precision matters, compare the decimal value instead: width divided by height.
+
+| Ratio | Decimal | Typical pixel sizes | Where you see it |
+| --- | --- | --- | --- |
+| 16:9 | 1.778 | 1920 × 1080, 1280 × 720, 3840 × 2160 | TV, YouTube, laptop screens, presentations |
+| 4:3 | 1.333 | 1024 × 768, 1600 × 1200 | Older monitors, iPad screens, many compact cameras |
+| 3:2 | 1.5 | 3000 × 2000, 6000 × 4000 | Most DSLR and mirrorless photos, 6 × 4 inch prints |
+| 1:1 | 1.0 | 1080 × 1080 | Profile pictures, square social posts, album art |
+| 4:5 | 0.8 | 1080 × 1350 | Tall feed posts on social platforms |
+| 9:16 | 0.5625 | 1080 × 1920 | Stories, short vertical video, phone screens |
+| 21:9 (nominal) | about 2.33 to 2.37 | 2560 × 1080, 3440 × 1440 | Ultrawide monitors, cinematic video |
+
+## Why do the common ratios exist?
+
+Each one came from a physical constraint. 4:3 was the shape of early film frames and then of television tubes, so a generation of software, slides and monitors inherited it. 3:2 comes from 35 mm film, whose frame is 36 by 24 mm, which is why digital cameras that descend from film cameras still shoot in 3:2.
+
+16:9 was chosen as a compromise for high-definition television: it sits between the old 4:3 TV shape and the much wider cinema formats, so content made for either loses less when shown on the other. Phones then turned 16:9 on its side, which is where 9:16 vertical video comes from. Square and 4:5 are platform choices: square suits grids of thumbnails, and 4:5 takes up more of a phone screen than a landscape image while still fitting in a scrolling feed.
+
+## What happens when the ratio does not match?
+
+When an image and its frame have different shapes, there are only three honest options, plus one dishonest one.
+
+### Crop to fill the frame
+
+Cropping removes part of the image so the remainder has the target shape. A 4000 by 3000 photo (4:3) cropped to 16:9 keeps the full width and loses height: the result is 4000 by 2250, with 375 pixel rows trimmed from the top and bottom if you crop from the center. Cropped to 1:1 it becomes 3000 by 3000, losing 500 columns on each side. Cropped to 4:5 it becomes 2400 by 3000.
+
+```js
+function cropTo(w, h, rw, rh) {
+  const target = rw / rh;
+  if (w / h > target) {
+    const nw = Math.round(h * target);
+    return { width: nw, height: h, x: Math.round((w - nw) / 2), y: 0 };
+  }
+  const nh = Math.round(w / target);
+  return { width: w, height: nh, x: 0, y: Math.round((h - nh) / 2) };
+}
+
+cropTo(4000, 3000, 16, 9); // { width: 4000, height: 2250, x: 0, y: 375 }
+cropTo(4000, 3000, 1, 1);  // { width: 3000, height: 3000, x: 500, y: 0 }
+```
+
+A centered crop is only a starting point. If the subject sits off center, slide the crop box so you keep the part that matters. That is the step automatic platform crops get wrong.
+
+### Fit inside the frame and add bars
+
+Fitting scales the image until it touches two edges, then fills the remaining space. A 4:3 video shown full height on a 1920 by 1080 screen is 1440 pixels wide, leaving 240 pixel bars on the left and right; that is pillarboxing. A 21:9 film shown full width on the same screen is about 823 pixels tall, leaving bars of roughly 128 pixels above and below; that is letterboxing. Nothing is lost, but some of the frame is empty.
+
+### Choose a different frame
+
+Sometimes the right answer is to change the container. A gallery can switch a tall product shot to a 4:5 card instead of forcing it into 16:9. On the web, the CSS `aspect-ratio` property reserves the right shape before an image loads, and `object-fit: cover` or `contain` chooses between cropping and fitting inside that box.
+
+### Stretch it (do not)
+
+Stretching scales width and height by different amounts. Circles become ellipses and faces look wrong, and viewers notice instantly. Any resize that does not keep the original ratio is a stretch, which is why resize tools have a lock-proportions switch, and why you should crop first and resize second.
+
+## Which aspect ratio should you use?
+
+Pick the ratio from where the image will be seen, not from what the camera produced.
+
+- **Video and slides for screens:** 16:9. Almost every TV, laptop and projector made in the last decade is close to it, so nothing gets cropped or letterboxed.
+- **Vertical video and stories:** 9:16. Keep text and faces away from the top and bottom edges, where apps overlay buttons and captions.
+- **Social feed posts:** 1:1 is the safest everywhere, and 4:5 uses more screen height on platforms that accept it. Check each platform's current guidance, because accepted ratios change over time.
+- **Profile pictures and avatars:** 1:1, with the face centered. Many sites display them as circles, so leave space around the edges.
+- **Prints:** match the paper. A 6 × 4 print is 3:2, an 8 × 10 is 4:5, and A-series paper such as A4 is about 1:1.414. Cropping before you order means you choose what is cut, not the print lab.
+- **Website hero banners:** wide ratios such as 16:9 or 21:9 work on desktop, but they become a thin strip on phones. Many sites serve a taller crop to small screens.
+
+## Does changing the aspect ratio reduce quality?
+
+Cropping never reduces the quality of the pixels you keep, but it does reduce how many you have. A 4000 by 3000 photo cropped to a 1:1 square still has 9 million pixels; cropped tightly around a small detail it might have only 600 by 600, which looks soft when shown large. Resizing down after cropping is lossless in practice; resizing up adds pixels the camera never captured, and that is where blur comes from.
+
+The order of operations matters:
+
+1. Crop to the target ratio, choosing what to keep.
+2. Resize to the target pixel size, with proportions locked.
+3. Export in a suitable format and quality.
+
+Doing it the other way round, resizing first and cropping after, throws away resolution you might have kept.
+
+## Common questions about aspect ratio
+
+### Is 1920 by 1080 the same as 16:9?
+
+Yes. 1920 by 1080 is one specific size with a 16:9 ratio. So are 1280 by 720, 2560 by 1440 and 3840 by 2160. The ratio describes the shape; the pixel dimensions describe the size.
+
+### Why do my phone photos have a different ratio from my screen?
+
+Most phone cameras capture 4:3 by default, because that uses the full sensor, while phone screens are much taller than 16:9. The gallery app fits the photo inside the screen with space around it. Switching the camera to 16:9 or 1:1 crops the sensor, so you get fewer pixels.
+
+### What ratio is A4 paper?
+
+A-series paper uses a ratio of 1 to the square root of 2, about 1:1.414, so that cutting a sheet in half produces two sheets of the same shape. A4 is 210 by 297 mm.
+
+## Do it in your browser
+
+The [Image Editor](/tools/image/image-editor/) has aspect presets for 16:9, 4:3, 3:2, 1:1, 4:5 and 9:16, so you can drag the crop box to keep the right part of the picture before anything is resized. When you then need an exact pixel size, or the same size for a batch of images, the [Image Resizer](/tools/image/image-resizer/) keeps proportions locked so nothing is stretched. If the images are going on a website, the guide on [resizing images for the web](/blog/resize-images-for-web/) covers the pixel sizes that matter next.

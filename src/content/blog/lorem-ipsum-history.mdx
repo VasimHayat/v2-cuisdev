@@ -1,0 +1,116 @@
+---
+title: "Lorem ipsum: where it comes from and when not to use it"
+description: What does lorem ipsum mean? Its roots in Cicero, how it became the designer's placeholder text, and the cases where real words work better than filler.
+publishDate: 2027-03-04
+author: Cuisdev Team
+tags: [Design, Writing]
+tools: [lorem-ipsum-generator, word-counter]
+---
+
+Lorem ipsum means almost nothing, and that is the point. It is scrambled Latin taken from a passage by the Roman statesman Cicero, cut and altered until it no longer reads as real sentences. Designers and typesetters use it as placeholder text so that people judge the layout, the type and the spacing instead of reading the words.
+
+If you just need some, the [Lorem Ipsum Generator](/tools/text/lorem-ipsum-generator/) produces paragraphs, sentences, words or list items in seconds. This guide covers where the text comes from, why it became the industry default, and when you should reach for real copy instead.
+
+## What does "lorem ipsum" actually mean?
+
+"Lorem" is not a Latin word at all. It is the tail end of "dolorem", meaning pain or grief, with the first syllable cut off. "Ipsum" means "itself". So the famous opening, "lorem ipsum dolor sit amet", is a fragment of a phrase about pain itself, with the start of the first word missing.
+
+The standard placeholder paragraph begins:
+
+```text
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+tempor incididunt ut labore et dolore magna aliqua.
+```
+
+Read as Latin it is mostly broken: words are cut short ("lorem"), run together ("eiusmod" from "eius modi"), altered ("incididunt" from "incidunt") or rearranged. That is deliberate. Text that is almost but not quite readable lets your eye register "this is a paragraph" without pulling you into the content.
+
+## Where does lorem ipsum come from?
+
+The source is Cicero's philosophical work *De finibus bonorum et malorum*, "On the Ends of Good and Evil", written in 45 BC. The placeholder is drawn from sections 1.10.32 and 1.10.33, where a character discusses the pursuit of pleasure and the avoidance of pain. The original sentence contains the phrase:
+
+```text
+Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet,
+consectetur, adipisci velit...
+```
+
+In plain English, the passage says that nobody loves or seeks out pain for its own sake simply because it is pain. Placeholder text built from it keeps the rhythm and letter shapes of Latin prose while losing the meaning.
+
+### How old is lorem ipsum as placeholder text?
+
+You will often read that a printer created lorem ipsum in the 1500s. That claim is widely repeated but not well documented. The clearly documented history is much more recent: lorem ipsum appeared on Letraset dry-transfer lettering sheets used by designers in the 1960s, and later shipped as sample text in desktop publishing and word processing software, which spread it to everyone who laid out a page on a computer.
+
+The Cicero connection is widely credited to Richard McClintock, a Latin scholar who traced the scrambled words back to *De finibus*.
+
+## Why do designers use placeholder text at all?
+
+Early in a project the layout often exists before the words do. Placeholder text solves a few real problems:
+
+- **It shows how text will flow.** Line lengths, paragraph breaks, how a column fills and where it wraps around images all depend on having text of realistic length.
+- **It keeps reviews on design.** Show stakeholders a mockup with draft marketing copy and the meeting becomes about the copy. With lorem ipsum, the discussion stays on hierarchy, spacing and type.
+- **It has natural letter frequencies.** Latin-like text has a mix of short and long words and ascenders and descenders, so it looks like real prose at a glance. Repeating "text text text" or "asdf asdf" does not.
+
+## When should you not use lorem ipsum?
+
+Placeholder text is a shortcut, and like most shortcuts it has a cost. These are the cases where it causes trouble.
+
+### When the content decides the design
+
+If you are designing a product page, a pricing table or an onboarding flow, the words are the design. A headline that turns out to be twelve words, not four, breaks a layout that only looked good with "Lorem ipsum dolor". Use real or realistic draft copy, even rough, for any element where length and meaning drive the layout.
+
+### For interface labels and messages
+
+Buttons, menus, error messages and form labels are short, specific and often the hardest part to get right. "Lorem ipsum" on a button tells you nothing about whether "Delete account permanently" fits. Write the real label, or at least a plausible one.
+
+### When the site will be translated
+
+Translated text is often longer than English. A layout tested only with lorem ipsum, or only with tight English copy, can overflow or truncate in German or Finnish. Test with longer strings, and with real translations as soon as you have them.
+
+### For accessibility and usability testing
+
+Screen reader users, people testing with real tasks and usability study participants all need meaningful text. Testing a flow full of Latin filler tells you very little about whether people can complete it.
+
+### When it might ship
+
+The most embarrassing failure is placeholder text that reaches production: a live page, an email, an app store listing or a printed brochure still saying "Lorem ipsum". It happens more often than anyone admits, usually in rarely viewed states such as empty search results or error pages. Two simple defenses help:
+
+1. Search your codebase and content for "lorem" before release.
+2. Add an automated check that fails a build if the word appears in production templates.
+
+## What should you use instead?
+
+When lorem ipsum is the wrong choice, these alternatives work better.
+
+| Situation | Better placeholder |
+| --- | --- |
+| Marketing pages and landing pages | A rough draft of the real copy, even if it will change |
+| Product and data views | Realistic data: real-looking names, prices, dates and long values |
+| Interface labels | The actual labels, written early and refined later |
+| Long-form templates | Real articles of typical length from your own archive |
+| Visual tests of extremes | Deliberately short and deliberately long strings |
+
+For data-heavy screens, realistic test data is especially valuable, because real names, addresses and product titles vary in length far more than placeholder text does. Our guide to [generating realistic test data](/blog/generate-test-data/) covers that side.
+
+## How do you insert lorem ipsum in common tools?
+
+You rarely need to copy placeholder text from a website. Most design and writing tools can generate it on the spot.
+
+- **Microsoft Word.** Type `=lorem()` on a new line and press Enter to insert lorem ipsum paragraphs. `=lorem(3,5)` inserts three paragraphs of five sentences each. `=rand()` does the same with readable English sample text instead of Latin.
+- **VS Code and other editors with Emmet.** In an HTML file, type `lorem` and press Tab to expand a paragraph of placeholder text. `lorem10` expands to exactly ten words, which is handy for headings and buttons.
+- **Design tools.** Most layout and prototyping apps include a placeholder text option or plugin that fills a text box to its current size.
+- **Code.** Libraries for generating fake data in most languages include a lorem ipsum generator for words, sentences and paragraphs, which is useful when seeding a database for development.
+
+Whichever tool you use, the same rule applies: pick an amount that matches the real content, not whatever fills the box.
+
+### Does lorem ipsum hurt search rankings if it is published?
+
+Placeholder text that slips onto a live page gives search engines and readers nothing useful. A page that is mostly lorem ipsum is thin, low-quality content, and it signals an unfinished site. The fix is simple: remove it before launch, and keep staging sites that contain placeholder text out of search results with authentication or a `noindex` directive.
+
+## How much placeholder text should you use?
+
+Match the expected length of the real content. A product description that will be about 80 words should be mocked with about 80 words, not three paragraphs. If you have a target, generate text and check it with the [Word Counter](/tools/text/word-counter/), which shows words, characters and reading time, so the mockup reflects what will actually be published.
+
+Variety matters too. Real headlines and paragraphs are not all the same length, so a mockup where every card has identical text hides the layout problems you will meet in production.
+
+## Do it in your browser
+
+When placeholder text is the right tool, the [Lorem Ipsum Generator](/tools/text/lorem-ipsum-generator/) gives you exactly the amount you need as paragraphs, sentences, words or list items, in plain text, HTML or Markdown. It can start with the classic "Lorem ipsum dolor sit amet" or skip it, and a seed makes the output repeatable, so a mockup looks the same every time you regenerate it.

@@ -1,0 +1,165 @@
+---
+title: "BMI explained: what it measures and where it falls short"
+description: "What is BMI? How body mass index is calculated, what the WHO categories mean, and the limitations that matter for athletes, older adults and children."
+publishDate: 2027-01-19
+author: Cuisdev Team
+tags: [Health, Calculators]
+tools: [bmi-calculator, unit-converter]
+---
+
+Body mass index (BMI) is your weight in kilograms divided by the square of your height in meters. It is a quick screening number that sorts adults into broad weight categories, but it does not measure body fat, muscle or health directly. That gap between what BMI is and what people assume it is explains most of the confusion around it.
+
+This guide covers where BMI came from, how to calculate it by hand, what the categories mean, and the specific situations where the number misleads. If you only want your result, the [BMI Calculator](/tools/calculators/bmi-calculator/) works it out in metric or imperial units.
+
+This article is general information, not medical advice. Talk to a doctor or another qualified professional about your own health.
+
+## What does BMI actually measure?
+
+BMI measures one thing: how heavy you are relative to your height. It does not know what that weight is made of. Fat, muscle, bone, water and organs all count the same.
+
+The idea is older than most people expect. The Belgian mathematician Adolphe Quetelet described the weight-to-height-squared relationship in the 1830s while studying the statistics of populations, not individuals. The name "body mass index" came much later, in a 1972 paper by the physiologist Ancel Keys, who found it a reasonable proxy for body fat across large groups of people.
+
+That history matters. BMI was designed to describe populations. It is good at answering "what share of this country is overweight?" and much weaker at answering "is this particular person carrying unhealthy fat?"
+
+## How is BMI calculated?
+
+The metric formula is short:
+
+```text
+BMI = weight (kg) / height (m)²
+```
+
+A person who weighs 70 kg and is 1.75 m tall has a BMI of 70 ÷ (1.75 × 1.75) = 70 ÷ 3.0625 = 22.9.
+
+### The imperial formula and the 703 factor
+
+In pounds and inches the formula needs a conversion factor:
+
+```text
+BMI = 703 × weight (lb) / height (in)²
+```
+
+The 703 comes from converting units. One pound is 0.45359237 kg and one inch is 0.0254 m, so 0.45359237 ÷ 0.0254² is about 703.07. Most calculators round it to 703, which changes the result by far less than one decimal place. A person who weighs 160 lb and is 69 inches (5 feet 9 inches) tall has a BMI of 703 × 160 ÷ 4,761 = 23.6.
+
+If your measurements are in stones and pounds, or in feet and inches, convert them first. The [Unit Converter](/tools/converters/unit-converter/) accepts mixed entries such as `5 ft 9 in` and gives you inches or centimeters directly.
+
+### BMI in code
+
+The calculation is simple enough to write in a few lines. This Python version also returns the WHO category:
+
+```python
+def bmi_metric(weight_kg, height_m):
+    return weight_kg / height_m ** 2
+
+def bmi_imperial(weight_lb, height_in):
+    return 703 * weight_lb / height_in ** 2
+
+def who_category(bmi):
+    if bmi < 18.5:
+        return "Underweight"
+    if bmi < 25:
+        return "Healthy weight"
+    if bmi < 30:
+        return "Overweight"
+    return "Obesity"
+
+for kg, m in [(55, 1.62), (70, 1.75), (95, 1.75)]:
+    b = bmi_metric(kg, m)
+    print(f"{kg} kg, {m} m -> BMI {b:.1f} ({who_category(b)})")
+
+print(f"160 lb, 69 in -> BMI {bmi_imperial(160, 69):.1f}")
+```
+
+Output:
+
+```text
+55 kg, 1.62 m -> BMI 21.0 (Healthy weight)
+70 kg, 1.75 m -> BMI 22.9 (Healthy weight)
+95 kg, 1.75 m -> BMI 31.0 (Obesity)
+160 lb, 69 in -> BMI 23.6
+```
+
+## What do the BMI categories mean?
+
+The World Health Organization uses these categories for adults aged 20 and over:
+
+| BMI | WHO category |
+| --- | --- |
+| Below 18.5 | Underweight |
+| 18.5 to 24.9 | Normal (healthy) weight |
+| 25.0 to 29.9 | Overweight (pre-obese) |
+| 30.0 to 34.9 | Obesity class I |
+| 35.0 to 39.9 | Obesity class II |
+| 40.0 and above | Obesity class III |
+
+The cut-offs are round numbers chosen because, across large populations, health risks such as type 2 diabetes and cardiovascular disease tend to rise as BMI moves away from the middle band. They are not thresholds where your body suddenly changes. A BMI of 24.8 and one of 25.1 describe almost exactly the same person.
+
+### What is a healthy weight range for my height?
+
+You can turn the categories around to get a weight range. Multiply the square of your height in meters by 18.5 and by 24.9. For someone 1.75 m tall:
+
+- 18.5 × 3.0625 = 56.7 kg (about 125 lb)
+- 24.9 × 3.0625 = 76.3 kg (about 168 lb)
+
+That 20 kg spread is wide on purpose. It covers people with very different builds, which is a hint that BMI is a coarse tool.
+
+### What is BMI Prime?
+
+BMI Prime divides your BMI by 25, the upper limit of the healthy band. A result under 1.0 is within or below the healthy range, and 1.24 means 24 percent above the upper limit. It is just a rescaled BMI, so it carries the same limitations.
+
+## Where does BMI fall short?
+
+Because BMI only sees total weight, it can misclassify people whose weight is unusual in composition or distribution.
+
+### Muscular people and athletes
+
+Muscle is denser than fat, so a muscular person can have a BMI in the overweight or even obese range while carrying little body fat. Rugby players, sprinters and people who lift weights regularly often fall into this group. For them, BMI says "heavy for height", which is true, but not "too much fat", which may be false.
+
+### Older adults
+
+People tend to lose muscle and some height with age. An older adult can have a BMI in the healthy range while carrying more body fat than the number suggests, and some research suggests that slightly higher BMI values are not linked to the same risks in later life. Clinicians usually interpret BMI for older adults with more context.
+
+### Where the fat is stored
+
+Fat around the abdomen is more closely linked to metabolic risk than fat on the hips and thighs, and BMI cannot tell the difference. That is why some guidelines pair BMI with a waist measurement. The UK's NICE guidance, for example, encourages adults to keep their waist circumference below half their height.
+
+### Ethnicity
+
+Risk at a given BMI differs between populations. A WHO expert consultation noted that many Asian populations have higher health risks at BMI values below the standard cut-offs, and some countries use lower thresholds for people of South Asian, Chinese and other Asian backgrounds. If that applies to you, the standard table may underestimate risk.
+
+### Children and teenagers
+
+The adult categories do not apply under 20. Children are still growing, and healthy body composition changes with age and differs between boys and girls. For them, BMI is compared against growth reference charts and expressed as a percentile for their age and sex. A calculator built for adults, including ours, should not be used to assess a child.
+
+### Pregnancy
+
+Weight gain during pregnancy is expected and BMI is not used to judge it. Pre-pregnancy BMI is sometimes used to guide recommended weight gain, which is a conversation for a midwife or doctor.
+
+## What measures can you use alongside BMI?
+
+No single number captures health. These are commonly used together with BMI:
+
+| Measure | What it adds | Limitation |
+| --- | --- | --- |
+| Waist circumference | Abdominal fat, linked to metabolic risk | Needs consistent measuring technique |
+| Waist-to-height ratio | Abdominal fat relative to frame size | Still a proxy for fat, not a direct measure |
+| Waist-to-hip ratio | Fat distribution pattern | Sensitive to how the hips are measured |
+| Body fat percentage | Separates fat from lean mass | Home scales and calipers vary widely in accuracy |
+| Blood pressure, blood sugar, cholesterol | Direct markers of risk | Need a test or a clinic visit |
+
+A doctor looking at your health will combine several of these with your history and lifestyle, rather than relying on BMI alone.
+
+## How should you use your BMI result?
+
+Treat BMI as a first signal, not a verdict. A few practical points:
+
+- **Look at the trend.** A BMI that moves steadily over months says more than a single reading.
+- **Use consistent measurements.** Weigh yourself at the same time of day, and measure height without shoes.
+- **Read it with your build in mind.** If you train for strength or sport, expect a higher BMI than your body fat suggests.
+- **Ask about the other measures.** If your BMI is outside the healthy band, a waist measurement and routine blood tests give a much fuller picture.
+
+## Calculate your BMI in your browser
+
+The [BMI Calculator](/tools/calculators/bmi-calculator/) takes metric or imperial input, including stones and pounds, and shows your BMI, the WHO category, the healthy weight range for your height in both units, and BMI Prime. Everything is calculated on your device, so your weight and height are never sent anywhere.
+
+Remember what the number is: a ratio of weight to height that works well for describing groups and only roughly for describing one person.

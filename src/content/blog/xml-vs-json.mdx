@@ -1,0 +1,148 @@
+---
+title: "XML vs JSON: when XML is still the right choice"
+description: "XML vs JSON compared: syntax, data types, schemas, namespaces and size, plus the cases where XML is still the better format, from documents to SVG and SOAP."
+publishDate: 2027-02-11
+author: Cuisdev Team
+tags: [XML, Developer]
+tools: [xml-formatter, json-formatter]
+---
+
+JSON is the better default for APIs and data exchange between programs: it is smaller to write, maps directly to the objects in most languages, and every web platform parses it natively. XML is still the right choice for documents with mixed text and markup, for formats that need namespaces or strict schema validation, and anywhere an established standard already uses it, such as SVG, RSS, Office files and many enterprise and government systems. If you are working with XML today, the [XML Formatter](/tools/developer/xml-formatter/) makes it readable and checks that it is well formed.
+
+The two formats overlap less than the "XML vs JSON" framing suggests. This guide compares them point by point and explains where each one wins.
+
+## The same data in XML and JSON
+
+Here is one record in both formats:
+
+```xml
+<books>
+  <book id="42" lang="en">
+    <title>Dune</title>
+    <author>Frank Herbert</author>
+    <price currency="USD">9.99</price>
+  </book>
+</books>
+```
+
+```json
+{
+  "books": [
+    {"id": 42, "lang": "en", "title": "Dune",
+     "author": "Frank Herbert", "price": {"amount": 9.99, "currency": "USD"}}
+  ]
+}
+```
+
+Both carry the same information, but they model it differently. XML distinguishes attributes (`id`, `lang`, `currency`) from element content, and everything is text. JSON has only keys and values, but those values have types: `42` is a number and `"42"` would be a string.
+
+Reading them in Python shows the practical difference:
+
+```python
+import json
+import xml.etree.ElementTree as ET
+
+# xml_doc and json_doc hold the two documents shown above, as strings
+book = ET.fromstring(xml_doc).find("book")
+print(book.get("id"), book.findtext("title"), float(book.findtext("price")))
+
+data = json.loads(json_doc)["books"][0]
+print(data["id"], data["title"], data["price"]["amount"])
+```
+
+```text
+42 Dune 9.99
+42 Dune 9.99
+```
+
+The XML version needs to know which values live in attributes and which in elements, and it has to convert the price from text to a number. The JSON version reads the structure as native dictionaries, lists and numbers.
+
+## XML vs JSON at a glance
+
+| | XML | JSON |
+| --- | --- | --- |
+| Data model | A tree of elements with attributes and text | Objects, arrays, strings, numbers, booleans, null |
+| Data types | All text unless a schema says otherwise | Built in: string, number, boolean, null |
+| Mixed content (text with inline markup) | Natural | Awkward |
+| Comments | Yes | No |
+| Namespaces | Yes | No |
+| Schema languages | XSD, RELAX NG, DTD (mature, widely used) | JSON Schema |
+| Transformation | XSLT, XPath, XQuery | Code, or JSONPath-style queries |
+| Native parsing in browsers | `DOMParser` | `JSON.parse`, the fetch API's `json()` |
+| Typical size | Larger (closing tags repeat names) | Smaller |
+
+## Which is smaller, XML or JSON?
+
+JSON is usually smaller because XML repeats every element name in its closing tag. We generated 1,000 book records in both formats, minified:
+
+- JSON: 84,791 bytes
+- XML: 108,795 bytes, about 28 percent larger
+
+After gzip compression, which most web servers apply automatically, the gap almost disappears: 5,523 bytes for JSON against 5,618 for XML. Repeated tag names are exactly what compression is good at removing. Size alone is rarely a strong reason to choose JSON over XML for data in transit, though it does matter for storage and for parsing speed.
+
+## When is XML the right choice?
+
+### Documents with mixed content
+
+XML was designed for documents, and it shines when text and structure interleave:
+
+```xml
+<p>Read the <term>terms</term> before <link href="/signup">signing up</link>.</p>
+```
+
+Representing that in JSON means inventing a structure of text runs and inline objects, which is clumsy to write and to read. This is why publishing formats such as DocBook, DITA and JATS (used for scholarly articles) are XML, and why XHTML is XML.
+
+### Established standards and file formats
+
+Many formats you use every day are XML underneath:
+
+- **SVG** vector graphics
+- **RSS and Atom** feeds
+- **Office Open XML** (`.docx`, `.xlsx`, `.pptx` are zip files of XML) and OpenDocument
+- **Android** layouts and app manifests
+- **Maven** `pom.xml` and .NET project files
+- **Sitemaps** for search engines
+- **SAML** for single sign-on, and **SOAP** web services
+
+If you integrate with one of these, the choice is made for you. Converting to JSON and back adds risk for no gain.
+
+### Strict validation and contracts between organizations
+
+XML Schema (XSD) is mature, expressive and well supported by tools in Java, .NET and other enterprise stacks. Banking, healthcare, government filing and supply-chain systems often exchange XML documents validated against a published schema, sometimes with digital signatures defined by standards such as XML Signature. JSON Schema has grown capable, but these ecosystems have decades of XML tooling.
+
+### Namespaces: combining vocabularies
+
+XML namespaces let one document mix elements from different standards without name clashes. An SVG image can embed metadata from another vocabulary, and a SOAP message can carry a payload defined by a separate schema. JSON has no equivalent, so mixing vocabularies relies on naming conventions.
+
+### Transformation with XSLT
+
+XSLT can turn an XML document into HTML, another XML format or plain text using declarative templates. Publishing pipelines that produce web pages, PDFs and ebooks from one source often rely on it.
+
+## When is JSON the better choice?
+
+- **Web and mobile APIs.** JSON maps directly to JavaScript objects and to the dictionaries and lists of most languages, with no attribute-versus-element decisions.
+- **Configuration and data with clear types.** Numbers, booleans and null are explicit, so `"true"` and `true` are never confused.
+- **Logs and event streams.** One JSON object per line (NDJSON) is easy to append, stream and query.
+- **Document databases and search engines,** many of which store and query JSON directly.
+
+For new HTTP APIs without an existing standard to follow, JSON is the safe default.
+
+## Common XML mistakes that JSON users run into
+
+If you mostly work with JSON, a few XML rules tend to cause surprises:
+
+- **Exactly one root element.** `<a/><b/>` is not a valid document. Wrap them.
+- **Case matters.** `<Title>` and `<title>` are different elements, and a closing tag must match exactly.
+- **Escape special characters.** `&` must be written `&amp;` and `<` as `&lt;` in text, unless inside a CDATA section.
+- **Attributes must be quoted.** `id=42` is invalid. Use `id="42"`.
+- **Whitespace can be significant.** In mixed content, line breaks and indentation may matter to the consumer, so do not reformat documents blindly.
+
+A well-formedness check catches the first four immediately, with the exact line and column.
+
+## Can you convert XML to JSON?
+
+You can, but there is no single correct mapping. Attributes, repeated elements and mixed content all need conventions. Is one `<item>` a single object and two `<item>` elements an array? Does `id="42"` become `"@id": "42"` or `"id": 42`? Different libraries answer differently, and round-tripping back to identical XML is often impossible. Convert when a consumer genuinely needs JSON, and keep the XML as the source of truth.
+
+## Format both in your browser
+
+To read or check an XML file, paste it into the [XML Formatter](/tools/developer/xml-formatter/). It indents nested elements, keeps mixed content on one line, preserves comments, CDATA and namespaces, and points to the exact spot where a document is not well formed. For the JSON side, the [JSON Formatter](/tools/developer/json-formatter/) does the same job. Both run entirely in your browser, so configuration files and API payloads never leave your machine.

@@ -9,6 +9,7 @@ import Breadcrumbs from '@/components/Breadcrumbs.astro';
 import Icon from '@/components/Icon.astro';
 import FAQ from '@/components/FAQ.astro';
 import RelatedTools from '@/components/RelatedTools.astro';
+import { postsForTool } from '@/lib/blog';
 import type { Tool, Category } from '@/data/tools';
 import { relatedTools, toolPath, categoryPath } from '@/data/tools';
 import { graph, organizationLd, websiteLd, breadcrumbLd, faqLd, softwareApplicationLd, howToLd, type Crumb } from '@/lib/seo';
@@ -30,6 +31,7 @@ const crumbs: Crumb[] = [
   { name: tool.name, href: toolPath(tool) },
 ];
 const related = relatedTools(tool);
+const guides = await postsForTool(tool.slug, 3);
 const updatedIso = updated.toISOString().slice(0, 10);
 
 const jsonLd = graph(
@@ -127,7 +129,24 @@ const jsonLd = graph(
           </ul>
         </div>
         <div class="mt-6">
-          <RelatedTools tools={related} />
+          <RelatedTools tools={related} variant="sidebar" />
+          {
+            guides.length > 0 && (
+              <div class="card mt-6 p-5">
+                <h2 class="text-sm font-semibold">Guides</h2>
+                <ul class="mt-3 space-y-2.5 text-sm">
+                  {guides.map((g) => (
+                    <li>
+                      <a href={`/blog/${g.id}/`} class="flex gap-2 text-ink-2 hover:text-brand-600 dark:hover:text-brand-400">
+                        <Icon name="book-open" size={16} class="mt-0.5 shrink-0 text-ink-3" />
+                        <span>{g.data.title}</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )
+          }
         </div>
         <a href={categoryPath(category.slug)} class="btn-secondary mt-6 w-full justify-between">
           All {category.name.toLowerCase()}

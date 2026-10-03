@@ -1,0 +1,146 @@
+---
+title: "Natural sort order: why file10 sorts before file2"
+description: "Why does file10 sort before file2? Natural sort order explained, with fixes for JavaScript, Python, the command line, Excel and databases."
+publishDate: 2026-12-08
+author: Cuisdev Team
+tags: [Text, Productivity]
+tools: [sort-lines, remove-duplicate-lines]
+---
+
+`file10` sorts before `file2` because a normal sort compares text one character at a time, and the character `1` comes before `2`. The sort never sees the numbers 10 and 2, only the digits. **Natural sort order** fixes this by treating runs of digits as numbers, so `file2` comes before `file10` the way a person would expect. You can sort any list this way in the [Sort Lines](/tools/text/sort-lines/) tool, and the rest of this guide shows how to do it in code, spreadsheets and the command line.
+
+## Why does a normal sort put 10 before 2?
+
+Computers sort text **lexicographically**: compare the first character of each string, and only look at the second character if the first ones are equal, and so on. Comparing `file10.txt` with `file2.txt`, the first four characters match, then the fifth is `1` against `2`. Since `1` is smaller, `file10.txt` wins, and the rest of the string is never examined.
+
+The same thing happens to plain numbers stored as text. In JavaScript, even an array of real numbers sorts this way by default, because `Array.prototype.sort` converts values to strings unless you give it a comparison function:
+
+```js
+console.log(['10', '9', '100', '1'].sort());
+console.log([10, 9, 100, 1].sort());
+console.log([10, 9, 100, 1].sort((a, b) => a - b));
+```
+
+```text
+[ '1', '10', '100', '9' ]
+[ 1, 10, 100, 9 ]
+[ 1, 9, 10, 100 ]
+```
+
+### Why does File1 come before file1?
+
+Lexicographic comparison uses character codes, and in ASCII and Unicode every uppercase letter comes before every lowercase letter. A plain sort therefore groups capitalized names first, which is rarely what people want for file names or product lists. Natural sorts usually ignore case as well.
+
+## How does natural sort work?
+
+A natural sort splits each string into chunks of digits and non-digits, then compares chunk by chunk:
+
+- Two digit chunks are compared as **numbers**, so `2` is less than `10`.
+- Two text chunks are compared as **text**, usually ignoring case.
+
+`file10.txt` becomes `file`, `10`, `.txt`, and `file2.txt` becomes `file`, `2`, `.txt`. The first chunks are equal, then 2 is less than 10, so `file2.txt` comes first.
+
+## How do I sort naturally in JavaScript?
+
+Use `Intl.Collator` with the `numeric` option. It is built into every modern browser and Node:
+
+```js
+const files = ['file10.txt', 'file2.txt', 'File1.txt', 'file1.txt', 'file20.txt', 'file3.txt'];
+const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+
+console.log([...files].sort().join(', '));
+console.log([...files].sort(collator.compare).join(', '));
+```
+
+```text
+File1.txt, file1.txt, file10.txt, file2.txt, file20.txt, file3.txt
+File1.txt, file1.txt, file2.txt, file3.txt, file10.txt, file20.txt
+```
+
+`sensitivity: 'base'` makes the comparison ignore case and accents, and `numeric: true` turns on number-aware comparison. A collator also sorts accented letters where a reader expects them, which plain character-code sorting does not.
+
+## How do I sort naturally in Python?
+
+Python has no built-in natural sort, but a short key function does the job:
+
+```python
+import re
+
+files = ['file10.txt', 'file2.txt', 'File1.txt', 'file1.txt', 'file20.txt', 'file3.txt']
+
+def natural_key(s):
+    return [int(t) if t.isdigit() else t.lower() for t in re.split(r'(\d+)', s)]
+
+print(sorted(files))
+print(sorted(files, key=natural_key))
+```
+
+```text
+['File1.txt', 'file1.txt', 'file10.txt', 'file2.txt', 'file20.txt', 'file3.txt']
+['File1.txt', 'file1.txt', 'file2.txt', 'file3.txt', 'file10.txt', 'file20.txt']
+```
+
+`re.split` with a capturing group keeps the digit runs, and converting them to `int` makes them compare as numbers. Python compares lists element by element, which gives exactly the chunk-by-chunk behavior described above.
+
+## How do I sort naturally on the command line?
+
+GNU `sort`, found on Linux and in Git Bash on Windows, has a version sort option that handles this case:
+
+```bash
+printf 'file10.txt\nfile2.txt\nfile1.txt\nfile20.txt\n' | sort
+printf 'file10.txt\nfile2.txt\nfile1.txt\nfile20.txt\n' | sort -V
+```
+
+```text
+file1.txt file10.txt file2.txt file20.txt
+file1.txt file2.txt file10.txt file20.txt
+```
+
+GNU `ls -v` lists directory contents in the same order. Windows File Explorer and the macOS Finder already sort file names numerically, which is why a folder can look correct on screen and still come out in the wrong order in a script.
+
+## How do I sort numbers stored as text in Excel or Google Sheets?
+
+Spreadsheets sort text cells character by character, so `Item 10` lands before `Item 2`. There is no natural-sort button, but two fixes work:
+
+1. **If the column holds only numbers,** convert it to real numbers. In Excel, select the column and use Data, then Text to Columns, then Finish, or multiply by 1 in a helper column with `=A2*1`.
+2. **If numbers are inside text,** extract them into a helper column and sort by it. For values shaped like `Item 10`, `=VALUE(MID(A2, 6, 10))` pulls out the number. Sort by the helper column, then hide it.
+
+## How do I sort naturally in a database?
+
+SQL `ORDER BY` on a text column is lexicographic too. Two common approaches:
+
+- If the text has a fixed prefix, order by the numeric part, for example by casting a substring to an integer.
+- PostgreSQL with ICU support can define a collation with numeric ordering:
+
+```sql
+CREATE COLLATION numeric (provider = icu, locale = 'en-u-kn-true');
+SELECT name FROM files ORDER BY name COLLATE numeric;
+```
+
+The `kn-true` part is the Unicode locale extension that switches on numeric comparison, the same idea as `numeric: true` in JavaScript.
+
+## What about version numbers and other edge cases?
+
+Natural sort handles version numbers well, because each dotted part is its own digit run: a numeric collator sorts `1.2.0`, `1.9.3`, `1.10.0` in the right order, where a plain sort puts `1.10.0` first. A few cases still need care:
+
+| Input | Problem |
+| --- | --- |
+| `1.5` and `1.10` as decimals | A natural sort treats them as 1 then 5 versus 1 then 10, so 1.5 comes first, which is wrong for decimals |
+| `-5` and `3` | The minus sign is text, so negative numbers may not sort numerically |
+| `007` and `7` | Leading zeros compare as equal numbers, and the tie-break varies by implementation |
+
+If a column is genuinely numeric, store and sort it as numbers. Natural sort is for mixed text such as file names, labels and product codes.
+
+## What happens when two items compare as equal?
+
+A case-insensitive natural sort considers `File1.txt` and `file1.txt` equal, so something else has to decide their order. Both JavaScript's `Array.prototype.sort` (since ECMAScript 2019) and Python's `sorted` are **stable**: items that compare as equal keep the order they had in the input. That is why both examples above list `File1.txt` before `file1.txt`, since that is the order they were given in.
+
+Stability matters when you sort in several passes. Sort by the secondary key first, then by the primary key, and items with the same primary key stay ordered by the secondary one. If you need a fixed result regardless of input order, add an explicit tie-breaker to the comparison, for example comparing with case sensitivity only when the case-insensitive comparison returns zero.
+
+## The best fix is padding
+
+If you control the names, pad numbers with zeros: `file002.txt` and `file010.txt` sort correctly everywhere, in every tool, with no special options. Dates written as `2026-12-08` sort correctly as text for the same reason.
+
+## Do it in your browser
+
+The [Sort Lines](/tools/text/sort-lines/) tool sorts a pasted list naturally, A to Z or Z to A, by length or by a column, with options for case and language-aware ordering. If your list also contains repeats, the [Remove Duplicate Lines](/tools/text/remove-duplicate-lines/) tool can dedupe it in the same step. Nothing you paste leaves your browser.

@@ -1,0 +1,151 @@
+---
+title: "Metric vs imperial: the conversions that trip people up"
+description: "The metric to imperial conversion mistakes people make most: US vs UK gallons, fluid ounces, tons, temperature changes, square and cubic units, and mpg."
+publishDate: 2027-02-16
+author: Cuisdev Team
+tags: [Math, Productivity]
+tools: [unit-converter, percentage-calculator]
+---
+
+Most metric to imperial conversion mistakes come from units that share a name but not a size: the US gallon is about 20 percent smaller than the UK gallon, a "ton" can mean three different weights, and an ounce can be weight or volume. The next biggest source is temperature, where converting a change in temperature uses a different rule from converting a reading. Square and cubic units, which need the conversion factor squared or cubed, cause the rest. A converter that names its units precisely, like the [Unit Converter](/tools/converters/unit-converter/), avoids all three, but it helps to know where the traps are.
+
+## Same name, different size
+
+### US gallons vs UK (imperial) gallons
+
+| Unit | Exact size |
+| --- | --- |
+| US gallon | 3.785411784 liters |
+| UK (imperial) gallon | 4.54609 liters |
+
+The UK gallon is 20.09 percent larger than the US gallon. Put the other way, a US gallon is 16.73 percent smaller than a UK one. (The asymmetry is normal for percentages: the [Percentage Calculator](/tools/calculators/percentage-calculator/) shows the working for both directions.)
+
+Every unit derived from the gallon inherits the difference:
+
+| Unit | US | UK (imperial) |
+| --- | --- | --- |
+| Gallon | 3.785 L | 4.546 L |
+| Pint | 473.18 mL (16 US fl oz) | 568.26 mL (20 UK fl oz) |
+| Fluid ounce | 29.57 mL | 28.41 mL |
+
+Notice the twist in the last row. A UK pint is bigger than a US pint, but a UK fluid ounce is smaller than a US fluid ounce, because the UK pint holds 20 fluid ounces and the US pint holds 16.
+
+### Fuel economy: mpg is not one unit
+
+Because the gallons differ, "miles per gallon" means different things on each side of the Atlantic. Most of the world uses liters per 100 km instead, which also runs the other way (lower is better).
+
+```python
+US_GALLON_L = 3.785411784
+UK_GALLON_L = 4.54609
+MILE_KM = 1.609344
+
+def mpg_us_to_l_per_100km(mpg):
+    return 100 * US_GALLON_L / (mpg * MILE_KM)
+
+def mpg_uk_to_l_per_100km(mpg):
+    return 100 * UK_GALLON_L / (mpg * MILE_KM)
+
+print(f"40 mpg (US) = {mpg_us_to_l_per_100km(40):.2f} L/100 km")
+print(f"40 mpg (UK) = {mpg_uk_to_l_per_100km(40):.2f} L/100 km")
+print(f"UK gallon / US gallon = {UK_GALLON_L / US_GALLON_L:.4f}")
+```
+
+```text
+40 mpg (US) = 5.88 L/100 km
+40 mpg (UK) = 7.06 L/100 km
+UK gallon / US gallon = 1.2009
+```
+
+The same "40 mpg" describes two quite different cars. When comparing fuel economy figures from different countries, check which gallon they use.
+
+### Three tons
+
+| Name | Pounds | Kilograms |
+| --- | --- | --- |
+| Short ton (US) | 2,000 lb | 907.18474 kg |
+| Long ton (UK imperial) | 2,240 lb | 1,016.0469088 kg |
+| Metric ton (tonne) | about 2,204.6 lb | 1,000 kg |
+
+Shipping, freight and commodity prices often quote "tons" without saying which. The difference between short and long tons is 12 percent, which is large on a cargo invoice. The metric tonne sits between them.
+
+### Ounces: weight, volume and gold
+
+"Ounce" alone is ambiguous in at least three ways:
+
+- **Avoirdupois ounce** (everyday weight): 28.349523125 g. Sixteen make a pound.
+- **Troy ounce** (precious metals): 31.1034768 g, about 10 percent heavier. Gold and silver prices are quoted per troy ounce.
+- **Fluid ounce** (volume): 29.57 mL in the US and 28.41 mL in the UK, as above.
+
+A recipe that says "8 ounces of flour" means weight. One that says "8 ounces of milk" usually means fluid ounces. They are not interchangeable, because a fluid ounce of flour weighs much less than an ounce.
+
+### Cups and spoons
+
+Cooking measures vary by country too. A US customary cup is 236.59 mL, US nutrition labels use a rounded 240 mL, and the metric cup used in Australia, New Zealand and Canada is 250 mL. The differences are small for one cup but add up in baking, where proportions matter. Weighing ingredients avoids the problem entirely.
+
+### The stone
+
+In the UK and Ireland body weight is often given in stones and pounds. One stone is 14 pounds, or 6.35 kg. "11 stone 4" means 11 stone and 4 pounds, which is 158 lb or about 71.7 kg, not 11.4 stone.
+
+## Temperature: readings vs changes
+
+Celsius and Fahrenheit differ in both scale and starting point, so converting a reading needs a multiplication and an offset:
+
+```text
+°F = °C × 9/5 + 32
+°C = (°F − 32) × 5/9
+```
+
+A change in temperature, however, ignores the offset. A rise of 1 °C is a rise of 1.8 °F, whatever the starting temperature:
+
+```python
+def c_to_f(c):
+    return c * 9 / 5 + 32
+
+print(f"25 C = {c_to_f(25):.0f} F, but a rise of 25 C = a rise of {25 * 9 / 5:.0f} F")
+```
+
+```text
+25 C = 77 F, but a rise of 25 C = a rise of 45 F
+```
+
+This is the mistake behind statements such as "the oven runs 10 degrees hot, which is 50 °F". A 10 °C error is an 18 °F error. It also explains why Kelvin and Celsius degrees are the same size: 0 °C is 273.15 K, but a change of 1 °C is a change of 1 K.
+
+## Square and cubic units
+
+One meter is 3.28084 feet, so it is tempting to multiply square meters by 3.28 as well. That is wrong. Area uses the factor squared, and volume uses it cubed:
+
+| From | To | Multiply by |
+| --- | --- | --- |
+| meters | feet | 3.28084 |
+| square meters | square feet | 10.7639 (3.28084²) |
+| cubic meters | cubic feet | 35.3147 (3.28084³) |
+
+A 50 m² apartment is 538 ft², not 164 ft². The same applies to any area or volume, including centimeters to inches for screen sizes and liters to cubic inches for engines.
+
+## Miles, nautical miles and rounding
+
+A statute mile is exactly 1.609344 km. A nautical mile, used at sea and in aviation, is exactly 1,852 m, about 15 percent longer. Speeds in knots are nautical miles per hour.
+
+Rounding a factor is fine for estimates and risky for anything that accumulates. Using 1.6 km per mile for a 100-mile route gives 160 km instead of 160.93 km. That small gap becomes a large one over a long distance or many repeated calculations. The inch, foot, yard, mile and pound all have exact metric definitions (the inch is exactly 2.54 cm), so precise conversion is always possible.
+
+## When unit mistakes are expensive
+
+Unit confusion has caused well-documented failures:
+
+- **NASA's Mars Climate Orbiter** was lost in 1999. Software from one team reported thruster impulse in pound-force seconds, while the navigation software expected newton-seconds, a factor of about 4.45. The spacecraft's trajectory was wrong by enough that it was lost on arrival at Mars.
+- **Air Canada Flight 143**, nicknamed the "Gimli Glider", ran out of fuel in flight in 1983. During a period when Canada was moving to metric units, the fuel load was calculated with a pounds-based factor where a kilograms-based one was needed, so the aircraft carried far less fuel than the crew believed. The pilots glided it to a safe landing.
+
+Both cases share a lesson: write the unit next to every number, especially at the boundary between two systems or two teams.
+
+## How to avoid conversion mistakes
+
+- **Name the exact unit.** Write "US gal", "UK gal", "short ton" or "troy oz" instead of the bare word.
+- **Use exact factors** for anything precise, and round only the final result.
+- **Square or cube the factor** for areas and volumes.
+- **Drop the offset** when converting a change in temperature.
+- **Sanity-check direction.** Converting to a smaller unit should give a bigger number. If 5 kg came out as 2.3 lb, the factor was used upside down.
+- **Prefer weight in the kitchen,** and prefer metric internally in software, converting only for display.
+
+## Convert units precisely in your browser
+
+The [Unit Converter](/tools/converters/unit-converter/) separates US and imperial gallons, pints and fluid ounces, the short ton, long ton and tonne, and US and UK miles per gallon, using exact legal definitions. It handles temperature offsets correctly, accepts mixed entries such as `5 ft 11 in` and shows the formula in words, so you can see exactly what was multiplied by what.

@@ -1,0 +1,118 @@
+---
+title: "Favicon sizes: the files and HTML tags you actually need"
+description: "Which favicon sizes do you need? The short modern list: favicon.ico, an SVG icon, a 180px Apple touch icon and 192 and 512px PNGs, with the HTML."
+publishDate: 2026-11-26
+author: Cuisdev Team
+tags: [Web, Design]
+tools: [favicon-generator, image-resizer]
+---
+
+A modern website needs only a handful of favicon files: a `favicon.ico` with 16, 32 and 48 pixel images inside it, an optional SVG icon, a 180 by 180 pixel `apple-touch-icon.png`, and 192 and 512 pixel PNGs listed in a web app manifest. Four `<link>` tags in your HTML tie them together. The long lists of twenty-plus sizes you still see online date from older devices and are no longer needed. The fastest way to produce the whole set from one image is the [Favicon Generator](/tools/image/favicon-generator/).
+
+## Which favicon sizes do I need?
+
+| File | Size | Used by |
+| --- | --- | --- |
+| `favicon.ico` | 16, 32 and 48 px inside one file | Browser tabs, bookmarks, and any client that requests `/favicon.ico` directly |
+| `icon.svg` | Any (vector) | Browser tabs in browsers that support SVG favicons, sharp at every size |
+| `apple-touch-icon.png` | 180 by 180 px | iPhone and iPad home screen shortcuts |
+| `android-chrome-192x192.png` | 192 by 192 px | Android home screen and app install prompts |
+| `android-chrome-512x512.png` | 512 by 512 px | Install prompts and splash screens |
+| `site.webmanifest` | Not an image | Lists the 192 and 512 px icons, name and colors |
+
+That is the full list. Browsers scale these files down when they need a smaller size, and they do a good job of it, so separate 57, 72, 114 and 152 pixel Apple icons or a Windows tile configuration file add nothing for current devices.
+
+## Why is favicon.ico still needed?
+
+Browsers request `/favicon.ico` from the root of your site automatically when a page does not declare an icon, and so do many feed readers, link preview services and other tools that never parse your HTML. An ICO file is a container that can hold several images at different sizes, so one file serves 16 pixel tabs and 32 pixel high-density tabs alike. Keeping it at the root, with that exact name, is the safest baseline.
+
+## What HTML do I put in the head?
+
+```html
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+```
+
+A few details are worth knowing:
+
+- The `sizes="32x32"` on the ICO line is deliberate. Without it, some browsers treat the ICO as a better match than the SVG and never use the vector version.
+- You do not need a `sizes` attribute on the Apple touch icon when you only provide the 180 pixel file.
+- Use absolute paths starting with `/` so the icons work on every page, not just the home page.
+
+## What goes in the web app manifest?
+
+The manifest is a small JSON file that tells Android and installable web apps which icons to use:
+
+```json
+{
+  "name": "Example Studio",
+  "short_name": "Example",
+  "icons": [
+    { "src": "/android-chrome-192x192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/android-chrome-512x512.png", "sizes": "512x512", "type": "image/png" }
+  ],
+  "theme_color": "#4f46e5",
+  "background_color": "#ffffff",
+  "display": "standalone"
+}
+```
+
+`short_name` is the label under the home screen icon, so keep it to about a dozen characters. `theme_color` tints the browser interface on some devices. Chrome's installability checks look for 192 and 512 pixel icons, which is why those two sizes are standard.
+
+### What is a maskable icon?
+
+Android launchers crop icons into circles, squircles or other shapes. A normal icon can lose its corners in the process. A maskable icon is designed with padding so that its important content sits inside a safe zone: a centered circle whose diameter is 80 percent of the icon's width, as defined in the W3C manifest specification. You declare it with `"purpose": "maskable"` on a separate icon entry. If you add one, give it a solid background that fills the whole square.
+
+## Why does my Apple touch icon have a black background?
+
+iOS does not keep transparency on home screen icons. Transparent areas are filled in, often with black, which can make a logo with a transparent background look broken. Always give the 180 pixel Apple icon an opaque background color, usually your brand color or white, with the logo centered and a little padding around it.
+
+## Can a favicon change in dark mode?
+
+An SVG favicon can contain its own CSS, including a media query for the operating system's color scheme:
+
+```xml
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <style>
+    path { fill: #1e1b4b; }
+    @media (prefers-color-scheme: dark) { path { fill: #e0e7ff; } }
+  </style>
+  <path d="M4 4h24v24H4z"/>
+</svg>
+```
+
+This follows the system theme, not the browser's tab color, so test it in both modes. Browsers that do not support SVG favicons fall back to the ICO file, which is another reason to keep it.
+
+## How do I design an icon that works at 16 pixels?
+
+Most favicons are seen at 16 or 32 pixels, where detail disappears. Some practical rules:
+
+1. **Use a single bold shape or one or two letters.** A full logo with a wordmark becomes an unreadable smudge.
+2. **Fill the square.** Leave only a small margin. A tiny shape in a large empty square looks faint in a crowded tab bar.
+3. **Check contrast on both light and dark tabs.** A dark icon on a transparent background can vanish in a dark browser theme.
+4. **Start from a large, square source.** Begin with at least 512 by 512 pixels, or an SVG, and scale down. If your logo file is not square or is too small, the [Image Resizer](/tools/image/image-resizer/) can pad or resize it first.
+
+## Where do the favicon files go?
+
+Put them in the root of your site so they are served from URLs like `/favicon.ico` and `/apple-touch-icon.png`. In most frameworks and static site generators that means the `public` or `static` folder, whose contents are copied to the root when the site is built. The manifest file can live anywhere, but keeping it in the root alongside the icons makes the paths simple to reason about.
+
+If your site lives in a subfolder or behind a CDN, make sure each path in the HTML and the manifest points to a URL that actually returns the file. A broken path fails silently: the browser just shows a generic icon.
+
+## Do favicons show up in search results?
+
+Yes. Google Search shows a site's favicon next to its results on many devices, which makes a clear, recognizable icon worth the effort. Google's [favicon guidelines](https://developers.google.com/search/docs/appearance/favicon-in-search) ask for a square icon whose size is a multiple of 48 pixels, declared with a `rel="icon"` link and crawlable by Googlebot. The 48 pixel image inside the ICO file and the 192 and 512 pixel PNGs all meet that rule. Changes can take time to appear in results, because the icon is refreshed when the home page is recrawled.
+
+## Why does my new favicon not show up?
+
+Browsers cache favicons aggressively, sometimes far longer than the rest of the page. If you replaced the files and still see the old icon:
+
+- Open the icon URL directly, such as `/favicon.ico`, and reload that tab to refresh the cached file.
+- Check that the server returns the file with status 200 and an image content type, not an HTML error page.
+- During development, add a version query string such as `/favicon.ico?v=2` to the link tags to force a fresh request.
+- Remember that bookmarks and home screen shortcuts may keep the old icon until they are recreated.
+
+## Do it in your browser
+
+The [Favicon Generator](/tools/image/favicon-generator/) turns one image, or a letter or emoji, into the complete set described here: the multi-size ICO, the Apple touch icon with an opaque background, the 192 and 512 pixel PNGs, the manifest and the HTML snippet, zipped and ready to drop into your site's root folder. Everything is generated in your browser, so your logo is never uploaded.

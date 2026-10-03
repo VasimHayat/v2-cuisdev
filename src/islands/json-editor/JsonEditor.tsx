@@ -9,7 +9,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import type { ComponentChildren } from 'preact';
 import { Mode } from 'vanilla-jsoneditor';
 import { Icon } from '../shared/icons';
-import { copyText, downloadText, toast, track } from '../shared/toast';
+import { copyText, downloadText, formatBytes, toast, track } from '../shared/toast';
 import { Panel, type PanelApi } from './Panel';
 import { AiPanel } from './AiPanel';
 import { LocalDocsModal, Modal, ShortcutsModal, UrlModal } from './dialogs';
@@ -102,6 +102,30 @@ export default function JsonEditor({ mode: page = 'editor' }: Props) {
     if (!ready) return;
     writeHash(docs.left?.id ?? null, twoPanels ? (docs.right?.id ?? null) : null);
   }, [ready, docs.left?.id, docs.right?.id, twoPanels]);
+
+  // Size readout for the active document: bytes now and bytes once minified. Computed
+  // 300 ms after typing stops; the minified size is skipped above 20 MB to stay responsive.
+  const [sizes, setSizes] = useState<{ raw: number; min: number | null } | null>(null);
+  const activeText = docs[active]?.text ?? '';
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (!activeText.trim()) {
+        setSizes(null);
+        return;
+      }
+      const raw = new Blob([activeText]).size;
+      let min: number | null = null;
+      if (raw <= 20 * 1024 * 1024) {
+        try {
+          min = new Blob([JSON.stringify(JSON.parse(activeText))]).size;
+        } catch {
+          min = null;
+        }
+      }
+      setSizes({ raw, min });
+    }, 300);
+    return () => clearTimeout(t);
+  }, [activeText]);
 
   // Dark mode follows the site toggle
   useEffect(() => {
@@ -431,7 +455,19 @@ export default function JsonEditor({ mode: page = 'editor' }: Props) {
 
       {ready && docs.left && !twoPanels && (
         <div class="mt-2 flex items-center justify-between gap-3 text-xs text-ink-3">
-          <span class="hidden sm:inline">Tip: right-click a node in tree mode for the full menu.</span>
+          {sizes ? (
+            <span class="tabular-nums" aria-live="polite">
+              {formatBytes(sizes.raw)}
+              {sizes.min !== null && sizes.min < sizes.raw && (
+                <>
+                  {' '}· minified {formatBytes(sizes.min)} <span class="text-success">(−{Math.round((1 - sizes.min / sizes.raw) * 1000) / 10}%)</span>
+                </>
+              )}
+              {sizes.min !== null && sizes.min >= sizes.raw && ' · already minified'}
+            </span>
+          ) : (
+            <span class="hidden sm:inline">Tip: right-click a node in tree mode for the full menu.</span>
+          )}
           <button
             type="button"
             class="btn-secondary btn-sm"

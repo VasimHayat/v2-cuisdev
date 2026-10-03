@@ -1,0 +1,200 @@
+---
+title: How to open and edit large JSON files without crashing
+description: "How to open a large JSON file without freezing your editor: peek at it, query it with jq or Python, stream it as NDJSON, and edit only the part you need."
+publishDate: 2027-01-21
+author: Cuisdev Team
+tags: [JSON, Developer]
+tools: [json-editor, json-minifier]
+---
+
+To open a large JSON file without crashing, stop trying to load all of it into a visual editor. Peek at the start to learn its shape, then query or stream only the part you need with a command-line tool or a short script, and open that extract in an editor. For files of moderate size a browser-based editor like the [JSON Editor](/tools/developer/json-editor/) handles the whole thing, and it opens files up to 100 MB. Beyond that, the techniques below keep your machine responsive.
+
+## Why do editors freeze on large JSON files?
+
+A JSON file is just text, so it seems like any editor should open it. The trouble is what happens after the text is read.
+
+- **Parsing builds objects.** A JSON parser turns the text into objects, arrays and strings in memory. Those structures take more room than the raw text, because every value carries bookkeeping. A file that is 70 MB on disk can need several times that in RAM once parsed.
+- **Editors do extra work per line.** Syntax highlighting, bracket matching, code folding and error checking all run across the document. A pretty-printed file with a few million lines gives them a lot to do.
+- **Tree views render nodes.** Showing a collapsible tree means creating interface elements for nodes, and naive tree views try to create them all at once.
+- **One long line is the worst case.** Minified JSON puts everything on a single line. Many editors handle millions of short lines better than one line that is tens of megabytes long.
+
+So "large" depends on the tool. The useful question is not "how do I open it?" but "what do I need from it?"
+
+## Step 1: Find out what is inside before opening it
+
+Check the size and look at the first few hundred bytes. On macOS, Linux or Git Bash on Windows:
+
+```bash
+ls -lh orders.json
+head -c 600 orders.json
+```
+
+That is usually enough to see the top-level structure, for example an object with an `orders` array. In PowerShell, `Get-Content orders.json -TotalCount 20` shows the first 20 lines.
+
+If the file is minified onto one line, `head -c` still works because it counts bytes, not lines.
+
+## Step 2: Query the file instead of scrolling it
+
+Most of the time you want a count, a filter or one record. A query answers that without ever rendering the file.
+
+### With jq
+
+`jq` is a small command-line JSON processor. A few common queries:
+
+```bash
+# How many orders are there?
+jq '.orders | length' orders.json
+
+# Show one record
+jq '.orders[0]' orders.json
+
+# Keep only refunded orders and save them
+jq '[.orders[] | select(.status == "refunded")]' orders.json > refunded.json
+```
+
+`jq` still parses the whole document for these queries, but it is efficient about it and prints only the result.
+
+### With Python
+
+Python's standard library can do the same, which is handy when you need logic that would be awkward in a one-liner. We generated a test file of 200,000 orders, 71.7 MB pretty-printed, and ran this:
+
+```python
+import json
+
+with open("orders.json", encoding="utf-8") as f:
+    data = json.load(f)
+
+orders = data["orders"]
+refunded = [o for o in orders if o["status"] == "refunded"]
+print(len(orders), "orders,", len(refunded), "refunded")
+
+with open("refunded.json", "w", encoding="utf-8") as f:
+    json.dump(refunded, f)
+```
+
+Output:
+
+```text
+200000 orders, 66415 refunded
+```
+
+The extract in `refunded.json` is a third of the size and opens comfortably in any editor.
+
+## Step 3: Stream it when it is too big for memory
+
+`json.load` reads the whole document at once. When a file is larger than the memory you can spare, process it record by record instead.
+
+### Convert to NDJSON
+
+Newline-delimited JSON (NDJSON, also called JSON Lines) puts one complete JSON value on each line. Every line can be parsed on its own, so a program only ever holds one record in memory. Many logging systems and data tools already export this format.
+
+To convert an array to NDJSON with `jq`:
+
+```bash
+jq -c '.orders[]' orders.json > orders.ndjson
+```
+
+Or with Python:
+
+```python
+import json
+
+with open("orders.json", encoding="utf-8") as f:
+    orders = json.load(f)["orders"]
+
+with open("orders.ndjson", "w", encoding="utf-8") as out:
+    for order in orders:
+        out.write(json.dumps(order, separators=(",", ":")) + "\n")
+```
+
+That conversion still loads the array once. Do it on a machine with enough memory, or ask whoever produces the file for NDJSON in the first place.
+
+### Read NDJSON line by line
+
+Once the data is NDJSON, memory use stays flat no matter how long the file is. In Python:
+
+```python
+import json
+
+total = 0.0
+count = 0
+with open("orders.ndjson", encoding="utf-8") as f:
+    for line in f:
+        order = json.loads(line)
+        if order["status"] == "paid":
+            total += order["total"]
+            count += 1
+print(f"{count} paid orders, revenue {total:,.2f}")
+```
+
+```text
+66662 paid orders, revenue 16,798,693.87
+```
+
+And in Node.js, using only built-in modules:
+
+```js
+import { createReadStream } from 'node:fs';
+import { createInterface } from 'node:readline';
+
+const lines = createInterface({ input: createReadStream('orders.ndjson') });
+let pending = 0;
+for await (const line of lines) {
+  if (JSON.parse(line).status === 'pending') pending++;
+}
+console.log(`${pending} pending orders`);
+```
+
+```text
+66923 pending orders
+```
+
+### Stream a regular JSON array
+
+If you cannot change the format, use a streaming parser. `jq --stream` emits path and value pairs without building the whole tree, and libraries such as `ijson` for Python or `stream-json` for Node.js read arrays element by element. They are more code to set up, so reach for them only when the file genuinely will not fit in memory.
+
+## Step 4: Edit only the part you need
+
+Editing a huge file in place is risky: one stray character makes the whole document invalid. A safer workflow:
+
+1. **Extract** the records you need with `jq` or a script.
+2. **Edit** the extract in a JSON editor where you get validation, tree view and search.
+3. **Merge** the change back with a script, matching records by ID.
+
+Here is the merge step in Python, assuming the edited records are in `fixed.json`:
+
+```python
+import json
+
+with open("orders.json", encoding="utf-8") as f:
+    data = json.load(f)
+with open("fixed.json", encoding="utf-8") as f:
+    fixed = {o["id"]: o for o in json.load(f)}
+
+data["orders"] = [fixed.get(o["id"], o) for o in data["orders"]]
+
+with open("orders.json", "w", encoding="utf-8") as f:
+    json.dump(data, f, indent=2)
+```
+
+Keep a copy of the original until you have checked the result.
+
+## Does minifying help with large JSON files?
+
+Minifying removes the indentation and line breaks that pretty-printing adds. On our 200,000-order test file it shrank the file from 71.7 MB to 31.2 MB, a 56.6 percent saving, because deeply indented records carry a lot of whitespace. Your saving depends on how nested the data is and how long the values are.
+
+A smaller file is faster to copy, upload and parse. It does not make the parsed data smaller in memory, and a single enormous line can be harder for some text editors. Minify files you store or send, and pretty-print the extracts you read. The [JSON Minifier](/tools/developer/json-minifier/) does the first, and any formatter does the second.
+
+## Which approach should you use?
+
+| Situation | Best approach |
+| --- | --- |
+| Up to 100 MB, need to browse and edit | Open it in a JSON editor with a tree or table view |
+| Any size, need a count, a field or a filter | Query with `jq` or a short script |
+| Larger than available memory | Convert to NDJSON or use a streaming parser |
+| Need to change a few records | Extract, edit, merge back by ID |
+| Need to send or store it | Minify it |
+
+## Open JSON in your browser
+
+The [JSON Editor](/tools/developer/json-editor/) runs entirely in your browser, so files never leave your machine. It opens files up to 100 MB with text, tree and table views, search and validation. For anything larger, use the steps above to extract the part you care about, then open that.

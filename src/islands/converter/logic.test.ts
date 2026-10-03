@@ -74,6 +74,9 @@ describe('JSON <-> YAML', () => {
     expect(r.output).toContain('flag: "true"\n');
     expect(r.output).toContain('list:\n  - 1\n  - 2\n');
     expect(r.summary).toBe('5 top-level keys');
+    const norway = jsonToYaml('{"country":"NO","agree":"yes","on":"off","name":"Oslo"}', O).output;
+    expect(norway).toBe('country: "NO"\nagree: "yes"\n"on": "off"\nname: Oslo\n');
+    expect(yamlToJson(norway, O).output).toBe(JSON.stringify({ country: 'NO', agree: 'yes', on: 'off', name: 'Oslo' }, null, 2) + '\n');
   });
   it('converts YAML to JSON with indentation and minify', () => {
     const r = yamlToJson(SAMPLES.yaml, O);

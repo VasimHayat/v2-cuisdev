@@ -1,0 +1,130 @@
+---
+title: How to combine images into one PDF on any device
+description: Combine JPG or PNG images into one PDF on Windows, Mac, iPhone, Android or the command line, keep the photo quality and control page size and order.
+publishDate: 2026-12-31
+author: Cuisdev Team
+tags: [PDF, Productivity]
+tools: [pdf-converter, image-resizer]
+---
+
+To combine images into one PDF, put the images in the order you want, then either print them to a PDF printer that is built into your operating system or use a converter that creates one page per image. Windows has Microsoft Print to PDF, macOS has Preview, iPhone and iPad can create a PDF from the Files app, and a browser tool such as the [PDF Converter](/tools/pdf/pdf-converter/) works the same way on every device.
+
+The method matters less than three decisions you make along the way: the order of pages, the page size, and whether your photos are re-compressed. This guide covers each platform and then those three decisions.
+
+## How to combine images into a PDF on Windows
+
+Windows includes a virtual printer called Microsoft Print to PDF.
+
+1. In File Explorer, select the images. Rename them first (01, 02, 03) if the order matters, because Windows prints them in the order shown.
+2. Right-click the selection and choose **Print**. On Windows 11 it may be under **Show more options**.
+3. In the Print Pictures window, choose **Microsoft Print to PDF** as the printer.
+4. Pick a layout such as **Full page photo**, and untick **Fit picture to frame** if you do not want the edges cropped.
+5. Click **Print** and choose a file name for the PDF.
+
+The "Fit picture to frame" option is the one that surprises people. When it is on, Windows crops each photo to fill the page shape. Turning it off keeps the whole image with white margins.
+
+## How to combine images into a PDF on a Mac
+
+Preview, the image viewer built into macOS, can do it without extra software.
+
+1. Select the images in Finder and open them together in Preview.
+2. Show the sidebar with **View > Thumbnails**, then drag the thumbnails into the order you want.
+3. Select all thumbnails in the sidebar.
+4. Choose **File > Print**, open the **PDF** menu at the bottom of the print dialog and choose **Save as PDF**.
+
+Printing to PDF from Preview puts each selected image on its own page using the paper size chosen in the print dialog, so set the paper size and orientation before saving.
+
+## How to combine images into a PDF on iPhone or iPad
+
+The Files app can merge images directly.
+
+1. Save the photos to a folder in Files. From the Photos app, select them, tap **Share** and choose **Save to Files**.
+2. In Files, tap **Select**, choose the images in order and tap the **More** button.
+3. Tap **Create PDF**. The new PDF appears in the same folder.
+
+On recent iOS versions you can also print from the Photos app and use the share button in the print preview to save a PDF, but the Files method gives you more control over order.
+
+## How to combine images into a PDF on Android
+
+Android has a built-in **Save as PDF** printer that appears in the print menu of many apps. Whether several photos end up in one PDF, or one PDF each, depends on the app you print from and differs between phone makers. If your gallery app prints a single image at a time, a browser-based converter is the most reliable route because it behaves the same on every phone.
+
+## How to combine images into a PDF from the command line
+
+For batches, scripts are faster than any interface. In Python, the `img2pdf` package embeds JPEG files into the PDF without re-encoding them:
+
+```python
+import glob
+import img2pdf
+
+pages = sorted(glob.glob('page*.jpg'))
+with open('combined.pdf', 'wb') as f:
+    f.write(img2pdf.convert(pages))
+```
+
+Pillow, the common Python imaging library, can also write a multi-page PDF:
+
+```python
+from pathlib import Path
+from PIL import Image
+
+paths = sorted(Path('.').glob('page*.jpg'))
+images = [Image.open(p).convert('RGB') for p in paths]
+images[0].save('combined.pdf', save_all=True, append_images=images[1:])
+```
+
+Both produce one page per image. The difference is quality: `img2pdf` copies the original JPEG bytes into the PDF unchanged, while Pillow decodes each image and compresses it again. For scans and photos you care about, prefer a tool that embeds originals.
+
+## Decision 1: getting the page order right
+
+Every method above orders pages by the order you select or name the files. A few habits prevent re-doing the job:
+
+- **Number your files with leading zeros.** `page01.jpg` to `page12.jpg` sort correctly everywhere. `page1.jpg` to `page12.jpg` often sort as 1, 10, 11, 12, 2, which is the problem described in the guide to [natural sort order](/blog/natural-sort-order/).
+- **Rotate before converting.** Phone photos carry an orientation tag. Most converters respect it, but a quick check of each image saves a sideways page.
+- **Reorder afterwards if needed.** If a page ends up in the wrong place, you do not need to start again; a page reorder tool can move it.
+
+## Decision 2: choosing the page size
+
+There are two sensible choices, and they suit different purposes.
+
+**Page fits the image.** Each page is exactly the shape of its photo. This is best for screenshots, slides and photos that will be viewed on screen, because there are no white borders.
+
+**Standard paper size.** Each image is placed on an A4 or US Letter page with margins. This is best for anything that will be printed, submitted to a portal that expects A4, or read as a document.
+
+PDF pages are measured in points, at 72 points per inch, so an A4 page is about 595 by 842 points and US Letter is exactly 612 by 792. To fill an A4 page at print quality without upscaling, an image needs about 2480 by 3508 pixels at 300 dpi, or 1240 by 1754 pixels at 150 dpi, which is enough for documents read on screen.
+
+| Page | 150 dpi | 300 dpi |
+| --- | --- | --- |
+| A4 (210 × 297 mm) | 1240 × 1754 px | 2480 × 3508 px |
+| US Letter (8.5 × 11 in) | 1275 × 1650 px | 2550 × 3300 px |
+
+Phone photos are usually larger than this, so they print sharply. Small screenshots are not; a 1000 pixel wide image stretched across A4 will look soft when printed.
+
+## Decision 3: keeping the file size reasonable
+
+A PDF made of photos is roughly as large as the photos inside it, plus a little overhead. Ten 4 MB phone photos produce a PDF of about 40 MB, which is too large for many email attachments and upload forms.
+
+Three ways to keep it down, from best to worst for quality:
+
+1. **Resize the images first.** If the PDF is for reading on screen, images around 1600 to 2000 pixels on the long edge are plenty. The [Image Resizer](/tools/image/image-resizer/) does a whole batch in one go.
+2. **Re-compress the JPEGs** at a quality setting around 80 to 85, which is usually indistinguishable on screen.
+3. **Compress the finished PDF.** This works, but compressing an already assembled PDF has fewer options than preparing the images, as the guide to [reducing PDF file size](/blog/reduce-pdf-file-size/) explains.
+
+PNG screenshots are a special case: they are lossless and can be large. Converting text-heavy screenshots to PDF keeps them crisp, but photos saved as PNG are better converted to JPEG first.
+
+## Common questions
+
+### Can I mix images and existing PDFs?
+
+Yes, with the right tool. Some built-in printers only accept images, but a converter that merges PDFs can place an image cover page in front of an existing PDF report.
+
+### Will the text in a scanned image be searchable?
+
+No. Combining images creates a PDF of pictures. Making the text searchable needs optical character recognition (OCR), which is a separate step.
+
+### Is it safe to use an online converter for private documents?
+
+Only if the files do not leave your device. Many sites upload your images to a server. A converter that runs in the browser processes them locally, which matters for ID documents, contracts and medical records.
+
+## Do it in your browser
+
+The [PDF Converter](/tools/pdf/pdf-converter/) combines JPG, PNG, WebP and other images into one PDF on any device, with drag-to-reorder, per-image rotation and a choice between fit-to-image pages and A4 or Letter with margins. JPEG and PNG files are embedded without re-compression by default, and nothing is uploaded, so it is safe for scans of passports and contracts.

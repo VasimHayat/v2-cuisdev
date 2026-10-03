@@ -1,0 +1,183 @@
+---
+title: How code formatters like Prettier work, and how to set one up
+description: How Prettier and other code formatters parse and reprint your code, and a step-by-step Prettier setup with editor, config, CI check and pre-commit hook.
+publishDate: 2027-02-23
+author: Cuisdev Team
+tags: [Code Style, Developer]
+tools: [code-formatter, text-diff-checker]
+---
+
+A code formatter like Prettier reads your source code into a syntax tree, throws away all the original spacing, and prints the tree again using one fixed set of rules. That is why it can format any messy input into the same output every time. To set one up, install Prettier as a dev dependency, add a small config file, turn on format on save in your editor, and add a check to CI so unformatted code cannot be merged.
+
+If you only need to tidy a snippet right now, paste it into the [Code Formatter](/tools/developer/code-formatter/), which runs Prettier in your browser. The rest of this guide explains how formatters work and how to wire one into a project.
+
+## What does a code formatter actually do?
+
+A formatter is not a find-and-replace for spaces. It works in three steps.
+
+1. **Parse.** The source text is turned into an abstract syntax tree (AST), a structure that records what the code means: this is a variable declaration, its value is an object, the object has three properties. Spacing, line breaks and most punctuation choices are not part of the tree.
+2. **Build a document.** The formatter walks the tree and describes how each node could be printed, including where a line break is allowed if the line gets too long.
+3. **Print.** A layout algorithm decides which of those optional breaks to use so that lines fit within the configured width, then writes the final text.
+
+Because step 1 discards your original layout, the output depends only on the code's meaning and the formatter's settings. Two developers who wrote the same code with completely different spacing get identical results.
+
+### Why does Prettier sometimes put an object on one line and sometimes split it?
+
+This is the line-fitting step. Prettier's printer is based on Philip Wadler's "prettier printer" algorithm: it first tries to print a group, such as an object literal, on one line. If that line would exceed `printWidth` (80 characters by default), it breaks the group onto multiple lines and tries again for each nested group.
+
+Here is the same input formatted with two different settings. The input:
+
+```js
+const user={name:'Ada',roles:['admin','editor'],active:true}
+function greet(u){return 'Hello, '+u.name}
+```
+
+With Prettier's defaults the object fits within 80 characters, so it stays on one line:
+
+```js
+const user = { name: "Ada", roles: ["admin", "editor"], active: true };
+function greet(u) {
+  return "Hello, " + u.name;
+}
+```
+
+With `printWidth: 40`, `singleQuote: true` and `semi: false`, the object no longer fits, so it breaks, and Prettier adds a trailing comma because that is its default for multi-line structures:
+
+```js
+const user = {
+  name: 'Ada',
+  roles: ['admin', 'editor'],
+  active: true,
+}
+function greet(u) {
+  return 'Hello, ' + u.name
+}
+```
+
+Both outputs come from running Prettier 3 on the input above.
+
+### Why is formatting the same code twice safe?
+
+A good formatter is idempotent: formatting already formatted code changes nothing. That property is what makes "format on save" and CI checks practical. If formatting kept changing its own output, every save would produce a diff. Running Prettier on the default output above a second time produces exactly the same text.
+
+## Formatter, linter, or both?
+
+People often mix these up.
+
+| | Formatter (Prettier, Black, gofmt) | Linter (ESLint, Ruff, golangci-lint) |
+| --- | --- | --- |
+| Cares about | Layout: spacing, line breaks, quotes, commas | Correctness and risky patterns |
+| Example finding | "This line is too long" is fixed automatically | "This variable is never used" |
+| Changes meaning? | Never | Some fixes can |
+| Configuration | Deliberately small | Often large |
+
+The usual setup uses both: the formatter owns layout, and the linter is configured to ignore layout rules so the two never fight. For ESLint that means leaving its stylistic rules out of your config; ESLint deprecated its built-in formatting rules in version 8.53.
+
+## How do you set up Prettier in a JavaScript project?
+
+### 1. Install it
+
+Install an exact version, so everyone on the team and in CI formats the same way:
+
+```bash
+npm install --save-dev --save-exact prettier
+```
+
+### 2. Add a config file
+
+Create `.prettierrc` in the project root. Keep it short; the point of an opinionated formatter is to stop debating style.
+
+```json
+{
+  "singleQuote": true,
+  "printWidth": 100
+}
+```
+
+Anything you do not set uses Prettier's defaults: two-space indentation, semicolons on, double quotes, trailing commas wherever they are valid.
+
+### 3. Tell it what to skip
+
+Create `.prettierignore` for generated files and anything you do not own:
+
+```text
+dist
+coverage
+package-lock.json
+```
+
+### 4. Format everything once
+
+```bash
+npx prettier . --write
+```
+
+Commit this as a single, separate commit with a message like "Format with Prettier". Mixing a whole-project reformat with real changes makes the real changes impossible to review. Many teams also list that commit hash in a `.git-blame-ignore-revs` file so `git blame` skips it.
+
+### 5. Turn on format on save
+
+In VS Code, install the Prettier extension and add this to the workspace settings in `.vscode/settings.json`:
+
+```json
+{
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true
+}
+```
+
+Committing this file means everyone who opens the project gets the same behavior.
+
+### 6. Check formatting in CI
+
+Add a script to `package.json`:
+
+```json
+{
+  "scripts": {
+    "format": "prettier . --write",
+    "format:check": "prettier . --check"
+  }
+}
+```
+
+Then run `npm run format:check` in your CI pipeline. It exits with an error and lists the files that are not formatted, without changing anything.
+
+### 7. Optionally, format on commit
+
+A pre-commit hook formats only the files you are committing. A common pairing is `husky` to install Git hooks and `lint-staged` to run commands on staged files:
+
+```json
+{
+  "lint-staged": {
+    "*.{js,ts,css,md,json}": "prettier --write"
+  }
+}
+```
+
+This catches anyone who has not set up their editor, without slowing down the whole repository.
+
+## What about other languages?
+
+The same idea exists almost everywhere, usually as the language's standard tool:
+
+- **Python:** Black, or the formatter built into Ruff.
+- **Go:** `gofmt`, which ships with Go and is used almost universally.
+- **Rust:** `rustfmt`, run with `cargo fmt`.
+- **SQL:** dedicated SQL formatters, covered in our [SQL style guide](/blog/sql-style-guide/).
+
+The concepts carry over: parse, discard the original layout, print with fixed rules, and check in CI.
+
+## How do you see what the formatter changed?
+
+When a formatter rewrites a file you did not expect to change, compare the before and after. Paste both versions into the [Text Diff Checker](/tools/developer/text-diff-checker/) with "ignore whitespace" turned off to see every change, then turn it on to confirm that only layout changed. If the diff with whitespace ignored is empty, the formatter did not touch anything meaningful. Our guide to [reading unified diffs](/blog/how-diff-works-unified-diff/) explains the output format.
+
+## Common setup problems
+
+- **Different results on different machines.** Usually two Prettier versions. Pin an exact version and use the project's copy (`npx prettier`) rather than a global install.
+- **The editor ignores the config.** Check that the extension is the default formatter for that file type and that the config file is in the project root.
+- **Endless diffs on Windows.** Prettier defaults to `"endOfLine": "lf"`. If Git converts line endings on checkout, set `core.autocrlf` to `false` or `input`, or add a `.gitattributes` file with `* text=auto eol=lf`.
+- **A file must keep hand-made alignment.** Add a `// prettier-ignore` comment above the node, for example a matrix you aligned by hand.
+
+## Do it in your browser
+
+For a quick one-off, such as a minified script, a snippet from a ticket, or code pasted from a chat, the [Code Formatter](/tools/developer/code-formatter/) runs Prettier locally in your browser with the same options described here: indentation, print width, quotes, semicolons and trailing commas. Nothing is uploaded, and you can copy the result straight back into your project.

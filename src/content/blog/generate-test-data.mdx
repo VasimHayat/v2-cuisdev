@@ -1,0 +1,151 @@
+---
+title: How to generate realistic test data for APIs and prototypes
+description: Generate fake JSON test data that looks real, stays reproducible and never leaks personal data. Templates, seeded generators, reserved domains and IP ranges.
+publishDate: 2027-01-07
+author: Cuisdev Team
+tags: [Testing, Developer]
+tools: [mock-json-generator, uuid-generator]
+---
+
+The fastest way to generate realistic test data is to describe the shape you need once, as a template, and let a generator fill it with plausible values: names, emails, dates, prices and IDs. Use a seeded random generator so the same seed always produces the same data, and use values that are reserved for testing, such as `example.com` email addresses, so nothing you generate can ever reach a real person.
+
+You can do this with a few lines of code, or with a template in the [Mock JSON Generator](/tools/developer/mock-json-generator/), which runs in the browser and needs no setup. Either way, the principles below decide whether your test data helps or quietly hides bugs.
+
+## Why not use real data or "test test test"?
+
+There are two common shortcuts, and both cause problems.
+
+**Copying production data.** It looks perfectly realistic because it is real, which is exactly the problem. Customer names, emails and addresses end up in developer laptops, screenshots, bug trackers and staging databases with weaker access controls. Privacy laws in many places restrict that kind of use, and a single leaked fixture file can be a reportable incident.
+
+**Hand-typed placeholders.** Records like `{"name": "test", "email": "test@test.com"}` are safe but tell you nothing. Every name is four characters long, so you never see how the layout handles a long surname, an accent or a name with an apostrophe. Every value is identical, so sorting and filtering bugs stay invisible.
+
+Generated data sits between the two: safe like placeholders, varied like production.
+
+## What makes test data realistic?
+
+Realistic does not mean real. It means the data exercises the same paths real data will.
+
+- **Varied lengths.** Names and titles from 3 to 40 characters show wrapping and truncation bugs.
+- **International content.** Names such as Ngozi Okafor, Søren Ødegaard or Wei Tanaka test accents and character encoding. An app that only ever sees "John Smith" in development will break on its first real customer named José.
+- **Edge values.** Zero, negative numbers, empty arrays, `null` and very large totals each catch a different bug.
+- **Correct types.** A price should be a number, not the string `"19.99"`, unless your real API sends strings.
+- **Relationships.** An order's `customerId` should match a customer that exists, or your joins and lookups never get tested.
+
+## Use values reserved for testing
+
+Several standards reserve values specifically so they can be used in examples and tests without colliding with anything real. Using them means a bug that accidentally sends an email or makes a request cannot reach a third party.
+
+| Kind of value | Reserved for documentation and testing | Defined by |
+| --- | --- | --- |
+| Domains | `example.com`, `example.org`, `example.net` | RFC 2606 |
+| Top-level domains | `.test`, `.example`, `.invalid`, `.localhost` | RFC 2606 |
+| IPv4 addresses | `192.0.2.0/24`, `198.51.100.0/24`, `203.0.113.0/24` | RFC 5737 |
+| IPv6 addresses | `2001:db8::/32` | RFC 3849 |
+| US phone numbers | `555-0100` to `555-0199` | North American Numbering Plan |
+
+So a fake user should have an address like `ada.lovelace@example.com`, a server log line should come from `203.0.113.42`, and a fake phone number should be `(201) 555-0123`. Never invent a domain such as `testmail.com`: someone may own it and receive whatever your tests send there.
+
+For payment testing, use the test card numbers published by your payment provider for its sandbox. Generating random card numbers, even ones that pass a checksum, is not a substitute.
+
+## Make it reproducible with a seed
+
+Random data that changes on every run makes failing tests impossible to reproduce. A seeded pseudo-random generator solves that: the same seed always produces the same sequence. Here is a small, complete example in JavaScript:
+
+```js
+// mulberry32: a tiny seeded pseudo-random generator (not for security).
+function mulberry32(seed) {
+  return function () {
+    seed |= 0;
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const firstNames = ['Ada', 'Grace', 'Linus', 'Wei', 'Amara', 'Diego'];
+const lastNames = ['Lovelace', 'Hopper', 'Okafor', 'Rossi', 'Tanaka', 'Silva'];
+
+function makeUsers(count, seed) {
+  const rand = mulberry32(seed);
+  const pick = (list) => list[Math.floor(rand() * list.length)];
+  return Array.from({ length: count }, (_, i) => {
+    const first = pick(firstNames);
+    const last = pick(lastNames);
+    return {
+      id: i + 1,
+      name: `${first} ${last}`,
+      email: `${first}.${last}@example.com`.toLowerCase(),
+      age: 18 + Math.floor(rand() * 60),
+      active: rand() < 0.8,
+    };
+  });
+}
+
+console.log(makeUsers(3, 42));
+```
+
+Running it with seed 42 always prints the same three users:
+
+```json
+[
+  { "id": 1, "name": "Wei Okafor", "email": "wei.okafor@example.com", "age": 69, "active": true },
+  { "id": 2, "name": "Grace Rossi", "email": "grace.rossi@example.com", "age": 34, "active": true },
+  { "id": 3, "name": "Diego Okafor", "email": "diego.okafor@example.com", "age": 32, "active": false }
+]
+```
+
+Store the seed alongside a failing test, and anyone can regenerate exactly the data that triggered the bug. Change the seed when you want fresh variety. Note that generators like this are for test data only; anything security-related, such as tokens or passwords, needs a cryptographically secure source like `crypto.getRandomValues`.
+
+## IDs: sequential, random or UUID?
+
+Match the IDs your real system uses. If production uses integer IDs, sequential test IDs are fine. If it uses UUIDs, generate real UUIDs so your validation, URL routing and database column types are tested with the real format. A string like `"user-1"` in a UUID column hides bugs until production. The [UUID Generator](/tools/developer/uuid-generator/) produces valid v4 or time-ordered v7 UUIDs in bulk, and the guide to [UUID v4 vs v7](/blog/uuid-v4-vs-v7/) explains which one suits database keys.
+
+## A template-based approach
+
+Writing a generator in code is flexible, but for API mocks and front-end prototypes a template is often quicker. You write the JSON shape you want and mark the values to be generated:
+
+```json
+[
+  "{{repeat(20)}}",
+  {
+    "id": "{{uuid}}",
+    "name": "{{name.full}}",
+    "email": "{{internet.email}}",
+    "plan": "{{pick(free,pro,team)}}",
+    "signedUpAt": "{{date.past}}",
+    "seats": "{{number.int(1,50)}}"
+  }
+]
+```
+
+The `repeat` marker turns the array into 20 records, and each placeholder is replaced with a fresh value. Placeholders that make up a whole value keep their natural type, so `seats` comes out as a number rather than a string.
+
+Templates are easy to share with designers and front-end developers who are waiting for a real API, and they double as documentation of the expected response shape.
+
+## Keep related records consistent
+
+Single records are easy. Realistic data sets also need relationships that hold together, or the bugs that live in joins and lookups never appear.
+
+Generate parent records first, then build children that reference them. Create 50 customers with known IDs, then generate 500 orders whose `customerId` is picked from that list, and order lines whose `orderId` comes from the orders. Totals should be computed from the generated lines rather than generated separately, so an order's total always matches its items. Dates should respect order too: an order should not ship before it was placed, and an account should not have activity before its sign-up date.
+
+These constraints are what make generated data trustworthy. A dashboard tested on orders whose totals do not add up will show "bugs" that are really test-data errors, and a team quickly stops believing the test environment.
+
+## Common mistakes with generated data
+
+- **Too uniform.** If every user has exactly three orders, pagination and empty states are never exercised. Vary counts, including zero.
+- **Too clean.** Real data has missing optional fields, trailing spaces and unexpected capitalization. Include some deliberately, in a separate fixture if you prefer.
+- **Not versioned.** Treat seed scripts and templates like code. Commit them, so a test that passed last month can be reproduced exactly.
+- **Secrets in fixtures.** Never paste real API keys or tokens into test data, even temporarily. Use clearly fake values such as `test_key_not_real`, so anyone who finds them in a repository knows at once that they grant no access.
+
+## Where to use generated data
+
+- **Front-end prototypes:** realistic lists show how tables, cards and empty states really look.
+- **API mocks:** serve generated JSON from a mock server while the backend is built.
+- **Load and performance tests:** thousands of records reveal slow queries and heavy pages that ten records never will.
+- **Database seeds:** a reproducible seed script gives every developer the same local data.
+- **Demos and screenshots:** generated customers are safe to show in public.
+
+## Do it in your browser
+
+The [Mock JSON Generator](/tools/developer/mock-json-generator/) turns a JSON template with placeholders such as `{{name.full}}`, `{{internet.email}}` and `{{number.int(1,100)}}` into realistic data, with a visible seed so the same template and seed always give the same output. Generated emails use reserved example domains, you can export flat results as CSV for spreadsheets, and nothing is uploaded.

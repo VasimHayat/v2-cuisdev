@@ -1,0 +1,141 @@
+---
+title: "Unix timestamps explained: seconds, milliseconds and 2038"
+description: "What a Unix timestamp is, how to tell seconds from milliseconds, how to convert epoch time in JavaScript, Python and SQL, and what the 2038 problem means."
+publishDate: 2026-10-03
+author: Cuisdev Team
+tags: [Time, Developer]
+tools: [timestamp-converter, date-difference-calculator]
+---
+
+A Unix timestamp, also called epoch time, is the number of seconds that have passed since 00:00:00 UTC on 1 January 1970, not counting leap seconds. It is a single number that means the same instant everywhere on Earth, which is why logs, databases, APIs and tokens use it. For example, `1767225600` is 1 January 2026 at 00:00:00 UTC.
+
+This guide explains how to read timestamps, how to tell seconds from milliseconds at a glance, how to convert them in the languages you are most likely to use, and what the year 2038 problem really is. To convert a value right now, paste it into the [Timestamp Converter](/tools/converters/timestamp-converter/).
+
+## Why count seconds from 1970?
+
+Early Unix systems needed a compact way to store time. A count of seconds from a fixed starting point, the epoch, is easy to store, compare and subtract: the event with the bigger number happened later, and the difference between two numbers is the duration in seconds. The date 1 January 1970 was simply a convenient recent date when the format was settled.
+
+Two properties make timestamps so useful:
+
+- **No time zones.** A timestamp is always UTC. The question "what time was it in Tokyo?" only arises when you display it.
+- **No calendar math.** Adding an hour is adding 3,600. You never have to think about month lengths or leap years while storing.
+
+## Seconds, milliseconds, microseconds: how to tell them apart
+
+Different systems count in different units. The quickest clue is the number of digits for a present-day date:
+
+| Unit | Digits today | Example for 1 Jan 2026 00:00 UTC | Common in |
+| --- | --- | --- | --- |
+| Seconds | 10 | `1767225600` | Unix tools, PHP, Python `time.time()` (as a float), JWTs, most APIs |
+| Milliseconds | 13 | `1767225600000` | JavaScript `Date.now()`, Java, many JSON APIs |
+| Microseconds | 16 | `1767225600000000` | PostgreSQL internals, some logging systems |
+| Nanoseconds | 19 | `1767225600000000000` | Go `time.UnixNano()`, high-resolution tracing |
+
+Mixing them up is the most common timestamp bug. Read a millisecond value as seconds and you get a date tens of thousands of years in the future. Read seconds as milliseconds and you land in January 1970:
+
+```js
+new Date(1767225600).toISOString();
+// '1970-01-21T10:53:45.600Z'  (seconds passed where milliseconds were expected)
+```
+
+If a date shows up as 1970, check the units first.
+
+## How to convert a Unix timestamp to a date
+
+### JavaScript
+
+JavaScript dates work in milliseconds, so multiply seconds by 1,000:
+
+```js
+new Date(1767225600 * 1000).toISOString(); // '2026-01-01T00:00:00.000Z'
+
+// Current time in seconds
+Math.floor(Date.now() / 1000);
+
+// A date string with an explicit offset back to seconds
+new Date('2026-01-01T09:30:00+05:30').getTime() / 1000; // 1767240000
+```
+
+Always include `Z` or an offset in date strings. A string such as `'2026-01-01T09:30:00'` without one is read in the browser's local zone, so the same code gives different timestamps on different machines.
+
+### Python
+
+```python
+from datetime import datetime, timezone, timedelta
+
+datetime.fromtimestamp(1767225600, tz=timezone.utc)
+# datetime.datetime(2026, 1, 1, 0, 0, tzinfo=datetime.timezone.utc)
+
+ist = timezone(timedelta(hours=5, minutes=30))
+int(datetime(2026, 1, 1, 9, 30, tzinfo=ist).timestamp())
+# 1767240000
+```
+
+Pass a `tz` to `fromtimestamp`. Without one, Python returns a naive local time, which is a frequent source of off-by-hours bugs on servers.
+
+### SQL
+
+```sql
+-- PostgreSQL
+SELECT to_timestamp(1767225600);                      -- timestamptz
+SELECT extract(epoch FROM timestamptz '2026-01-01 00:00:00+00');
+
+-- MySQL
+SELECT FROM_UNIXTIME(1767225600);                     -- in the session time zone
+SELECT UNIX_TIMESTAMP('2026-01-01 00:00:00');
+
+-- SQLite
+SELECT datetime(1767225600, 'unixepoch');
+```
+
+### Command line
+
+```bash
+# GNU date (Linux)
+date -u -d @1767225600          # Thu Jan  1 00:00:00 UTC 2026
+date +%s                        # current timestamp
+
+# BSD date (macOS)
+date -u -r 1767225600
+```
+
+### Spreadsheets
+
+Excel and Google Sheets count days, not seconds, from their own epoch. To turn a Unix timestamp in cell A2 into a date, divide by the seconds in a day and add the date of the Unix epoch:
+
+```text
+=A2/86400 + DATE(1970,1,1)
+```
+
+Then format the cell as a date and time. The result is in UTC; add or subtract hours divided by 24 for a local zone.
+
+## What is the year 2038 problem?
+
+Many older systems store timestamps in a signed 32-bit integer. The largest value that type can hold is 2,147,483,647, which is 03:14:07 UTC on 19 January 2038. One second later the number overflows and wraps around to the most negative value, -2,147,483,648, which those systems read as 20:45:52 UTC on 13 December 1901.
+
+It is the same kind of problem as Y2K: not a sudden failure of computers everywhere, but a bug in specific software that still uses 32-bit time. Modern 64-bit operating systems, databases and languages use 64-bit timestamps, which push the limit hundreds of billions of years away. The risk sits in places that are easy to forget:
+
+- Embedded devices and firmware that will still be running in 2038.
+- Database columns declared as 32-bit integers, and MySQL's `TIMESTAMP` type, which is limited to 2038.
+- File formats and network protocols with a fixed 32-bit time field.
+- Old compiled software that has not been rebuilt with 64-bit `time_t`.
+
+Some formats use an unsigned 32-bit field instead, which postpones the overflow to 06:28:15 UTC on 7 February 2106 but cannot represent dates before 1970.
+
+If you design a table or a file format today, store timestamps as 64-bit integers or as a proper date-time type, and you will not have to think about it again.
+
+## Negative timestamps and leap seconds
+
+Timestamps before 1970 are negative: `-86400` is 31 December 1969. Support is uneven. JavaScript handles them fine, but Python's `datetime.fromtimestamp(-86400)` raises an `OSError` on Windows, and spreadsheets cannot show dates before their own epoch. If you store birth dates or historical data, test negative values on every platform you deploy to, or add a `timedelta` to the epoch instead: `datetime(1970, 1, 1, tzinfo=timezone.utc) + timedelta(seconds=-86400)` works everywhere.
+
+Unix time also ignores leap seconds. Every day is treated as exactly 86,400 seconds, so the count does not match the true number of elapsed SI seconds since 1970. For almost all applications this is a feature: it keeps date arithmetic simple. Only systems that need sub-second agreement with atomic time, such as some scientific and financial systems, deal with leap seconds directly.
+
+## Timestamps and time zones in practice
+
+A good rule for applications: **store and transmit time as UTC timestamps or ISO 8601 strings with an offset, and convert to a time zone only when you show it to a person.** Converting early, for example saving "09:30 local" without the zone, loses information you cannot recover, especially around daylight saving changes.
+
+When you need durations rather than instants, such as "how many days until the invoice is due", subtract timestamps for exact elapsed time, or use calendar-aware date math when months and business days matter. The [Date Difference Calculator](/tools/calculators/date-difference-calculator/) handles the calendar side, including business days.
+
+## Do it in your browser
+
+The [Timestamp Converter](/tools/converters/timestamp-converter/) detects whether a number is in seconds, milliseconds, microseconds or nanoseconds, shows the instant in UTC and in any time zone with that day's offset, and converts dates back into timestamps. It also has a batch mode for converting a column of values from a log, and everything runs locally in your browser.

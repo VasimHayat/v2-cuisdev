@@ -1,0 +1,108 @@
+---
+title: "Why are PDFs so large? How to reduce PDF file size"
+description: "Why PDFs get so large, and how to reduce PDF file size by downsampling images, subsetting fonts and removing hidden data, on any computer or in a browser."
+publishDate: 2026-10-22
+author: Cuisdev Team
+tags: [PDF, Productivity]
+tools: [pdf-compress, image-compressor]
+---
+
+Most large PDFs are large because of images: scanned pages or photos embedded at a much higher resolution than anyone needs on screen. To reduce PDF file size, lower the image resolution to around 150 dpi, recompress the images as JPEG, and remove embedded extras such as full font files, previous revisions and metadata. Text and vector graphics are almost never the problem.
+
+This guide explains where the bytes in a PDF actually go, so you can pick the right fix instead of guessing. If you just need a smaller file now, the [PDF Compress](/tools/pdf/pdf-compress/) tool does it in your browser.
+
+## What makes a PDF file so big?
+
+A PDF is a container. It holds page descriptions, which are small, plus every resource those pages use. These are the usual culprits, roughly in order of how often they cause a bloated file:
+
+1. **Images at print resolution.** A photo taken on a phone or a page scanned at 300 or 600 dpi carries millions of pixels per page.
+2. **Scanned documents.** Every page of a scan is an image, even when it looks like text.
+3. **Embedded fonts.** Embedding a full font family can add hundreds of kilobytes, while a subset of only the characters used is much smaller.
+4. **Incremental saves.** Many editors append changes to the end of the file instead of rewriting it, so old versions of pages and images stay inside.
+5. **Duplicated resources.** Merging files can embed the same logo or font once per source document.
+6. **Extras.** Attachments, page thumbnails, form data, JavaScript and large XML metadata blocks.
+
+Text itself is tiny. A page of plain text compressed inside a PDF is typically a few kilobytes.
+
+## How much space does a scanned page take?
+
+The numbers explain why scans dominate. An A4 page is 8.27 by 11.69 inches, so its pixel size depends directly on the scan resolution:
+
+| Scan resolution | Pixel size | Megapixels | Raw size in RGB |
+| --- | --- | --- | --- |
+| 300 dpi | 2481 × 3507 | 8.7 | 24.9 MiB |
+| 150 dpi | 1240 × 1754 | 2.17 | 6.2 MiB |
+| 96 dpi | 794 × 1122 | 0.89 | 2.5 MiB |
+
+Compression shrinks those raw sizes a lot, but the ratio between rows stays roughly the same. Halving the resolution cuts the pixel count to a quarter. For reading on a screen, 150 dpi is usually plenty, and that single change is often the biggest win available.
+
+## Lossless vs lossy PDF compression
+
+There are two kinds of reduction, and it helps to know which one you are doing.
+
+**Lossless cleanup** rewrites the file without changing what any page looks like. It removes old revisions, merges duplicate objects, packs objects into compressed streams and drops unused data. Text stays selectable and searchable. Savings range from nothing to a lot, depending on how messy the original file is.
+
+**Lossy image compression** recompresses or downsamples the images. This is where the big savings come from on scanned and photo-heavy files. The trade-off is image quality, and, if a tool rasterizes whole pages, the loss of selectable text.
+
+| Method | Typical saving | Text selectable afterwards | Best for |
+| --- | --- | --- | --- |
+| Lossless re-save | Small to moderate | Yes | Office exports, merged files, edited files |
+| Downsample images only | Large | Yes | Documents with photos and charts |
+| Rasterize every page as JPEG | Very large | No | Scans that are already images |
+
+## How to reduce PDF size on Windows, Mac and Linux
+
+### From the original document
+
+The best fix is often upstream. If you made the PDF from Word or another office app, export it again with smaller images:
+
+- In Microsoft Word, choose **Save As > PDF** and select **Minimum size (publishing online)** under Optimize for.
+- Compress pictures in the document before exporting, or replace huge photos with resized versions.
+- Scan at 150 or 200 dpi instead of 300 or 600 when the result is only for reading on screen. Scan in grayscale when color does not matter.
+
+### On a Mac with Preview
+
+Open the PDF in Preview, choose **File > Export**, and pick the **Reduce File Size** Quartz filter. It downsamples aggressively, so check that small text in images is still readable.
+
+### On the command line with Ghostscript
+
+Ghostscript is free and available on every platform. Its `pdfwrite` device rewrites the whole file, downsampling images according to a preset:
+
+```bash
+gs -sDEVICE=pdfwrite -dPDFSETTINGS=/ebook -dNOPAUSE -dBATCH -dQUIET \
+   -sOutputFile=smaller.pdf original.pdf
+```
+
+The presets trade quality for size. `/screen` targets 72 dpi images, `/ebook` 150 dpi, `/printer` 300 dpi, and `/prepress` 300 dpi with color preservation for print. Start with `/ebook`, and fall back to `/printer` if images look soft.
+
+### Before you put images into a PDF
+
+If you are building a PDF from photos, shrink the photos first. Resizing a 4000-pixel-wide phone photo to 1600 pixels and saving it at JPEG quality 80 to 85 usually makes it several times smaller with no visible difference on screen. The [Image Compressor](/tools/image/image-compressor/) does that in bulk in your browser and shows the before and after size of each file.
+
+## Why did my PDF get bigger after compressing?
+
+It happens, and it is usually one of these:
+
+- **The images were already efficiently compressed.** Re-encoding a well-compressed JPEG at high quality can make it larger.
+- **Rasterizing a text-only page.** A page of vector text is a few kilobytes. The same page as a 150 dpi JPEG can be far bigger.
+- **Fonts got fully embedded.** Some tools embed complete fonts when they rewrite a file that previously used subsets or system fonts.
+
+Always compare the result with the original, and keep whichever is smaller.
+
+## How small should a PDF be for email?
+
+Many email providers limit attachments to around 20 to 25 MB, and some company mail servers set lower limits. The exact limit varies, so aim for well under 10 MB when you can. For larger documents, share a link from cloud storage instead of attaching the file. For forms and contracts that people need to sign, keep text selectable, because some signing workflows depend on it.
+
+## Checklist for a small, readable PDF
+
+- Find out where the size is. A 40-page text report at 30 MB almost certainly has oversized images.
+- Re-export from the source with smaller images when you can.
+- Downsample images to 150 dpi for screen reading, or 300 dpi for printing.
+- Prefer JPEG for photos and keep line art and screenshots as PNG or vector.
+- Run a lossless cleanup after heavy editing or merging.
+- Rasterize whole pages only for scans, where text is already an image.
+- Check the result at 100% zoom, especially small text inside images.
+
+## Do it in your browser
+
+The [PDF Compress](/tools/pdf/pdf-compress/) tool offers both approaches. **Optimize** performs a lossless re-save that keeps text selectable. **Compress images** re-renders every page as a JPEG at the resolution and quality you choose, which is the strong option for scans. It shows the size before and after, previews the first page side by side, and offers the original back if the result came out larger. The file never leaves your computer, which matters for contracts, medical records and anything else you would rather not upload.

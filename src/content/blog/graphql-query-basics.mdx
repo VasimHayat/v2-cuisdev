@@ -1,0 +1,219 @@
+---
+title: "GraphQL query basics: fields, variables, fragments, directives"
+description: "A GraphQL query tutorial covering fields, arguments, aliases, variables, fragments, directives and mutations, with examples and the HTTP request format."
+publishDate: 2027-02-04
+author: Cuisdev Team
+tags: [GraphQL, API]
+tools: [graphql-formatter, api-request-tester]
+---
+
+A GraphQL query is a description of the exact data you want, written as a nested list of fields. The server returns JSON in the same shape as the query, with nothing extra. Five building blocks cover nearly everything you will write: fields with arguments, aliases, variables, fragments and directives. This tutorial walks through each one with an example, then shows how a query travels over HTTP. Paste any of the examples into the [GraphQL Formatter](/tools/developer/graphql-formatter/) to check the syntax and tidy the layout.
+
+The examples use a small book API so you can focus on the language rather than a real schema. Field names will differ in the API you use, but the syntax is the same everywhere.
+
+## How does a GraphQL query work?
+
+A GraphQL API has a single endpoint, usually `/graphql`, and a schema that describes every type and field it offers. Instead of calling different URLs for different resources, you send one document that names the fields you need, and you can follow relationships between types in the same request.
+
+Here is the simplest useful query:
+
+```graphql
+query {
+  book(id: "42") {
+    title
+    author {
+      name
+    }
+  }
+}
+```
+
+A response mirrors the query exactly:
+
+```json
+{
+  "data": {
+    "book": {
+      "title": "Dune",
+      "author": { "name": "Frank Herbert" }
+    }
+  }
+}
+```
+
+Three things to notice:
+
+- **You choose the fields.** If you do not ask for `author`, you do not get it. That avoids the over-fetching common with fixed REST responses.
+- **Relationships nest.** `author` is another type, so you select fields inside it. Every field that returns an object needs a selection of its own, down to plain values such as strings and numbers.
+- **The result is wrapped in `data`.** If something goes wrong, an `errors` array appears alongside it, and the parts that did resolve can still be in `data`.
+
+## Fields and arguments
+
+Any field can take arguments, written in parentheses. Arguments are how you filter, paginate or choose a record:
+
+```graphql
+query {
+  book(id: "42") {
+    title
+    reviews(first: 3) {
+      rating
+      text
+    }
+  }
+}
+```
+
+Arguments are defined in the schema with types. If a field declares `first: Int`, passing a string is an error the server reports before running anything.
+
+## Aliases: asking for the same field twice
+
+You cannot request the same field twice with different arguments, because the keys in the response would collide. Aliases rename a field in the result:
+
+```graphql
+query {
+  first: book(id: "42") { title }
+  second: book(id: "43") { title }
+}
+```
+
+The response then has `first` and `second` keys instead of two `book` keys. Aliases are also handy for renaming awkward field names to match your front-end code.
+
+## Variables: keeping values out of the query string
+
+Writing values directly into a query works for experiments, but real applications should use variables. You declare them on the operation with a type, and send their values separately:
+
+```graphql
+query BookById($id: ID!, $withReviews: Boolean = false) {
+  book(id: $id) {
+    title
+    reviews(first: 3) @include(if: $withReviews) {
+      rating
+      text
+    }
+  }
+}
+```
+
+- `$id: ID!` declares a variable of type `ID`. The `!` makes it required.
+- `$withReviews: Boolean = false` is optional, with a default.
+- `BookById` is the operation name. It is optional for a single query, but it makes logs and server metrics far easier to read, so name every operation.
+
+Variables have practical benefits beyond tidiness. The query text stays constant, so it can be cached, persisted or allow-listed on the server, and you never build queries by concatenating strings, which avoids a class of injection bugs.
+
+## Fragments: reusing a selection
+
+When several parts of a query need the same fields, define them once as a fragment and spread them with `...`:
+
+```graphql
+query TwoBooks {
+  first: book(id: "42") { ...BookCard }
+  second: book(id: "43") { ...BookCard }
+}
+
+fragment BookCard on Book {
+  title
+  author { name }
+  coverUrl
+}
+```
+
+`on Book` says which type the fragment applies to. Front-end frameworks often keep one fragment next to each component, describing exactly the data that component renders, and compose them into page queries.
+
+### Inline fragments for interfaces and unions
+
+Some fields can return more than one type. A search might return books and authors. Inline fragments select fields depending on the type that comes back:
+
+```graphql
+query {
+  search(text: "dune") {
+    __typename
+    ... on Book { title }
+    ... on Author { name }
+  }
+}
+```
+
+`__typename` is a built-in field that tells you which type each result is, so your code can branch on it.
+
+## Directives: including or skipping fields
+
+Directives change how a field is executed. Two are built into every GraphQL server:
+
+- `@include(if: $flag)` includes the field only when the variable is true.
+- `@skip(if: $flag)` skips the field when the variable is true.
+
+```graphql
+query Profile($compact: Boolean!) {
+  me {
+    name
+    bio @skip(if: $compact)
+  }
+}
+```
+
+The `BookById` query above used `@include` to fetch reviews only when asked. The specification also defines `@deprecated` for marking fields in a schema, and servers can add custom directives of their own. In queries, `@include` and `@skip` are the two you will use most.
+
+## Mutations: changing data
+
+Reads use `query`. Writes use `mutation`, with the same syntax. A mutation usually takes an input object and returns the changed record, so you can update your interface without a second request:
+
+```graphql
+mutation AddReview($bookId: ID!, $review: ReviewInput!) {
+  addReview(bookId: $bookId, review: $review) {
+    id
+    rating
+  }
+}
+```
+
+The variables for that mutation might be:
+
+```json
+{
+  "bookId": "42",
+  "review": { "rating": 5, "text": "A classic." }
+}
+```
+
+A third operation type, `subscription`, keeps a connection open so the server can push updates. It uses the same field syntax, though the transport is usually a WebSocket rather than a plain HTTP request.
+
+## How is a GraphQL query sent over HTTP?
+
+Most servers accept a `POST` to the GraphQL endpoint with a JSON body containing three keys:
+
+```js
+const body = JSON.stringify({
+  query: 'query BookById($id: ID!) { book(id: $id) { title } }',
+  variables: { id: '42' },
+  operationName: 'BookById',
+});
+console.log(body);
+```
+
+```text
+{"query":"query BookById($id: ID!) { book(id: $id) { title } }","variables":{"id":"42"},"operationName":"BookById"}
+```
+
+Send it with the header `Content-Type: application/json`, plus whatever authentication the API needs, usually an `Authorization: Bearer` token. A few practical points:
+
+- **The status code is often 200 even on errors.** Many servers report validation and resolver failures in the `errors` array with a 200 response, so always check for `errors` in the body.
+- **`operationName` matters when a document has several operations.** It tells the server which one to run.
+- **GET is sometimes allowed for queries,** with the query and variables in URL parameters, which helps HTTP caching. Mutations should always use POST.
+
+To try requests without writing code, the [API Request Tester](/tools/developer/api-request-tester/) sends a POST with a JSON body and shows the status, headers and formatted response.
+
+## Common GraphQL errors and what they mean
+
+| Error message (wording varies by server) | Usual cause |
+| --- | --- |
+| Cannot query field "x" on type "Y" | Typo, or the field is not in the schema for that type |
+| Field "author" of type "Author" must have a selection of subfields | You asked for an object without choosing its fields |
+| Variable "$id" of required type "ID!" was not provided | The variables object is missing a required value |
+| `Syntax Error: Expected Name, found "}"` | Unbalanced braces or a stray character |
+| Unknown fragment "BookCard" | The fragment is spread but not defined in the same document |
+
+Syntax errors are the easiest to catch before you send anything: a formatter fails on the exact line and column.
+
+## Format and check queries in your browser
+
+Queries copied from network logs or written quickly tend to end up on one line. The [GraphQL Formatter](/tools/developer/graphql-formatter/) pretty-prints queries, mutations, fragments and schema files with consistent indentation, reports the first syntax error with its position, and can minify a query for a request body. It runs entirely in your browser, so queries that reveal the shape of a private API stay on your machine.

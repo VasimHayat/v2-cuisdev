@@ -1,0 +1,104 @@
+---
+title: How QR codes work and how to make one that always scans
+description: "How do QR codes work? Finder patterns, versions, error correction and masking explained, plus practical rules for printing codes that scan every time."
+publishDate: 2026-12-10
+author: Cuisdev Team
+tags: [QR Codes, Design]
+tools: [qr-code-generator, url-encode-decode]
+---
+
+A QR code stores data as a grid of black and white squares called modules. Three large squares in the corners let a camera find the code and work out its angle, the data is written into the remaining modules as bits, and extra error correction bits let the code still scan when part of it is dirty, damaged or covered by a logo. The larger the data, the more modules the code needs. If you just need a code, the [QR Code Generator](/tools/converters/qr-code-generator/) makes one in your browser; read on to understand what you are making and how to keep it scannable.
+
+## What are the parts of a QR code?
+
+Every QR code, defined by the international standard ISO/IEC 18004, has the same anatomy:
+
+| Part | What it does |
+| --- | --- |
+| Finder patterns | The three large squares in the corners. Their unique 1:1:3:1:1 ratio of dark and light stripes is easy to detect from any angle. |
+| Separators | Light borders around the finder patterns |
+| Timing patterns | A row and a column of alternating modules that tell the reader the grid spacing |
+| Alignment patterns | Smaller squares in larger codes that correct for curved or tilted surfaces |
+| Format information | Encodes the error correction level and the mask used |
+| Version information | Appears in version 7 and above, identifying the size |
+| Data and error correction | Everything else: your content plus recovery bits |
+| Quiet zone | An empty margin around the code, four modules wide in the standard |
+
+The missing fourth corner is how the reader knows which way up the code is.
+
+## What do QR code versions mean?
+
+A QR code's version is its size. Version 1 is 21 by 21 modules, and each version adds 4 modules per side, up to version 40 at 177 by 177. The formula is `17 + 4 × version`.
+
+The version is chosen automatically from how much data you store and how much error correction you ask for. Running the same generator library this site uses on a few real inputs gives:
+
+| Content | Error correction | Version | Grid |
+| --- | --- | --- | --- |
+| `0123456789` (digits) | L | 1 | 21 × 21 |
+| `https://cuisdev.com` | M | 2 | 25 × 25 |
+| `https://cuisdev.com` | H | 3 | 29 × 29 |
+| A Wi-Fi network login | Q | 4 | 33 × 33 |
+| A 99-character tracking URL | M | 6 | 41 × 41 |
+
+Here is the snippet behind that table:
+
+```js
+const QRCode = require('qrcode');
+const qr = QRCode.create('https://cuisdev.com', { errorCorrectionLevel: 'M' });
+console.log(qr.version, qr.modules.size);
+```
+
+```text
+2 25
+```
+
+The practical lesson: **shorter content makes a simpler code**. At the same printed size, a version 2 code has much bigger modules than a version 6 code, so it scans from further away and under worse conditions.
+
+## How is the data encoded?
+
+QR codes have several encoding modes, and the generator picks the most compact one for each part of the content:
+
+- **Numeric** packs three digits into 10 bits, the densest mode.
+- **Alphanumeric** covers digits, uppercase letters, space and the symbols `$ % * + - . / :`, two characters in 11 bits.
+- **Byte** stores any data, typically UTF-8 text, at 8 bits per byte.
+- **Kanji** stores Japanese characters efficiently.
+
+A single code can switch modes partway through. The Wi-Fi example above used alphanumeric for part of the text and byte mode for the rest. This is also why writing the scheme and domain of a URL in uppercase can sometimes produce a smaller code: those parts are case-insensitive, and uppercase letters fit alphanumeric mode. Paths can be case-sensitive, so leave them as they are.
+
+## How does error correction work?
+
+QR codes use Reed-Solomon error correction, the same family of codes used on CDs and in deep-space communication. Extra codewords are calculated from the data, and the reader can use them to rebuild codewords it could not read. There are four levels:
+
+| Level | Roughly recoverable | Good for |
+| --- | --- | --- |
+| L | about 7 percent of codewords | Clean screens, maximum capacity |
+| M | about 15 percent | General use, the usual default |
+| Q | about 25 percent | Printed codes that may get scuffed |
+| H | about 30 percent | Codes with a logo, harsh environments |
+
+Higher levels need more modules for the same content, which is why the URL above went from version 2 at level M to version 3 at level H. A logo in the middle works by deliberately "damaging" part of the code and relying on error correction to fill it in, so always use level H with a logo and keep the logo small.
+
+## What is masking?
+
+Large blocks of the same color confuse readers, and areas that happen to look like finder patterns are worse. After placing the data, the encoder tries eight different mask patterns, each one flipping modules according to a fixed rule, and scores the results for problems such as long runs and finder-like shapes. It keeps the mask with the best score and records which one it used in the format information, so the reader can undo it. You never choose this yourself, but it explains why two codes for nearly identical text can look completely different.
+
+## How do I make a QR code that always scans?
+
+1. **Keep the content short.** Use a short URL on your own domain rather than a long link full of tracking parameters. Fewer characters mean a lower version and bigger modules.
+2. **Keep high contrast.** Dark modules on a light background. Many readers handle inverted codes, but not all. Avoid light-on-light color schemes and gradients through the modules.
+3. **Respect the quiet zone.** Leave at least four modules of empty margin on every side. Placing a code against a busy background or a border is a common reason codes fail.
+4. **Print it big enough.** A common rule of thumb is to make the code at least one tenth as wide as the distance it will be scanned from. A poster read from 3 meters needs a much larger code than a business card.
+5. **Use level H for logos, and test.** Cover no more of the center than the error correction can absorb, then scan it with several phones before printing a batch.
+6. **Encode special characters correctly.** If you build URLs by hand, encode spaces and symbols in query values. The [URL Encoder](/tools/developer/url-encode-decode/) shows exactly what a parameter should look like.
+
+## Do QR codes expire?
+
+A QR code is just data printed as an image, so a code that contains your URL directly works for as long as the URL does. Codes "expire" when a service encodes its own redirect link instead of your URL and later turns the redirect off. If you want a code that works permanently, encode the final destination yourself.
+
+### How does a Wi-Fi QR code work?
+
+Phones recognize a text format that starts with `WIFI:`, for example `WIFI:T:WPA;S:Cafe Guest;P:espresso2026;;`. `T` is the security type, `S` the network name and `P` the password. Special characters such as `;`, `,`, `:` and backslash inside the name or password must be escaped with a backslash. Remember that anyone who can photograph the code can read the password.
+
+## Do it in your browser
+
+The [QR Code Generator](/tools/converters/qr-code-generator/) builds codes for URLs, text, Wi-Fi logins, contacts, email, SMS and map locations. It shows the version and module count as you type, warns about low contrast and near-capacity content, adds a logo with level H automatically, and exports SVG for print or PNG for screens. The code is generated on your device, so Wi-Fi passwords and contact details are never uploaded.

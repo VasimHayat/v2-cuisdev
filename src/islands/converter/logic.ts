@@ -258,7 +258,10 @@ export function csvToJson(input: string, options: ConvertOptions): ConvertResult
 
 export function jsonToYaml(input: string, options: ConvertOptions): ConvertResult {
   const value = parseJson(input);
-  const output = YAML.stringify(value, { indent: options.yamlIndent, lineWidth: 0 });
+  // Serialise with YAML 1.1 resolution rules so strings that 1.1 parsers would read as
+  // booleans (NO, yes, on, off: the "Norway problem") are quoted. The output is still
+  // valid YAML 1.2, and 1.2 parsers read those quoted strings identically.
+  const output = YAML.stringify(value, { indent: options.yamlIndent, lineWidth: 0, version: '1.1' });
   const keys = isPlainObject(value) ? Object.keys(value).length : Array.isArray(value) ? value.length : 1;
   return { output, summary: isPlainObject(value) ? `${keys} top-level ${keys === 1 ? 'key' : 'keys'}` : Array.isArray(value) ? `${keys} ${keys === 1 ? 'item' : 'items'}` : 'scalar value', warnings: [] };
 }

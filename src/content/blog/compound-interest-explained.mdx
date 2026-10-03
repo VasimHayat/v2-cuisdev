@@ -1,0 +1,123 @@
+---
+title: "Compound interest explained: the formula and starting early"
+description: "Compound interest explained simply: the A = P(1 + r/n)^(nt) formula, worked examples, the rule of 72 and why starting early beats investing more later."
+publishDate: 2026-12-01
+author: Cuisdev Team
+tags: [Finance, Calculators]
+tools: [compound-interest-calculator, percentage-calculator]
+---
+
+Compound interest is interest earned on both your original money and the interest it has already earned. The formula is **A = P(1 + r/n)^(nt)**, where P is the starting amount, r the yearly rate as a decimal, n the number of times interest is added per year, and t the number of years. Because each period's interest becomes part of the balance, growth speeds up over time, which is why time in the market matters more than almost anything else. You can try your own numbers in the [Compound Interest Calculator](/tools/calculators/compound-interest-calculator/).
+
+*This article is general information, not financial advice. Real investments carry risk, and returns are not guaranteed.*
+
+## What is the difference between simple and compound interest?
+
+Simple interest is paid only on the original amount. Compound interest is paid on the growing balance.
+
+Take 10,000 invested at 7 percent a year for 10 years:
+
+- **Simple interest:** 10,000 × (1 + 0.07 × 10) = **17,000**
+- **Compound interest, added once a year:** 10,000 × 1.07^10 = **19,671.51**
+
+The difference of 2,671.51 is interest earned on earlier interest. Over 10 years it is noticeable. Over 30 or 40 years it becomes the largest part of the balance.
+
+## How does the compound interest formula work?
+
+Break **A = P(1 + r/n)^(nt)** into its pieces:
+
+| Symbol | Meaning | In the example |
+| --- | --- | --- |
+| A | Final amount | What we want to find |
+| P | Principal, the starting amount | 10,000 |
+| r | Yearly rate as a decimal | 0.07 for 7 percent |
+| n | Compounding periods per year | 1, 4, 12 or 365 |
+| t | Years | 10 |
+
+`r/n` is the rate for one period, and `nt` is the total number of periods. Each period multiplies the balance by `1 + r/n`, so after `nt` periods the original amount has been multiplied by that factor `nt` times.
+
+### Does compounding more often make a big difference?
+
+Here is the same 10,000 at 7 percent for 10 years with different compounding frequencies:
+
+| Compounding | Final amount |
+| --- | --- |
+| Yearly (n = 1) | 19,671.51 |
+| Quarterly (n = 4) | 20,015.97 |
+| Monthly (n = 12) | 20,096.61 |
+| Daily (n = 365) | 20,136.18 |
+| Continuous | 20,137.53 |
+
+More frequent compounding helps, but the gains shrink quickly. Moving from yearly to monthly adds about 425 here, while moving from monthly to daily adds about 40. Continuous compounding, the theoretical limit, uses **A = Pe^(rt)** and adds only a little more.
+
+This is also why savings accounts quote an annual percentage yield (APY) next to the nominal rate. A 7 percent rate compounded monthly has an APY of about 7.23 percent, and compounded daily about 7.25 percent. APY lets you compare accounts with different compounding schedules on equal terms.
+
+## How do regular contributions change the formula?
+
+Most people do not invest one lump sum. They add money every month. The future value of regular contributions made at the end of each period is:
+
+**FV = PMT × ((1 + i)^N − 1) / i**
+
+where PMT is the payment per period, i the rate per period and N the number of periods. In Python:
+
+```python
+def future_value(payment, years, rate=0.07):
+    i = rate / 12      # monthly rate
+    n = years * 12     # number of monthly payments
+    return payment * ((1 + i) ** n - 1) / i
+
+print(round(future_value(200, 10)))   # 200 a month for 10 years
+print(round(future_value(200, 30)))   # 200 a month for 30 years
+```
+
+```text
+34617
+243994
+```
+
+Thirty years of contributions total 72,000, yet the balance is about 244,000. Roughly 172,000 of it is interest.
+
+## Why does starting early matter so much?
+
+Compare two savers, both earning 7 percent a year compounded monthly.
+
+- **Early saver:** puts in 200 a month from age 25 to 35, then stops completely and leaves the money invested until 65. Total contributed: **24,000**.
+- **Late saver:** starts at 35 and puts in 200 a month every month until 65. Total contributed: **72,000**.
+
+At 65:
+
+| Saver | Contributed | Balance at 65 |
+| --- | --- | --- |
+| Early (10 years of saving) | 24,000 | about 280,968 |
+| Late (30 years of saving) | 72,000 | about 243,994 |
+
+The early saver contributes a third as much and still ends up ahead. The ten years of saving are less important than the thirty extra years of compounding that follow them. This example uses a steady 7 percent for clarity, and real returns rise and fall, but the principle holds: each year of growth multiplies everything that came before it.
+
+## What is the rule of 72?
+
+The rule of 72 estimates how long money takes to double: divide 72 by the yearly rate in percent.
+
+| Rate | Rule of 72 | Exact doubling time |
+| --- | --- | --- |
+| 3 percent | 24.0 years | 23.45 years |
+| 7 percent | 10.3 years | 10.24 years |
+| 12 percent | 6.0 years | 6.12 years |
+
+The exact figure is `log(2) / log(1 + r)`. The rule of 72 is close enough for mental math across typical rates, and it works for debt too: a card balance at 24 percent can double in about three years if it is never paid down.
+
+## How does inflation affect compound growth?
+
+A balance that doubles is not twice as useful if prices have also risen. To see growth in today's money, discount the result by inflation: divide the future amount by `(1 + inflation)^years`. As a rough shortcut, subtracting the inflation rate from the interest rate gives the approximate real rate of growth: a 7 percent return with 2.5 percent inflation is about 4.5 percent. The exact real rate is `1.07 / 1.025 - 1`, or about 4.39 percent a year. Either way, purchasing power grows far more slowly than the headline 7 percent.
+
+## Common mistakes when calculating compound interest
+
+1. **Using the yearly rate for monthly periods.** If you compound monthly, divide the rate by 12 and multiply the years by 12. Using 7 percent per month instead of 7 percent per year gives absurd results.
+2. **Mixing percentages and decimals.** The formula needs 0.07, not 7. If you are converting rates and changes, the [Percentage Calculator](/tools/calculators/percentage-calculator/) shows the working.
+3. **Forgetting fees and taxes.** A 1 percent yearly fee compounds too, against you. Over decades it can take a large share of the final balance.
+4. **Treating projections as promises.** A steady rate is a modeling assumption. Markets do not move in straight lines.
+
+Borrowing works the same way in reverse: interest compounds on what you owe. If you have a loan, our guide on [how EMI is calculated](/blog/how-emi-is-calculated/) shows how each payment splits between interest and principal.
+
+## Do it in your browser
+
+The [Compound Interest Calculator](/tools/calculators/compound-interest-calculator/) applies these formulas for you. Enter a starting amount, monthly contributions, a rate and a time frame, choose how often interest compounds, and add inflation to see the result in today's money. It shows a year-by-year table and chart, and all calculations stay in your browser.

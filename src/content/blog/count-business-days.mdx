@@ -1,0 +1,158 @@
+---
+title: How to count business days between two dates
+description: Calculate business days between two dates in Excel, Google Sheets, Python and JavaScript, with holidays, custom weekends and the off-by-one trap explained.
+publishDate: 2026-12-22
+author: Cuisdev Team
+tags: [Time, Productivity]
+tools: [date-difference-calculator, age-calculator]
+---
+
+To count business days between two dates, count every date in the range that falls on Monday to Friday, then subtract any public holidays in that range. In Excel and Google Sheets, `=NETWORKDAYS(start, end, holidays)` does exactly that and includes both the start and end date. In code, loop over the dates or use a library function, and decide up front whether the end date counts.
+
+That last decision causes most of the disagreements between tools, so it is worth settling before anything else. If you just need the answer, the [Date Difference Calculator](/tools/calculators/date-difference-calculator/) counts business days with an optional holiday list and shows whether the end date is included.
+
+## A worked example: December 2026
+
+Take 1 December 2026 (a Tuesday) to 31 December 2026 (a Thursday). The range covers 31 calendar days. Of those, 23 fall on a weekday. Christmas Day, 25 December 2026, is a Friday, so in a country where it is a public holiday the answer drops to 22.
+
+| Question | Answer |
+| --- | --- |
+| Calendar days from 1 to 31 December, both included | 31 |
+| Days between the dates (end minus start) | 30 |
+| Weekdays, both dates included | 23 |
+| Weekdays, both included, minus 25 December | 22 |
+
+Notice that "days between" is 30, not 31. Subtracting one date from another counts the gaps between them, the way 31 minus 1 is 30. Counting the dates themselves gives 31. Business-day counts have the same ambiguity, and different functions make different choices.
+
+## How to count business days in Excel and Google Sheets
+
+Both spreadsheets have the same functions with the same arguments.
+
+```text
+=NETWORKDAYS(A2, B2)
+=NETWORKDAYS(A2, B2, Holidays!A2:A20)
+```
+
+`NETWORKDAYS` treats Saturday and Sunday as the weekend and counts both the start and the end date when they are weekdays. The optional third argument is a range of holiday dates to exclude. Keep that list on its own sheet so every formula can point at it.
+
+For a different weekend, use `NETWORKDAYS.INTL`. Its third argument chooses the weekend, either as a number or as a seven-character string of ones and zeros starting on Monday, where 1 means a day off.
+
+```text
+=NETWORKDAYS.INTL(A2, B2, 1)          Saturday and Sunday off (the default)
+=NETWORKDAYS.INTL(A2, B2, 7)          Friday and Saturday off
+=NETWORKDAYS.INTL(A2, B2, 11)         Sunday only off
+=NETWORKDAYS.INTL(A2, B2, "0000011")  Saturday and Sunday off, written as a string
+=NETWORKDAYS.INTL(A2, B2, "0000111", Holidays!A2:A20)
+```
+
+The string form is the most flexible. `"0000111"` gives a four-day working week with Friday, Saturday and Sunday off. If a date in your holiday list already falls on a weekend, it is not subtracted twice.
+
+To go the other way, from a start date and a number of working days to a finish date, use `WORKDAY` or `WORKDAY.INTL`:
+
+```text
+=WORKDAY(A2, 10, Holidays!A2:A20)     the date 10 working days after A2
+```
+
+`WORKDAY` does not count the start date itself, so ten working days after a Monday lands on the Monday two weeks later, assuming no holidays.
+
+## How to count business days in Python
+
+The clearest version is a loop. It is fast enough for any realistic range and makes the inclusive end date obvious.
+
+```python
+from datetime import date, timedelta
+
+def business_days(start, end, holidays=()):
+    """Count Monday to Friday dates from start to end, both included."""
+    hols = set(holidays)
+    days = 0
+    d = start
+    while d <= end:
+        if d.weekday() < 5 and d not in hols:
+            days += 1
+        d += timedelta(days=1)
+    return days
+
+print(business_days(date(2026, 12, 1), date(2026, 12, 31)))                       # 23
+print(business_days(date(2026, 12, 1), date(2026, 12, 31), [date(2026, 12, 25)]))  # 22
+```
+
+In Python's `weekday()`, Monday is 0 and Sunday is 6, so `< 5` means Monday to Friday.
+
+If you already use NumPy, `numpy.busday_count` is vectorized and supports holidays and custom weekmasks, but its end date is exclusive:
+
+```python
+import numpy as np
+
+np.busday_count('2026-12-01', '2026-12-31')                           # 22, the 31st is not counted
+np.busday_count('2026-12-01', '2027-01-01', holidays=['2026-12-25'])  # 22, end moved forward one day
+```
+
+The first call returns 22, not 23, because 31 December is left out. Pass the day after your real end date to get the inclusive count. This is exactly the kind of off-by-one difference that makes two "correct" tools disagree.
+
+## How to count business days in JavaScript
+
+JavaScript has no built-in business-day function, but the same loop works. Do the arithmetic in UTC so a daylight saving change in the middle of the range cannot add or lose an hour and push a date across midnight.
+
+```js
+// Count Monday to Friday dates between two ISO dates, both included.
+function businessDays(startIso, endIso, holidays = []) {
+  const skip = new Set(holidays);
+  const day = 86_400_000;
+  let count = 0;
+  for (let t = Date.parse(startIso); t <= Date.parse(endIso); t += day) {
+    const d = new Date(t);
+    const weekday = d.getUTCDay(); // 0 = Sunday, 6 = Saturday
+    if (weekday !== 0 && weekday !== 6 && !skip.has(d.toISOString().slice(0, 10))) count++;
+  }
+  return count;
+}
+
+businessDays('2026-12-01', '2026-12-31');                 // 23
+businessDays('2026-12-01', '2026-12-31', ['2026-12-25']); // 22
+```
+
+`Date.parse` reads a date-only string such as `2026-12-01` as midnight UTC, so stepping by exactly 24 hours always lands on the next calendar date.
+
+## Which holidays should you exclude?
+
+There is no universal list. Public holidays differ by country, by state or province within a country, and sometimes by employer. A few rules make the list reliable:
+
+- **Use observed dates.** When a holiday falls on a weekend, many countries move the day off to the nearest Monday or Friday. Exclude the observed weekday, not the weekend date.
+- **Keep one list per region.** A team in two countries needs two lists, and a deadline should be counted against the calendar of whoever does the work.
+- **Add company closures.** Shutdowns between Christmas and New Year, or a regional day off, matter as much as national holidays for project planning.
+- **Refresh it every year.** Moveable holidays such as Easter and lunar new year change date annually.
+
+## Common mistakes when counting working days
+
+### Mixing inclusive and exclusive end dates
+
+Decide whether the end date counts and use one convention everywhere. Contract wording such as "within 10 business days" usually means counting forward from the day after an event, which matches `WORKDAY`, not `NETWORKDAYS`.
+
+### Ignoring time zones
+
+A deadline at 17:00 in New York is already the next day in Tokyo. If your dates come from timestamps, convert them to the calendar date in the relevant time zone before counting.
+
+### Assuming a Saturday and Sunday weekend
+
+Several countries have a Friday and Saturday weekend, and some workplaces work six days. Use `NETWORKDAYS.INTL` or a weekmask rather than hard-coding Saturday and Sunday.
+
+### Counting partial days
+
+Business-day counts are whole days. If you need hours, such as a support SLA of 16 business hours, count working hours per day instead, which needs opening times as well as dates.
+
+## Counting forward: what date is 10 business days from now?
+
+Many real questions run the other way. A supplier promises delivery in 7 working days, a notice period is 20 business days, or a support contract requires a reply within 3 working days. You know the start and the number of days, and you need the date.
+
+The rule is simple: step forward one calendar day at a time and only count the days that are working days, until you have counted the number you need. Whether the start day itself counts is the same inclusive question as before, and contracts usually say "from the day after". In a spreadsheet, `WORKDAY` handles this, and it already starts counting on the following day.
+
+A worked example: 10 working days after Tuesday 1 December 2026, with Christmas Day as a holiday, is Tuesday 15 December 2026. The count is Wednesday 2 to Friday 4 (3 days), Monday 7 to Friday 11 (5 days, 8 in total), then Monday 14 and Tuesday 15 (10 in total). The holiday on 25 December is outside this range, so it does not change the result. Moving the start to Monday 21 December would push the answer past both Christmas and the New Year holiday, and that is exactly where hand counting goes wrong.
+
+## When you need age or calendar differences instead
+
+Business days answer "how many working days", which is what you want for deadlines, delivery estimates and notice periods. For "how old is someone" or "how many years, months and days", the arithmetic is different, because months have different lengths. The [Age Calculator](/tools/calculators/age-calculator/) handles that, including people born on 29 February. The companion guide on [calculating age in Excel and code](/blog/calculate-age-excel-code/) shows the spreadsheet formulas.
+
+## Do it in your browser
+
+The [Date Difference Calculator](/tools/calculators/date-difference-calculator/) gives the calendar difference and the business-day count side by side, with a toggle for including the end date. Paste your holiday list, one date per line, and it subtracts the ones that fall on weekdays. It can also add or subtract working days from a date, the same job `WORKDAY` does in a spreadsheet, and it never sends your dates anywhere.

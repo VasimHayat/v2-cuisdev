@@ -1,0 +1,248 @@
+---
+title: Remove duplicate lines in Excel, Sheets, VS Code and the terminal
+description: "How to remove duplicate lines in Excel, Google Sheets, VS Code, the Linux or Mac terminal, PowerShell and Python, with or without changing the original order."
+publishDate: 2027-01-28
+author: Cuisdev Team
+tags: [Text, Productivity]
+tools: [remove-duplicate-lines, sort-lines]
+---
+
+To remove duplicate lines, use **Data, Remove Duplicates** in Excel, **Data, Data cleanup, Remove duplicates** in Google Sheets, `sort -u` or `awk '!seen[$0]++'` in a terminal, or `list(dict.fromkeys(lines))` in Python. The right choice depends on two questions: do you need to keep the original order, and should "Apple" and "apple" count as the same line? For a quick paste-and-clean job, the [Remove Duplicate Lines](/tools/text/remove-duplicate-lines/) tool answers both with a checkbox.
+
+Below are the methods for each environment, with the behavior differences that catch people out.
+
+## Two questions to answer first
+
+Every deduplication method makes two choices, often silently:
+
+1. **Order.** Some methods keep the first occurrence of each line where it was. Others sort the lines, so the result is unique but reordered.
+2. **Case and spaces.** Some treat `Apple`, `apple` and `apple ` (with a trailing space) as three different lines. Others ignore case. Almost none trim spaces unless you ask.
+
+All the examples below use this file, `fruits.txt`:
+
+```text
+banana
+apple
+cherry
+apple
+Banana
+banana
+date
+```
+
+It has an exact duplicate (`apple`), a case-only duplicate (`Banana` and `banana`) and an exact duplicate that is not next to its twin (`banana` on lines 1 and 6).
+
+## How to remove duplicate lines in Excel
+
+### Remove Duplicates (changes the data)
+
+1. Select the column or range.
+2. On the **Data** tab, choose **Remove Duplicates**.
+3. Tick the columns that should be compared, then **OK**.
+
+Excel keeps the first occurrence of each value and deletes the rest of the rows, and it tells you how many it removed. The comparison ignores case, so `Banana` and `banana` count as duplicates. This edits your sheet in place, so work on a copy if you need the original.
+
+### UNIQUE function (leaves the data alone)
+
+In Excel for Microsoft 365 and Excel 2021 or later, a formula gives a live, deduplicated list next to the original:
+
+```text
+=UNIQUE(A2:A100)
+```
+
+The result spills down as far as needed and updates when the source changes. Add `TRUE` as the third argument, `=UNIQUE(A2:A100,,TRUE)`, to list only the values that appear exactly once.
+
+To find duplicates rather than remove them, use **Home, Conditional Formatting, Highlight Cells Rules, Duplicate Values**.
+
+## How to remove duplicate lines in Google Sheets
+
+Google Sheets has both styles too:
+
+- **Menu:** select the range, then **Data, Data cleanup, Remove duplicates**. You choose which columns to compare and whether the range has a header row.
+- **Formula:** `=UNIQUE(A2:A)` returns the unique values in a new range without touching the source.
+
+The formula approach is handy for shared sheets, because it never deletes anything someone else might need.
+
+## How to remove duplicate lines in VS Code
+
+Open the Command Palette (`Ctrl+Shift+P`, or `Cmd+Shift+P` on a Mac):
+
+- **Sort Lines Ascending** sorts the selection, which puts duplicates next to each other.
+- Recent versions also include **Delete Duplicate Lines**, which removes repeats from the selection while keeping the first occurrence in place.
+
+If your version lacks that command, sort first and then use Find and Replace with regular expressions turned on (the `.*` button). Search for:
+
+```text
+^(.*)(\n\1)+$
+```
+
+and replace with:
+
+```text
+$1
+```
+
+The pattern matches a line followed by one or more identical lines and replaces the whole block with a single copy. It only works on adjacent duplicates, which is why you sort first. The same approach works in most editors that support regex search across lines.
+
+## How to remove duplicate lines in the terminal
+
+### sort -u: unique and sorted
+
+```bash
+sort -u fruits.txt
+```
+
+```text
+Banana
+apple
+banana
+cherry
+date
+```
+
+`sort -u` is the shortest option. It changes the order, and the exact order depends on your locale settings: in the plain `C` locale, as here, capital letters sort before lowercase ones. `sort fruits.txt | uniq` gives the same result.
+
+### Why uniq on its own is not enough
+
+`uniq` only removes duplicates that are next to each other:
+
+```bash
+uniq fruits.txt
+```
+
+```text
+banana
+apple
+cherry
+apple
+Banana
+banana
+date
+```
+
+Nothing changed, because no two identical lines were adjacent. Always sort before `uniq`, or use one of the other methods.
+
+### awk: unique in the original order
+
+To keep the first occurrence of each line where it was, `awk` is the classic one-liner:
+
+```bash
+awk '!seen[$0]++' fruits.txt
+```
+
+```text
+banana
+apple
+cherry
+Banana
+date
+```
+
+It remembers every line it has printed and skips any it has seen. To ignore case, compare a lowercased key:
+
+```bash
+awk '!seen[tolower($0)]++' fruits.txt
+```
+
+```text
+banana
+apple
+cherry
+date
+```
+
+### Counting and finding duplicates
+
+Sometimes you want to know what was repeated rather than delete it:
+
+```bash
+# Count every line, most frequent first
+sort fruits.txt | uniq -c | sort -rn
+
+# Show only the lines that appear more than once
+sort fruits.txt | uniq -d
+```
+
+```text
+      2 banana
+      2 apple
+      1 date
+      1 cherry
+      1 Banana
+```
+
+```text
+apple
+banana
+```
+
+## How to remove duplicate lines in PowerShell
+
+On Windows, PowerShell has two built-in options:
+
+```powershell
+# Keep the original order (comparison is case-sensitive)
+Get-Content fruits.txt | Select-Object -Unique
+
+# Sort and deduplicate (comparison ignores case by default)
+Get-Content fruits.txt | Sort-Object -Unique
+```
+
+Add `| Set-Content cleaned.txt` to save the result.
+
+## How to remove duplicate lines in Python
+
+Since Python 3.7, dictionaries keep insertion order, which makes order-preserving deduplication a one-liner. For case-insensitive matching, track a normalized key:
+
+```python
+with open("fruits.txt", encoding="utf-8") as f:
+    lines = f.read().splitlines()
+
+unique = list(dict.fromkeys(lines))
+print(unique)
+
+seen = set()
+unique_ci = []
+for line in lines:
+    key = line.casefold()
+    if key not in seen:
+        seen.add(key)
+        unique_ci.append(line)
+print(unique_ci)
+```
+
+```text
+['banana', 'apple', 'cherry', 'Banana', 'date']
+['banana', 'apple', 'cherry', 'date']
+```
+
+`casefold()` is a stronger version of `lower()` that also handles characters such as the German `ß`. Add `.strip()` to the key if stray spaces should not make lines different.
+
+## Watch out for invisible differences
+
+Two lines that look identical on screen can still count as different, and that is the most common reason a deduplication seems to "miss" repeats. Check for these:
+
+- **Trailing spaces and tabs.** `apple` and `apple ` differ by one invisible character. Trim before comparing.
+- **Windows line endings.** A file edited on Windows ends lines with a carriage return and a line feed. If some lines have the extra carriage return and others do not, they will not match. Most editors can convert line endings for the whole file.
+- **Non-breaking spaces.** Text copied from web pages or word processors often contains a non-breaking space that looks like a normal one.
+- **Different Unicode forms.** An accented letter can be stored as one character or as a letter plus a combining accent. In Python, `unicodedata.normalize("NFC", line)` makes them the same.
+
+If a tool reports fewer duplicates than you expect, look at the lines it kept with a hex viewer or by highlighting whitespace in your editor.
+
+## Which method should you use?
+
+| Where | Keeps order | Ignores case | Command |
+| --- | --- | --- | --- |
+| Excel | Yes | Yes | Data, Remove Duplicates or `=UNIQUE()` |
+| Google Sheets | Yes | Check your data | Data cleanup or `=UNIQUE()` |
+| Terminal | No | No | `sort -u` |
+| Terminal | Yes | Optional | `awk '!seen[$0]++'` |
+| PowerShell | Yes | No | `Select-Object -Unique` |
+| PowerShell | No | Yes | `Sort-Object -Unique` |
+| Python | Yes | Optional | `dict.fromkeys(lines)` |
+
+If you also want the list in a sensible order afterwards, be careful with numbers: plain sorting puts `item10` before `item2`. The [Sort Lines](/tools/text/sort-lines/) tool has a natural order that handles that, and our guide to [natural sort order](/blog/natural-sort-order/) explains why it happens.
+
+## Remove duplicates in your browser
+
+For lists you are copying between apps, such as email addresses, product codes or log lines, the [Remove Duplicate Lines](/tools/text/remove-duplicate-lines/) tool is the quickest route. Paste the list, choose whether to ignore case and surrounding spaces, keep the first or last occurrence, and copy the result. It can also show only the duplicates or count how often each line appears. The text never leaves your browser.

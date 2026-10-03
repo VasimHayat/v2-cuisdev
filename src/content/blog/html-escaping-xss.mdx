@@ -1,0 +1,126 @@
+---
+title: "HTML escaping and XSS: how to escape user input correctly"
+description: "How to escape user input to prevent XSS: which characters to escape, why context matters, and safe patterns for HTML, attributes, URLs and scripts."
+publishDate: 2026-12-03
+author: Cuisdev Team
+tags: [Security, Web]
+tools: [html-entity-encoder, url-encode-decode]
+---
+
+To prevent cross-site scripting (XSS), escape untrusted data at the moment you insert it into a page, using the rules for the exact place it goes. In HTML text, replace `&`, `<` and `>` with `&amp;`, `&lt;` and `&gt;`. In attribute values, also escape `"` and `'` and always quote the attribute. For URLs and scripts, escaping alone is not enough: validate URL schemes and pass data to scripts as JSON. You can see what escaped output looks like by pasting text into the [HTML Entity Encoder](/tools/developer/html-entity-encoder/).
+
+## What is XSS?
+
+Cross-site scripting happens when text that came from a user, a database or another site ends up in your page as markup or code instead of as plain text. If a comment field contains `<script>` and your page inserts it unchanged, the browser runs that script with all the permissions of your site. It can read what the page shows, act as the logged-in user and send data elsewhere.
+
+Escaping prevents this by turning characters that have meaning in HTML into entities that display as the characters themselves. A browser shows `&lt;script&gt;` as the text `<script>` and never runs it.
+
+## Which characters do I need to escape?
+
+For HTML text and quoted attribute values, five characters cover it:
+
+| Character | Escape as | Why |
+| --- | --- | --- |
+| `&` | `&amp;` | Starts an entity, so it must be escaped first |
+| `<` | `&lt;` | Starts a tag |
+| `>` | `&gt;` | Ends a tag; escaping it avoids edge cases |
+| `"` | `&quot;` | Ends a double-quoted attribute |
+| `'` | `&#39;` | Ends a single-quoted attribute |
+
+A small JavaScript function does it:
+
+```js
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  })[c]);
+}
+
+console.log(escapeHtml('<img src=x onerror="alert(1)">'));
+```
+
+```text
+&lt;img src=x onerror=&quot;alert(1)&quot;&gt;
+```
+
+Python's standard library has the same thing built in:
+
+```python
+import html
+print(html.escape('<script>alert("x")</script> & \'quotes\''))
+```
+
+```text
+&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt; &amp; &#x27;quotes&#x27;
+```
+
+`&#39;` and `&#x27;` are the same character written in decimal and hexadecimal. Either works.
+
+## Why does the context matter?
+
+The same piece of data can be safe in one place and dangerous in another. Escaping for HTML text does not protect a URL or a script, because those contexts have different special characters.
+
+| Where the data goes | Safe approach |
+| --- | --- |
+| Text between tags | HTML-escape `&`, `<`, `>` |
+| Quoted attribute value | HTML-escape all five characters and always use quotes |
+| URL in `href` or `src` | Validate the scheme, then percent-encode parameters |
+| Inside a script | Do not build code from strings; pass data as JSON |
+| Inside CSS | Avoid user data in styles; use a fixed list of allowed values |
+
+### Attributes must be quoted
+
+An unquoted attribute such as `<div class=USER_INPUT>` ends at the first space, so an attacker does not need any of the five special characters: a value like `x onmouseover=alert(1)` adds a new attribute. Always quote attributes, and escape quotes inside them.
+
+### URLs need scheme checks, not just escaping
+
+Escaping cannot stop `javascript:alert(1)` in a link, because there is nothing to escape in it. Check that a URL uses a scheme you allow before you output it:
+
+```js
+const isSafeUrl = (u) => {
+  try {
+    return ['http:', 'https:', 'mailto:'].includes(new URL(u, 'https://example.com').protocol);
+  } catch {
+    return false;
+  }
+};
+```
+
+Run against a few inputs, it accepts `https://ok.com` and `/relative/path` and rejects `javascript:alert(1)`, ` JaVaScRiPt:alert(1)` and `data:text/html,hi`. The URL parser normalizes case and leading spaces, which is why parsing beats matching strings yourself.
+
+When you insert data into a query string, encode it with `encodeURIComponent` so `&`, `=` and `/` cannot break the URL. `encodeURIComponent('cats & dogs/"quotes"')` returns `cats%20%26%20dogs%2F%22quotes%22`. Our guide to [URL encoding](/blog/url-encoding-explained/) explains the rules, and the [URL Encoder](/tools/developer/url-encode-decode/) shows the result for any input.
+
+### Scripts should receive data, not code
+
+Never build JavaScript by concatenating strings with user data. Put the data in a `data-` attribute or a JSON block and read it from your script. If you embed JSON in a `<script>` tag, escape `<` as `<` so the text `</script>` inside a value cannot end the tag early.
+
+## Use the platform instead of escaping by hand
+
+The safest escaping is the kind you do not write yourself.
+
+- **In the DOM,** set `element.textContent = value` instead of `innerHTML`. `textContent` never parses HTML, so there is nothing to escape. The MDN page on [textContent](https://developer.mozilla.org/en-US/docs/Web/API/Node/textContent) covers the differences.
+- **In templates,** use an engine that escapes by default. Most modern template engines and front-end frameworks escape interpolated values automatically. The risk is in their escape hatches, the features named "raw", "safe" or "dangerously set HTML". Treat every use of them as a security review item.
+- **When you must allow some HTML,** such as formatted comments, do not try to escape selectively. Run the HTML through a well-maintained sanitizer library with an allow-list of tags and attributes.
+
+## Escape on output, not on input
+
+A common mistake is escaping data when it is saved, then storing `&lt;` in the database. This breaks in two ways. Data shown in a non-HTML context, such as an email subject or a CSV export, now contains visible entities. And data that is escaped again on output becomes double escaped, so users see `&amp;lt;` on the page. Store the original text and escape it once, at the point where you know the context.
+
+## Add defense in depth
+
+Escaping is the primary defense, but bugs happen. A Content Security Policy that disallows inline scripts limits what an injected script can do, and cookies marked `HttpOnly` cannot be read by JavaScript at all. The OWASP [Cross Site Scripting Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html) is the standard reference for these layers.
+
+## How do I test my own app for XSS?
+
+Only test applications you own or have permission to test, and use a development or staging environment. A quick manual check covers a lot:
+
+1. **Find every place user data is displayed.** Names, comments, search terms echoed on the results page, file names, error messages and anything read from a URL parameter.
+2. **Enter harmless markers.** Type a value such as `<b>marker</b>` into each field. If the page shows the literal text with the angle brackets, output is escaped. If the word appears in bold, the input is being treated as HTML and needs fixing.
+3. **Check attributes too.** Enter a value containing a double quote, such as `test" data-x="1`, and inspect the resulting element in the browser's developer tools. If a new `data-x` attribute appears, the attribute is not escaped or not quoted.
+4. **Review the templates.** Search your code for the raw-output features mentioned above and for `innerHTML` assignments. Each one should either receive trusted content or go through a sanitizer.
+
+Automated scanners can complement this, but a template review usually finds the problems faster, because unescaped output is visible in the code.
+
+## How can I check escaped output?
+
+When you are debugging a template, comparing a bug report with your output or preparing a snippet for documentation, the [HTML Entity Encoder](/tools/developer/html-entity-encoder/) escapes the five essential characters, or every non-ASCII character if you need to, and decodes entities back to text. It runs entirely in your browser, so it is safe to paste real payloads from logs.
