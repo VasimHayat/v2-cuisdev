@@ -35,7 +35,6 @@ import {
   parseDimension,
   flipState,
   rotateState,
-  sameRect,
   scaleByPercent,
   withCrop,
   type Adjustments,

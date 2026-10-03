@@ -10,6 +10,7 @@ import { css } from '@codemirror/lang-css';
 import { html } from '@codemirror/lang-html';
 import { json } from '@codemirror/lang-json';
 import { sql } from '@codemirror/lang-sql';
+import { xml } from '@codemirror/lang-xml';
 import { Icon } from '../shared/icons';
 import { CodeEditor } from '../shared/CodeEditor';
 import { Chip, HeaderButton, Segmented } from '../shared/controls';
@@ -125,6 +126,8 @@ function languageExtension(language: LanguageId): Extension {
       return json();
     case 'sql':
       return sql();
+    case 'xml':
+      return xml();
   }
 }
 
@@ -155,9 +158,11 @@ export default function CodeFormatter({ language: fixedLanguage, lockLanguage = 
   // Persist preferences and draft
   useEffect(() => {
     try {
-      localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+      // A page with a locked language must not overwrite the language chosen on the general formatter.
+      const stored = fixedLanguage ? { ...prefs, lang: loadPrefs().lang } : prefs;
+      localStorage.setItem(PREFS_KEY, JSON.stringify(stored));
     } catch {}
-  }, [prefs]);
+  }, [prefs, fixedLanguage]);
   useEffect(() => {
     const t = setTimeout(() => {
       try {
@@ -322,7 +327,8 @@ export default function CodeFormatter({ language: fixedLanguage, lockLanguage = 
   const outBytes = useMemo(() => byteLength(output), [output]);
   const savings = savingsPercent(inBytes, outBytes);
   const minifyNote = minifyUnavailableMessage(language);
-  const showPrettierOptions = mode === 'beautify' && language !== 'sql';
+  const showPrettierOptions = mode === 'beautify' && language !== 'sql' && language !== 'xml';
+  const showIndent = mode === 'beautify';
   const showScriptOptions = showPrettierOptions && info.script;
   const showSqlOptions = mode === 'beautify' && language === 'sql';
 
@@ -374,7 +380,7 @@ export default function CodeFormatter({ language: fixedLanguage, lockLanguage = 
           ]}
         />
 
-        {(showPrettierOptions || showSqlOptions) && (
+        {showIndent && (
           <label class="flex items-center gap-2 text-xs text-ink-2">
             <span class="hidden sm:inline">Indent</span>
             <select

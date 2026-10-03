@@ -1,0 +1,46 @@
+---
+slug: xml-formatter
+updated: 2026-10-03
+howTo:
+  - Paste XML, SVG, XHTML, an RSS feed or a config file into the Input pane, drop a file onto it, or press Sample.
+  - The formatted result appears on the right as you type. Choose 2 spaces, 4 spaces or tabs for indentation.
+  - If the document is not well formed, the status line names the problem and the editor underlines the exact spot. Fix it and the output updates.
+  - Switch to Minify to strip comments and whitespace between elements for a compact single-line document.
+  - Press Copy to take the result, Download to save it as an .xml file, or the arrow button to feed the output back into the input.
+features:
+  - Pretty prints XML with consistent indentation, one element per line
+  - Validates well-formedness and pinpoints mismatched, unclosed or duplicate tags and unquoted attributes with line and column
+  - Keeps mixed content such as XHTML paragraphs on one line so whitespace meaning survives
+  - Preserves the XML declaration, DOCTYPE, comments, CDATA sections, namespaces and processing instructions
+  - Minifies by removing comments and inter-element whitespace while keeping text intact
+  - 2 or 4 space or tab indentation, remembered on your device
+  - Handles SVG, XHTML, RSS, Atom, XSD, XSLT, plist, pom.xml and csproj files
+  - Runs entirely in your browser; nothing is uploaded
+faq:
+  - q: What does well formed mean, and is this a validator?
+    a: "A well-formed document follows the XML syntax rules: one root element, every tag closed in the right order, attribute values quoted, no duplicate attributes. This tool checks all of that and reports the first problem with its line and column. It does not validate against a schema or DTD, so a well-formed document can still break a program that expects specific elements."
+  - q: Why are some elements kept on one line?
+    a: "Elements that contain only text, such as <title>XML for the Impatient</title>, stay on one line because that is how people read them. Elements that mix text with inline child elements, like an XHTML paragraph with emphasis, also stay on one line, because adding line breaks inside them would change the meaning of the whitespace."
+  - q: Will formatting change my data?
+    a: "Only whitespace between elements and inside tags is changed. Text content, attribute values, CDATA sections, comments and the declaration are preserved exactly. The one exception is whitespace-only text between elements, which XML parsers treat as insignificant and the formatter replaces with indentation."
+  - q: Can I format SVG or XHTML?
+    a: "Yes. Both are XML, so the same rules apply. Inline SVG files from design tools are often minified or oddly indented and format well here. XHTML paragraphs keep their inline markup on one line as described above."
+  - q: How does Minify differ from the formatter's output?
+    a: "Minify removes comments and all whitespace-only text between elements, collapses runs of whitespace inside mixed content to a single space, and writes self-closing tags as <tag/>. It is the smallest well-formed equivalent of your document, useful for embedding XML in a string or shipping an SVG."
+  - q: Is my XML uploaded anywhere?
+    a: "No. The formatter is a small JavaScript parser that runs in your browser tab. You can disconnect from the internet after the page loads and it keeps working, so configuration files containing secrets are safe to format here."
+---
+
+## Why format XML
+
+XML written by machines arrives on one line or with indentation from whatever generated it. Reading a SOAP response, a Maven pom.xml, an Android layout or an SVG exported from a design tool is slow until the structure is visible. Formatting puts one element per line with indentation that shows the nesting, so the shape of the document is obvious and a diff shows only real changes.
+
+The formatter is also a quick well-formedness check. XML parsers stop at the first error with a message that is often unhelpful, such as a complaint about the end of the file when the real problem is an unclosed tag a hundred lines earlier. This tool names the unclosed element and underlines where it was opened.
+
+## What is preserved
+
+The declaration, DOCTYPE (including an internal subset), comments, CDATA sections and processing instructions are kept and placed on their own lines. Attribute values are never touched, and attributes are written one space apart in their original order. Text content of simple elements is kept with its internal spacing collapsed, and elements with mixed content keep their inline children on one line.
+
+## Related tasks
+
+For JSON the [JSON Formatter](/tools/developer/json-formatter/) adds tree and table views. To format HTML, CSS, JavaScript and SQL alongside XML, use the full [Code Formatter](/tools/developer/code-formatter/), which detects the language automatically.

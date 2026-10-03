@@ -10,8 +10,9 @@ import type * as CssoModule from 'csso';
 import type * as TerserModule from 'terser';
 import type * as SqlModule from 'sql-formatter';
 import { scanJsonError } from '../shared/json-errors';
+import { XML_SAMPLE, XmlSyntaxError, formatXml, minifyXml } from './xml';
 
-export type LanguageId = 'html' | 'css' | 'scss' | 'javascript' | 'typescript' | 'json' | 'sql';
+export type LanguageId = 'html' | 'css' | 'scss' | 'javascript' | 'typescript' | 'json' | 'sql' | 'xml';
 export type Mode = 'beautify' | 'minify';
 export type IndentOption = 2 | 4 | 'tab';
 export type PrintWidth = 80 | 100 | 120;
@@ -39,7 +40,7 @@ export interface LanguageInfo {
   extension: string;
   mime: string;
   /** How this language is minified, or null when it cannot be. */
-  minifier: 'terser' | 'csso' | 'html' | 'json' | 'sql' | null;
+  minifier: 'terser' | 'csso' | 'html' | 'json' | 'sql' | 'xml' | null;
   /** Whether the quote / semicolon / trailing-comma options apply. */
   script: boolean;
 }
@@ -52,6 +53,7 @@ export const LANGUAGES: Record<LanguageId, LanguageInfo> = {
   scss: { id: 'scss', label: 'SCSS', parser: 'scss', extension: 'scss', mime: 'text/x-scss', minifier: null, script: false },
   json: { id: 'json', label: 'JSON', parser: 'json', extension: 'json', mime: 'application/json', minifier: 'json', script: false },
   sql: { id: 'sql', label: 'SQL', parser: null, extension: 'sql', mime: 'application/sql', minifier: 'sql', script: false },
+  xml: { id: 'xml', label: 'XML', parser: null, extension: 'xml', mime: 'application/xml', minifier: 'xml', script: false },
 };
 
 export const LANGUAGE_IDS = Object.keys(LANGUAGES) as LanguageId[];
@@ -106,6 +108,7 @@ export function languageFromFileName(name: string): LanguageId | undefined {
     html: 'html', htm: 'html', xhtml: 'html', vue: 'html', svelte: 'html',
     css: 'css', scss: 'scss', json: 'json', jsonc: 'json', json5: 'json', webmanifest: 'json',
     sql: 'sql', ddl: 'sql', dml: 'sql',
+    xml: 'xml', xsd: 'xml', xsl: 'xml', xslt: 'xml', svg: 'xml', rss: 'xml', atom: 'xml', plist: 'xml', csproj: 'xml', pom: 'xml', wsdl: 'xml', xaml: 'xml',
   };
   return map[ext];
 }
@@ -200,6 +203,9 @@ export function savingsPercent(inputBytes: number, outputBytes: number): number 
 const TS_SYNTAX =
   /\b(interface|type)\s+\w+\s*(=|\{|<)|:\s*(string|number|boolean|unknown|any|void|never|null|undefined|Record<|Promise<|Array<)\b|\)\s*:\s*[\w[\]<>|]+\s*(=>|\{|;)|\w+\?:\s*\w|\bas\s+const\b|\bimplements\b|\bdeclare\b|\benum\s+\w+\s*\{|\b(private|public|protected|readonly)\s+\w+|\babstract\s+class\b|<\w+(,\s*\w+)*>\s*\(|\bsatisfies\b|\w+!\s*[;,).]/;
 
+/** Tags that only make sense in HTML; a tag soup without any of them is treated as XML. */
+const HTML_TAGS = /<(html|head|body|div|span|p|a|img|script|style|link|meta|ul|ol|li|table|tr|td|th|h[1-6]|br|hr|form|input|button|nav|header|footer|section|article|main)\b/i;
+
 export function detectLanguage(source: string): LanguageId {
   const text = normalizeSource(source).trim();
   if (!text) return 'javascript';
@@ -211,7 +217,11 @@ export function detectLanguage(source: string): LanguageId {
       return 'json';
     } catch {}
   }
-  if (/^<!doctype\s+html|^<html|^<\?xml|^<[a-z][\w-]*(\s|>)/i.test(head) && /<\/?[a-z][\w-]*[^>]*>/i.test(head)) return 'html';
+  if (/^<\?xml[\s?]/i.test(head)) return 'xml';
+  if (/^<!doctype\s+html|^<html/i.test(head)) return 'html';
+  if (/^<[a-z_:][\w.:-]*(\s|>|\/)/i.test(head) && /<\/?[a-z_:][\w.:-]*[^>]*>/i.test(head)) {
+    return HTML_TAGS.test(head) ? 'html' : 'xml';
+  }
   if (/^\s*(--[^\n]*\n|\/\*[\s\S]*?\*\/\s*)*\s*(select|insert|update|delete|create|alter|drop|with|merge|truncate|grant|explain|begin|declare|use)\b/i.test(head)) return 'sql';
 
   const looksLikeCss = /(^|[\s;}])[.#]?[\w-]+\s*(,\s*[.#:\w-]+\s*)*\{[^}]*:[^}]*(;|})/m.test(head) && !/\b(function|=>|const |let |var |return |import |export )\b/.test(head);
@@ -286,6 +296,7 @@ let sqlPromise: Promise<typeof SqlModule> | undefined;
 export function isReady(language: LanguageId, mode: Mode): boolean {
   if (mode === 'beautify') {
     if (language === 'sql') return sqlPromise !== undefined;
+    if (language === 'xml') return true;
     return prettierPromise !== undefined && pluginCache.has(language);
   }
   switch (LANGUAGES[language].minifier) {
@@ -330,6 +341,13 @@ export async function beautify(source: string, language: LanguageId, options: Be
   const text = normalizeSource(source);
   if (text.trim() === '') return '';
   if (language === 'sql') return beautifySql(text, options);
+  if (language === 'xml') {
+    try {
+      return formatXml(text, { indent: options.indent ?? 2 });
+    } catch (err) {
+      throw toFormatError(err, text, 'xml');
+    }
+  }
   const [prettier, plugins] = await Promise.all([loadPrettier(), loadPlugins(language)]);
   try {
     return await prettier.format(text, { ...prettierConfig(language, options), plugins });
@@ -368,6 +386,12 @@ export async function minify(source: string, language: LanguageId): Promise<stri
       return minifyJsonText(text);
     case 'sql':
       return minifySql(text);
+    case 'xml':
+      try {
+        return minifyXml(text);
+      } catch (err) {
+        throw toFormatError(err, text, 'xml');
+      }
     case 'csso': {
       cssoPromise ??= import('csso');
       const csso = await cssoPromise;
@@ -637,6 +661,10 @@ interface LocatedError {
  */
 export function toFormatError(err: unknown, source: string, language: LanguageId): CodeFormatError {
   if (err instanceof CodeFormatError) return err;
+  if (err instanceof XmlSyntaxError) {
+    const { line, column } = offsetToLineColumn(source, err.offset);
+    return new CodeFormatError(`XML syntax error: ${err.message} (line ${line}, column ${column})`, { line, column, offset: err.offset });
+  }
   const e = (err ?? {}) as LocatedError;
   const raw = typeof e.message === 'string' ? e.message : typeof err === 'string' ? err : '';
   const first = raw.split('\n')[0] ?? '';
@@ -669,6 +697,7 @@ export function toFormatError(err: unknown, source: string, language: LanguageId
 // --- samples -----------------------------------------------------------------
 
 export const SAMPLES: Record<LanguageId, string> = {
+  xml: XML_SAMPLE,
   html: `<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <title>Invoice 4821</title>
