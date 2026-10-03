@@ -56,6 +56,12 @@ Five more islands, one folder each with `logic.ts` and tests: `regex-tester/` (m
 
 `word-counter/` (Intl.Segmenter counting, keyword density, length targets), `case-converter/` (14 cases with acronym-aware word splitting), `slug-generator/` (transliteration, stop words, replacements), `lorem-ipsum-generator/` (seeded, four vocabularies, text/HTML/Markdown), `markdown-preview/` (marked + DOMPurify, synced scroll, formatting buttons, HTML export), `line-tools/` (one island for Remove Duplicate Lines and Sort Lines via `islandProps.kind`, a trim, dedupe, sort, number pipeline), `find-and-replace/` (ordered rules, plain, whole word or regex) and `text-to-binary/` (binary, octal, decimal, hex or code points in UTF-8, UTF-16, Latin-1 or ASCII).
 
+## Image and PDF tools (wave 4)
+
+`image-batch/` serves Image Compressor, Converter and Resizer (`islandProps.kind`) with one decode, resize and encode pipeline, target-size quality search, a before/after compare and zip downloads. `favicon-generator/` writes the ICO container itself and zips every size with the manifest and HTML. `color-picker-from-image/` has a zoomable canvas, loupe, contrast checks and a k-means palette. `pdf-pages/` serves PDF Split and PDF Page Reorder (`kind`) on a page grid with drag and drop, rotation and undo. `pdf-to-image/` renders pages at a chosen DPI, and `pdf-compress/` offers a lossless re-save or a rasterising mode that clearly warns text stops being selectable.
+
+Shared helpers: `src/islands/shared/pdfjs.ts` loads pdf.js and its worker lazily (`loadPdf`, `renderPage`, `renderThumbnail`), and `src/islands/shared/zip.ts` builds zips with fflate. The pdf.js worker ships as `.mjs`, so `public/.htaccess` maps that extension to `text/javascript`.
+
 ## Islands render client-only
 
 `ToolIsland.astro` mounts every island with `client:only="preact"` and a skeleton sized like the tool. Islands read browser state on their first render (saved options, drafts, the user's zone), and Preact's hydration does not correct attributes that differ from the server HTML, so server rendering showed stale options. When adding an island, add its height classes to `SIZES` in `ToolIsland.astro`, and give any pane holding a CodeEditor a bounded height, otherwise the editor grows with its content. Give side-by-side grids a base `grid-cols-[minmax(0,1fr)]` so long unwrapped lines cannot widen the page on phones.

@@ -68,6 +68,8 @@ AddType application/manifest+json .webmanifest
 AddType font/woff2 .woff2
 AddType image/avif .avif
 AddType application/wasm .wasm
+# pdf.js ships its worker as an ES module; browsers refuse module scripts with a non-JS MIME type
+AddType text/javascript .mjs
 
 # ---------- Housekeeping ----------
 Options -Indexes

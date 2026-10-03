@@ -32,6 +32,12 @@ import MarkdownPreview from './markdown-preview/MarkdownPreview';
 import LineTools from './line-tools/LineTools';
 import FindReplace from './find-and-replace/FindReplace';
 import TextToBinary from './text-to-binary/TextToBinary';
+import ImageBatch from './image-batch/ImageBatch';
+import FaviconGenerator from './favicon-generator/FaviconGenerator';
+import ColorPicker from './color-picker-from-image/ColorPicker';
+import PdfPages from './pdf-pages/PdfPages';
+import PdfToImage from './pdf-to-image/PdfToImage';
+import PdfCompress from './pdf-compress/PdfCompress';
 
 interface Props {
   island: string;
@@ -62,6 +68,12 @@ const SIZES: Record<string, string> = {
   'line-tools': 'h-[min(78vh,860px)] min-h-[560px]',
   'find-and-replace': 'h-[min(78vh,860px)] min-h-[560px]',
   'text-to-binary': 'h-[min(78vh,860px)] min-h-[560px]',
+  'image-batch': 'h-[min(82vh,900px)] min-h-[600px]',
+  'favicon-generator': 'h-[min(82vh,900px)] min-h-[600px]',
+  'color-picker-from-image': 'h-[min(82vh,900px)] min-h-[600px]',
+  'pdf-pages': 'h-[min(82vh,900px)] min-h-[600px]',
+  'pdf-to-image': 'h-[min(82vh,900px)] min-h-[600px]',
+  'pdf-compress': 'h-[min(82vh,900px)] min-h-[600px]',
 };
 const size = SIZES[island] ?? 'min-h-[560px]';
 ---
@@ -87,6 +99,12 @@ const size = SIZES[island] ?? 'min-h-[560px]';
 {island === 'line-tools' && <LineTools client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></LineTools>}
 {island === 'find-and-replace' && <FindReplace client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></FindReplace>}
 {island === 'text-to-binary' && <TextToBinary client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></TextToBinary>}
+{island === 'image-batch' && <ImageBatch client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></ImageBatch>}
+{island === 'favicon-generator' && <FaviconGenerator client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></FaviconGenerator>}
+{island === 'color-picker-from-image' && <ColorPicker client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></ColorPicker>}
+{island === 'pdf-pages' && <PdfPages client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></PdfPages>}
+{island === 'pdf-to-image' && <PdfToImage client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></PdfToImage>}
+{island === 'pdf-compress' && <PdfCompress client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></PdfCompress>}
 
 <style is:global>
   .tool-skeleton {

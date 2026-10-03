@@ -1,0 +1,46 @@
+---
+slug: color-picker-from-image
+updated: 2026-10-03
+howTo:
+  - Open an image, drop it onto the tool, or paste a screenshot. Press Sample to try it with an example.
+  - Move over the image. The loupe shows the pixels around the pointer, and the panel shows the colour in HEX, RGB, HSL, HSV and CMYK with its nearest CSS name.
+  - Click to pick a colour. Scroll to zoom, drag to pan, and use the arrow keys and Enter to pick an exact pixel.
+  - Check each colour's contrast against white and black, with WCAG AA and AAA results.
+  - Use the dominant colours bar to add the main colours of the image, then copy your palette as CSS variables, JSON, a Tailwind snippet or plain HEX.
+features:
+  - Pixel-precise picking with an 11 by 11 magnifier loupe
+  - Zoom up to 6400 percent, pan by dragging, and arrow keys with Enter for exact pixels
+  - HEX, RGB, HSL, HSV and CMYK values plus the nearest CSS named colour, each one click to copy
+  - WCAG contrast ratios against white and black with AA, AAA and large text results
+  - Automatic dominant colour palette with the share of the image each colour covers
+  - Saved palette of up to 24 colours that survives a reload
+  - Export as CSS custom properties, JSON, a Tailwind config snippet or HEX
+  - Screen picker for colours anywhere on your display in supporting browsers
+faq:
+  - q: How do I get the exact colour of one pixel?
+    a: "Zoom in with the scroll wheel or the plus button until single pixels are visible as squares, then hover the pixel or move the cursor onto it with the arrow keys and press Enter. The loupe outlines the centre pixel so you can see exactly which one is read."
+  - q: Why does the colour differ from the one in my design tool?
+    a: "The tool reads the pixels as your browser decodes them, in sRGB. Images with an embedded wide-gamut profile, such as Display P3 photos from phones, are converted to sRGB first, which shifts saturated colours slightly. Screenshots and web images are already sRGB and match exactly."
+  - q: How is the dominant palette calculated?
+    a: "The image is sampled down and the pixels are grouped with k-means clustering into up to eight colours. Very similar clusters are merged and the rest are ordered by how much of the image they cover, which is shown as the width of each swatch."
+  - q: What do the AA and AAA badges mean?
+    a: "They are the WCAG 2 contrast levels for text. AA needs a ratio of at least 4.5 to 1 for normal text and 3 to 1 for large text; AAA needs 7 to 1. The badges show whether the picked colour passes when used as text on white and on black."
+  - q: What is the screen picker?
+    a: "Chrome, Edge and Opera support the EyeDropper API, which lets you pick a colour from anywhere on your screen, including other windows. When your browser supports it, a Screen picker button appears in the toolbar. Other browsers can still pick from images opened here."
+  - q: Is my image uploaded?
+    a: "No. The image is drawn on a canvas in your browser tab and the colours are read from it there. Nothing is sent to a server, and your picked palette is stored only in this browser."
+---
+
+## Colours straight from the pixels
+
+Designers and developers often need the exact colour of something they can only see: a brand colour in a logo, a shade in a screenshot, the background of a competitor's page. Guessing by eye is unreliable, because nearby pixels influence how a colour looks. This picker reads the actual pixel values, shows them magnified so you know exactly which one you are reading, and gives you every common format to paste into CSS, a design tool or a print brief.
+
+## From picks to a palette
+
+Every click adds a colour to a palette that is kept in this browser, newest first, up to 24 colours. The dominant colours bar does the same job automatically by clustering the whole image, which is the fastest way to pull a palette out of a photo or an illustration. Export either set as CSS custom properties, a JSON array, a Tailwind colour scale or plain HEX values.
+
+The contrast panel answers the next question: can this colour carry text? Ratios against white and black are calculated with the WCAG formula, and the badges show which accessibility levels pass.
+
+## Related tasks
+
+To crop or adjust the image before picking, use the [Image Editor](/tools/image/image-editor/), and to build a favicon in your brand colour use the [Favicon Generator](/tools/image/favicon-generator/).

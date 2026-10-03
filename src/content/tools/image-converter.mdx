@@ -1,0 +1,46 @@
+---
+slug: image-converter
+updated: 2026-10-03
+howTo:
+  - Add images with the Add images button, drop them onto the tool, or paste them. PNG, JPG, WebP, GIF, BMP and AVIF are accepted.
+  - In the Convert format section, choose the target format. AVIF appears when your browser can write it.
+  - For JPG, WebP and AVIF set the quality. For JPG, pick the colour that fills transparent areas.
+  - Check a result in the Compare view, then download single files or all of them as a zip.
+  - Turn on Compress or Resize as well if you want smaller files or new dimensions in the same pass.
+features:
+  - Converts between PNG, JPG, WebP and AVIF in bulk
+  - Reads GIF, BMP and other formats your browser can display
+  - Quality control for lossy formats and a background colour for transparency in JPG
+  - Detects which formats your browser can write and disables the rest
+  - Optional compression and resizing in the same pass
+  - Before and after comparison with file sizes and dimensions
+  - Download every result as a single zip file with clean names
+  - Converted in your browser; nothing is uploaded
+faq:
+  - q: Which format should I convert to?
+    a: "WebP for almost anything on the web: it is smaller than JPG for photos, smaller than PNG for graphics, supports transparency and works in every current browser. JPG when a system only accepts JPG. PNG when you need pixel-perfect, lossless output, such as screenshots of text or images you will edit again. AVIF for the smallest photos where the receiving side supports it."
+  - q: What happens to transparency when I convert to JPG?
+    a: "JPG has no transparency, so transparent pixels are filled with the background colour you choose, white by default. Choose the colour of the page the image will sit on to avoid a visible box around it. PNG, WebP and AVIF keep transparency."
+  - q: Why is AVIF greyed out?
+    a: "Your browser can display AVIF but cannot write it. Chrome and Edge can encode AVIF; Safari and Firefox currently cannot. Open the page in Chrome or Edge to convert to AVIF, or use WebP, which every browser can write."
+  - q: Can I convert animated GIFs?
+    a: "The first frame is converted. Browsers expose animated GIFs to a canvas as a single still image, so the result is a static PNG, JPG, WebP or AVIF. To keep the animation, a dedicated video or animated WebP tool is needed."
+  - q: Does converting reduce quality?
+    a: "Converting to PNG is lossless. Converting to JPG, WebP or AVIF uses the quality you set; at 90 the difference is very hard to see. Converting a JPG to PNG cannot restore detail the JPG already lost, it only stops further loss."
+  - q: Are my images uploaded?
+    a: "No. Every conversion happens on a canvas in your browser tab and the zip is built on your device. You can go offline after the page loads and the tool keeps working."
+---
+
+## Changing image formats
+
+Image formats are a compromise between size, quality and compatibility. PNG is exact but large, JPG is small but has no transparency, and WebP and AVIF are newer formats that beat both on size. A converter is how you move an image to the format the next system wants: a CMS that only takes JPG, a design file that needs PNG, or a website that should serve WebP.
+
+This converter handles whole batches. Add a folder of screenshots or photos, choose the target format, and every image is redrawn and encoded in your browser. Names keep their stem and get the right extension, and duplicates are numbered inside the zip.
+
+## Lossless and lossy targets
+
+Converting to PNG keeps every pixel exactly as decoded, which is right for text, diagrams and anything you will edit again. JPG, WebP and AVIF are lossy: the quality setting trades detail for size. For photos, WebP at quality 85 is a reliable default. When transparency matters, choose PNG, WebP or AVIF, because JPG fills transparent areas with a solid colour.
+
+## Related tasks
+
+To shrink files rather than change their type, use the [Image Compressor](/tools/image/image-compressor/). To combine converted images into one document, use the [PDF Converter](/tools/pdf/pdf-converter/).

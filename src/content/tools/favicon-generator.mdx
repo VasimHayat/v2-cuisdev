@@ -1,0 +1,46 @@
+---
+slug: favicon-generator
+updated: 2026-10-03
+howTo:
+  - Choose a source. Type one to four letters or an emoji, or switch to Image and open, drop or paste a logo. SVG logos are also exported as icon.svg.
+  - Shape the icon with the background colour, padding and corner radius, from a square to a circle. Image icons can keep a transparent background.
+  - Fill in the app name, the short home screen name, the theme colour and the folder the files will be served from.
+  - Check the previews in a light and a dark browser tab, on a phone home screen, and at every size on light and dark backgrounds.
+  - Press Download zip to get every file, then paste the HTML from the snippet into the head of your pages.
+features:
+  - Every favicon file a modern site needs from one source image, letters or emoji
+  - A real multi-size favicon.ico with 16, 32 and 48 pixel images
+  - Apple touch icon, Android Chrome icons and a web app manifest included
+  - Keeps your SVG as icon.svg for crisp tabs in modern browsers
+  - Padding, background colour and rounded or circular corners
+  - Previews in browser tabs, on a phone home screen and on light and dark tiles
+  - Ready-to-paste HTML link tags with your own file path
+  - Drawn entirely in your browser; your logo is never uploaded
+faq:
+  - q: Which favicon files does a website actually need?
+    a: "A favicon.ico for older browsers and tools that request it automatically, 16 and 32 pixel PNGs for browser tabs, a 180 pixel apple-touch-icon for iPhone and iPad home screens, 192 and 512 pixel icons for Android and installable web apps, and a site.webmanifest that lists them. The zip contains all of these, plus icon.svg when your source is an SVG."
+  - q: Where do I put the files and the HTML?
+    a: "Upload the files to the folder you entered under Files served from, usually the root of your site. Then paste the HTML snippet into the head of every page, or into the shared layout or template. If your site lives in a sub-folder or on a CDN, set the path first so the links match."
+  - q: Why is the Apple touch icon not transparent?
+    a: "iOS fills transparent areas of home screen icons with black, which rarely looks right. The 180 pixel Apple icon is therefore always drawn on your background colour, while the browser tab icons keep transparency when you ask for it."
+  - q: What size should my source image be?
+    a: "At least 512 by 512 pixels, and square. A non-square image is centred with space around it. Simple shapes with strong contrast work best, because the icon is mostly seen at 16 or 32 pixels where fine detail disappears. Increase the padding if the logo touches the edges."
+  - q: Can I make a favicon from an emoji?
+    a: "Yes. Choose Text or emoji and type or paste the emoji. It is drawn with your system's emoji font, so the result matches what you see in the preview. Pick a background colour or keep it transparent for image-style emoji icons."
+  - q: Is my logo uploaded anywhere?
+    a: "No. The icons are drawn on a canvas in your browser tab, the ICO file is assembled in JavaScript and the zip is built on your device. Nothing is sent to a server."
+---
+
+## One source, every icon
+
+Favicons have grown from a single 16 pixel file into a small family: tab icons for different screen densities, a home screen icon for iOS, two sizes for Android, and a manifest that ties them together for installable web apps. Each platform has its own expectations about size, transparency and naming, which is why favicons are so often half done. This generator produces the full set from one source and gives you the matching HTML, so nothing is missing.
+
+## Drawing for small sizes
+
+A favicon is mostly seen at 16 or 32 pixels. The generator draws every icon at 512 pixels first, then scales it down in halving steps, which keeps edges clean instead of jagged. Letters are centred on their visible shape rather than their font box, so a single initial sits in the middle where it looks right. Padding and corner radius apply to every size, and the phone preview shows how the rounded Apple icon will sit among other apps.
+
+The favicon.ico file contains three separate PNG images at 16, 32 and 48 pixels, which every browser and Windows itself understands, so the right size is picked for each place it appears.
+
+## Related tasks
+
+To crop, rotate or touch up your logo before turning it into a favicon, use the [Image Editor](/tools/image/image-editor/). To make an existing PNG or JPG smaller, use the [Image Compressor](/tools/image/image-compressor/).

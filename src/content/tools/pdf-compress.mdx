@@ -1,0 +1,46 @@
+---
+slug: pdf-compress
+updated: 2026-10-03
+howTo:
+  - Open a PDF with the Open PDF button, drop it onto the tool, or press Sample to try a file with a large photo in it.
+  - Choose Optimise to re-save the file without changing how it looks and keep text selectable, or Compress images to re-render every page as a JPEG for a much smaller file.
+  - For Compress images, pick a preset (Smallest, Balanced or Best quality) or set the resolution and JPEG quality yourself. Grayscale saves a little more.
+  - Press the compress button. Pages are processed one at a time and you can cancel at any point.
+  - Check the before and after sizes and the side-by-side preview of page 1, then download the result. If it came out larger, keep the original instead.
+features:
+  - Two modes, explained honestly, instead of one button that may or may not help
+  - Optimise rebuilds the PDF without unused objects and writes it with object streams; text stays selectable
+  - Compress images re-renders pages as JPEGs at 72 to 150 DPI, often shrinking scanned and photo-heavy PDFs by 70 percent or more
+  - Presets for smallest, balanced and best quality, plus a quality slider and grayscale
+  - Real before and after sizes, the percentage saved, and a warning when the result is not smaller
+  - Side-by-side preview of page 1 before and after strong compression
+  - Opens password-protected PDFs for image compression after you enter the password
+  - Runs entirely in your browser; your PDF is never uploaded
+faq:
+  - q: Why are there two modes?
+    a: "Desktop tools such as Acrobat compress PDFs by re-encoding each embedded image while leaving text untouched. That needs a full PDF rewriting engine that does not run well in a browser. So this tool offers the two things that do work reliably: a lossless optimisation that keeps everything as it was, and a strong mode that re-renders whole pages as images. You can see both results and choose."
+  - q: Will my text still be selectable?
+    a: "With Optimise, yes: page content is copied unchanged, so text, links and vector graphics stay exactly as they were. With Compress images, no: every page becomes a picture, so text can no longer be selected, searched or read by screen readers. Use the strong mode for scans and photo documents, and Optimise for reports and forms."
+  - q: Why did my file barely get smaller, or get larger?
+    a: "A PDF made of text and vector graphics is usually already compact, and Optimise can only remove what is unused. Re-rendering such a file as images can even make it larger, because a page of crisp text is cheaper as text than as a picture. The tool compares sizes and recommends keeping the original when the result is not smaller."
+  - q: Which settings should I use for email attachments?
+    a: "The Balanced preset, 96 DPI at quality 70, keeps scanned pages readable on screen and usually brings a multi-megabyte scan well under common attachment limits. Choose Smallest for documents that only need to be legible, and Best quality if the PDF may be printed."
+  - q: Can I compress a password-protected PDF?
+    a: "With Compress images, yes, after entering the password; the result is a new PDF without a password. Optimise cannot rewrite an encrypted file, so remove the password first if you need to keep the text selectable."
+  - q: Is my PDF uploaded to a server?
+    a: "No. The file is read, rendered and rebuilt inside your browser with pdf.js and pdf-lib. Nothing is sent anywhere, which makes the tool safe for contracts, medical records and other confidential documents."
+---
+
+## How PDF compression works in a browser
+
+Most of a PDF's size comes from images: scanned pages, photographs and screenshots embedded at full resolution. Text and vector drawings take up very little room. Shrinking a PDF is therefore mostly about images, and how much can be saved depends on what the file contains.
+
+Optimise copies every page into a freshly written document. Anything the pages no longer reference, such as leftovers from earlier edits, duplicated resources or orphaned images, is left behind, and the file is written with compressed object streams. Because page content is copied as it is, the result looks and behaves exactly like the original. On clean, text-based PDFs the saving is small, and the tool says so.
+
+## When to use Compress images
+
+Compress images renders each page with pdf.js at the resolution you choose and stores it as a JPEG, then builds a new PDF with one image per page at the original page size. For scanned contracts, photographed receipts and image-heavy brochures this routinely cuts the size by more than half. The trade-off is that every page becomes a picture, so the side-by-side preview of page 1 lets you judge legibility before you download.
+
+## Related tasks
+
+To send only part of a document, extract the pages you need with [PDF Split](/tools/pdf/pdf-split/) before compressing. To shrink photos before they go into a PDF, run them through the [Image Compressor](/tools/image/image-compressor/) and combine them with the [PDF Converter](/tools/pdf/pdf-converter/).

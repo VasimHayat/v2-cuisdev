@@ -1,0 +1,48 @@
+---
+slug: image-compressor
+updated: 2026-10-03
+howTo:
+  - Add images with the Add images button, drop them anywhere on the tool, or paste them. Up to 100 at a time.
+  - In the Compress section, drag the Quality slider, or switch to Target size and type the largest file size you will accept in KB.
+  - Keep the original format, or switch PNG and JPG files to WebP or JPG for much smaller results.
+  - Select a file and drag the Compare slider to check the result against the original before you download.
+  - Download one file with its download button, or every result at once as a zip with Download all.
+features:
+  - Compresses JPG, PNG and WebP in bulk, up to 100 images of 50 MB each
+  - Quality slider or a target file size that finds the best quality for each image automatically
+  - Converts to WebP or JPG on the way for the biggest savings
+  - Before and after compare slider with sizes, dimensions and the quality used
+  - Optional resizing in the same pass, because fewer pixels shrink a file more than any setting
+  - Strips EXIF and GPS metadata and rotates phone photos upright
+  - Per-file savings and a running total of space saved
+  - Runs in your browser; images are never uploaded
+faq:
+  - q: How much smaller will my images get?
+    a: "Photos saved straight from a phone or camera usually shrink by 60 to 80 percent at quality 75 with no visible difference. Screenshots and graphics saved as PNG shrink much more when converted to WebP. Images that were already compressed for the web may only shrink a little, and the list shows the exact saving for each file."
+  - q: What does Target size do?
+    a: "It searches for the highest quality that keeps each file at or under the size you type, encoding the image several times and keeping the best result. Use it when a form or a CMS has an upload limit, such as 200 KB. If even the lowest quality cannot reach the target, the file is marked and the smallest version is kept, and resizing it in the same pass is the next step."
+  - q: Why does quality have no effect on my PNG files?
+    a: "PNG is lossless, so there is no quality setting to lower: the pixels are always stored exactly. To make a PNG much smaller, switch the output format to WebP, which keeps transparency, or to JPG for photos without transparency."
+  - q: Which quality should I choose?
+    a: "75 to 85 is the sweet spot for photos on the web: artefacts are hard to see and files are small. Go to 90 or above for images people will zoom into, such as product photos. Below 60, edges and gradients start to show blocks, so check the compare slider."
+  - q: Is metadata such as location removed?
+    a: "Yes. Every output is a freshly encoded image, so EXIF data including GPS location, camera model and the original date is not carried over. Phone photos are rotated upright first, so they still display the right way round."
+  - q: Are my images uploaded?
+    a: "No. Images are decoded, compressed and zipped by your browser on your device. You can disconnect from the internet after the page loads and the tool keeps working."
+---
+
+## Why compress images
+
+Images are usually the heaviest part of a web page and the first thing an email or upload form rejects. A photo straight from a phone is often 3 to 5 MB, while the same photo at quality 80 and a sensible size is 200 to 400 KB, small enough to load fast on a mobile connection and still look sharp. Compressing before you publish improves page speed, which search engines measure, and saves storage everywhere the file goes next.
+
+This compressor works on a whole folder at once. Drop the images, set the quality or a size limit, and every file is processed in your browser with a running total of what you saved. The compare slider shows each result against its original, so you can lower the quality with confidence.
+
+## Quality or target size
+
+Quality is the simplest control: one number applied to every lossy image. Target size is for the moments when a limit is fixed, such as a job portal that accepts photos up to 200 KB. The tool tries a handful of qualities per image and keeps the highest one that fits, so a simple image keeps more detail than a busy one while both stay under the limit.
+
+The format matters as much as the setting. WebP is typically 25 to 35 percent smaller than JPG at the same visual quality and keeps transparency, so switching to WebP is the biggest single saving for PNG screenshots and graphics.
+
+## Related tasks
+
+To change formats without compressing hard, use the [Image Converter](/tools/image/image-converter/). To make images smaller in dimensions first, use the [Image Resizer](/tools/image/image-resizer/), and to crop or adjust a single photo, open the [Image Editor](/tools/image/image-editor/).

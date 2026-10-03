@@ -1,0 +1,46 @@
+---
+slug: pdf-to-image
+updated: 2026-10-03
+howTo:
+  - Open a PDF with the Open PDF button, drop it onto the tool, or press Sample. Thumbnails of every page appear.
+  - Choose the pages to convert by clicking thumbnails or typing a range such as 1-3, 7 or 10-. Every page is selected to start with.
+  - "Pick the format and resolution: PNG for crisp text and diagrams, JPG or WebP for photos, and a DPI from 72 for screens up to 300 for print. The pixel size of the first selected page is shown."
+  - Optionally set a background colour, keep PNG transparent, or turn on Combine into one image to stack the pages into a single tall picture.
+  - Press Convert. Pages render one at a time with a progress bar you can cancel. Click any result to see it large, download pages one by one, or download them all as a zip.
+features:
+  - Converts PDF pages to PNG, JPG or WebP at 72, 96, 150, 200 or 300 DPI
+  - Page thumbnails with click-to-select and a page range box
+  - Shows the output pixel size and refuses pages above 50 megapixels before they exhaust memory
+  - Quality slider for JPG and WebP, background colour, and transparent PNG
+  - Combines selected pages into one tall image, scaled to stay within browser limits
+  - Opens password-protected PDFs after you enter the password
+  - Downloads single images or every page as a zip named after the PDF
+  - Renders with pdf.js entirely in your browser; nothing is uploaded
+faq:
+  - q: Which DPI should I choose?
+    a: "Use 72 or 96 DPI for images shown on screen, such as a page preview on a website or a slide in a chat. Use 150 DPI for documents people will zoom into, and 200 or 300 DPI when the image will be printed or the text must stay sharp at full size. Higher DPI means larger files and longer rendering."
+  - q: PNG, JPG or WebP?
+    a: "PNG is lossless and keeps text and line art perfectly crisp, but it is the largest. JPG is much smaller for pages that are mostly photographs, at the cost of slight blur around text. WebP gives JPG-like quality at a smaller size and is supported by every current browser, but some older desktop software cannot open it."
+  - q: Why is a page skipped at high resolution?
+    a: "A page rendered above 50 megapixels needs hundreds of megabytes of memory and can crash the tab, so the tool skips it and tells you. Large-format pages such as A0 posters or architectural drawings hit this at 300 DPI. Choose a lower DPI; the resolution panel shows the highest safe one."
+  - q: How does Combine into one image work?
+    a: "The selected pages are stacked top to bottom with a small gap and centred, producing one long image that is easy to share in chat apps and social posts. Browsers cannot create images taller than about 16,000 pixels, so long documents are scaled down to fit and the tool tells you by how much."
+  - q: Can I convert a password-protected PDF?
+    a: "Yes, if you know the password. The tool asks for it, uses it only in this tab to open the file, and never stores or sends it anywhere. PDFs that only restrict printing or copying open without a password."
+  - q: Are my files uploaded?
+    a: "No. The PDF is opened and rendered with Mozilla's pdf.js inside your browser, and the images are created on your device. You can disconnect from the internet after the page loads and the tool keeps working."
+---
+
+## Turning PDF pages into pictures
+
+A PDF is the right format for documents and the wrong one for almost everything else. Slides need to go into a chat, a page needs to appear on a website, a diagram needs to go into a presentation, or a form needs to be attached somewhere that only accepts images. This tool renders each page exactly as a PDF viewer would and saves it as a regular image file.
+
+Rendering uses pdf.js, the same engine Firefox uses to display PDFs, so fonts, vector graphics, transparency and embedded images come out as they look in a viewer. Each page is rendered at the resolution you choose rather than captured from the screen, which is why text stays sharp at 200 or 300 DPI.
+
+## Resolution and file size
+
+PDF pages are measured in points, 72 to the inch, so the DPI you pick decides the pixel size directly: an A4 page is 595 by 842 pixels at 72 DPI and 2480 by 3508 pixels at 300 DPI. The pixel size of the first selected page updates as you change the setting, and the tool refuses sizes that would exhaust the browser's memory instead of crashing halfway through a long document.
+
+## Related tasks
+
+To go the other way and turn images into a PDF, use the [PDF Converter](/tools/pdf/pdf-converter/). To pull a few pages out as a smaller PDF instead of images, use [PDF Split](/tools/pdf/pdf-split/).
