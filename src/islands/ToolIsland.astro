@@ -9,6 +9,7 @@ import JsonEditor from './json-editor/JsonEditor';
 import CodeFormatter from './code-formatter/CodeFormatter';
 import TextDiff from './text-diff/TextDiff';
 import ImageEditor from './image-editor/ImageEditor';
+import PdfConverter from './pdf-converter/PdfConverter';
 
 interface Props {
   island: string;
@@ -21,3 +22,4 @@ const { island, props = {} } = Astro.props;
 {island === 'code-formatter' && <CodeFormatter client:load {...props} />}
 {island === 'text-diff' && <TextDiff client:load {...props} />}
 {island === 'image-editor' && <ImageEditor client:load {...props} />}
+{island === 'pdf-converter' && <PdfConverter client:load {...props} />}

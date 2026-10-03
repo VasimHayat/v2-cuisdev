@@ -28,6 +28,10 @@ Both islands share `src/islands/shared/CodeEditor.tsx` (a CodeMirror 6 wrapper t
 
 `src/islands/image-editor/` is non-destructive: `logic.ts` holds the EditState (rotation, flips, crop, resize, adjustments) and pure geometry such as `dragRect` and `rotateState`; `canvas.ts` decodes files (EXIF orientation via `createImageBitmap`), renders the pipeline with progressive downscaling and canvas filters, and encodes PNG, JPG or WebP. The island keeps undo and redo as a stack of states and renders the preview and the export from the original bitmap.
 
+## PDF Converter
+
+`src/islands/pdf-converter/` combines images and PDFs into one PDF with [pdf-lib](https://pdf-lib.js.org/) (MIT), loaded on first use. `logic.ts` holds page geometry (fit-to-image or named sizes with margins and orientation), page-range parsing and naming; `pdf.ts` reads page counts, converts non-embeddable image formats on a canvas (PNG when transparent, JPEG otherwise) and builds the document. JPEG and PNG sources are embedded byte for byte by default.
+
 ## Add a tool
 
 1. Add an entry to `src/data/tools.ts`. Keep `status: 'soon'` until the island is done.

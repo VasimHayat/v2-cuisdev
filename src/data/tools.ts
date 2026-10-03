@@ -283,12 +283,14 @@ export const TOOLS: Tool[] = [
     tagline: 'Turn images into a PDF or merge PDFs, all offline',
     description:
       'Free online PDF converter. Combine images into one PDF or merge several PDFs in your browser. No upload, no watermark, no sign-up.',
-    keywords: ['pdf converter', 'image to pdf', 'merge pdf', 'jpg to pdf'],
+    keywords: ['pdf converter', 'image to pdf', 'merge pdf', 'jpg to pdf', 'png to pdf', 'combine pdf files'],
     related: ['pdf-split', 'pdf-compress', 'pdf-to-image'],
-    status: 'soon',
+    status: 'live',
     wave: 1,
     icon: 'file-text',
-    since: '2026-11-06',
+    island: 'pdf-converter',
+    since: '2026-10-03',
+    featured: true,
   },
 
   // =============== Wave 2: developer core (weeks 5 to 7) ===============
