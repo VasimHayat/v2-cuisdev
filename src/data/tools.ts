@@ -266,12 +266,14 @@ export const TOOLS: Tool[] = [
     tagline: 'Crop, resize, rotate and export images in your browser',
     description:
       'Free online image editor. Crop, resize, rotate, flip and export to PNG, JPG or WebP without uploading. Fast, private and works on mobile.',
-    keywords: ['image editor', 'online image editor', 'crop image online', 'rotate image'],
+    keywords: ['image editor', 'online image editor', 'crop image online', 'rotate image', 'resize image', 'flip image', 'photo editor online'],
     related: ['image-resizer', 'image-compressor', 'image-converter'],
-    status: 'soon',
+    status: 'live',
     wave: 1,
     icon: 'crop',
-    since: '2026-10-30',
+    island: 'image-editor',
+    since: '2026-10-03',
+    featured: true,
   },
   {
     slug: 'pdf-converter',

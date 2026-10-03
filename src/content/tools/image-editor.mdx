@@ -1,0 +1,55 @@
+---
+slug: image-editor
+updated: 2026-10-03
+howTo:
+  - Open an image with the Open button, drop it onto the editor, or paste it from the clipboard. Press Sample to try the editor without a file.
+  - "Crop: drag the box or its handles on the preview, draw a new box, pick an aspect ratio such as 1:1 or 16:9, or type exact pixel values."
+  - Rotate in 90 degree steps and flip horizontally or vertically from the toolbar. The crop follows the image.
+  - "Resize: set a width or height with the aspect ratio locked, scale by percentage, or choose a preset such as Full HD or a square post."
+  - "Adjust: drag the brightness, contrast, saturation, hue, grayscale, sepia and blur sliders. Hold Compare to see the original."
+  - "Export: choose PNG, JPG or WebP, set the quality, check the estimated file size and press Download. Copy puts the result on the clipboard as PNG."
+features:
+  - Interactive crop box with eight handles, rule-of-thirds grid, aspect ratio presets and pixel-precise inputs
+  - Rotate and flip with the crop area following the image
+  - Resize by pixels, percentage or social and icon presets without distortion
+  - Brightness, contrast, saturation, hue, grayscale, sepia and blur with a hold-to-compare preview
+  - Undo and redo every step, or reset to the original in one click
+  - Export to PNG, JPG or WebP with a quality slider and a live file size estimate
+  - High quality downscaling that keeps text and edges crisp
+  - Everything runs on a canvas in your browser; files up to 50 MB and nothing uploaded
+faq:
+  - q: How do I crop an image online without losing quality?
+    a: "Cropping only removes pixels outside the box, so the pixels you keep are untouched. Export as PNG to keep them exactly, or as JPG or WebP at quality 90 or above if file size matters. The estimated size in the Export panel updates as you change the setting."
+  - q: Does rotating or flipping change the image quality?
+    a: "No. Quarter turns and flips move pixels without resampling them, so there is no loss. Only resizing resamples the image, and the editor uses progressive high quality scaling to keep edges and text sharp."
+  - q: Why do the adjustments not appear in some browsers?
+    a: "Adjustments use the canvas filter API. Every current version of Chrome, Edge, Firefox and Safari supports it. On an older browser the sliders are disabled and the editor tells you, while crop, resize and rotate keep working."
+  - q: Which output format should I choose?
+    a: "PNG is lossless and keeps transparency, best for screenshots, logos and graphics with flat colour. JPG is the smallest for photographs but has no transparency. WebP is usually 25 to 35 percent smaller than JPG at the same quality and keeps transparency, and every modern browser displays it."
+  - q: Is the EXIF orientation of phone photos respected?
+    a: "Yes. The editor reads the orientation tag when it decodes the file, so a photo taken in portrait appears upright. The exported file is written the way you see it, with no orientation tag needed."
+  - q: Can I keep editing after exporting?
+    a: "Yes. The edit history stays until you open another image. Use Apply in the Crop panel to bake the current edits into a new starting image if you want to crop again inside a crop, and Download as often as you like with different formats."
+  - q: Is my image uploaded anywhere?
+    a: "No. The image is decoded, edited and encoded on a canvas inside your browser tab. You can disconnect from the internet after the page loads and the editor keeps working, so private photos and documents are safe here."
+---
+
+## A photo editor for the quick jobs
+
+Most image edits are small: trim the edges of a screenshot, straighten a photo that came out sideways, bring a header down to the size a platform wants, or brighten a picture before it goes into a document. Opening a desktop application for those jobs is slow, and uploading the image to a website is not something you want to do with a photo of your passport. This editor does the small jobs in your browser, on a canvas, with nothing sent anywhere.
+
+Every edit is kept as a description of what to do to the original image rather than as a changed copy. That is why undo and redo are instant, why rotating after cropping keeps the crop in the right place, and why the exported file is rendered from the original pixels in one pass instead of degrading through several saves.
+
+## Crop, then resize
+
+The crop box selects the area that matters; the resize sets how large that area is exported. Keeping the two separate avoids the most common mistake, which is stretching an image into a size with a different shape. Choosing a size preset therefore crops to the preset's aspect ratio first, centred on the image, and then sets the output size. Drag the crop box to choose which part of the picture survives.
+
+When you resize with the aspect ratio locked, typing a width fills in the matching height and vice versa. Downscaling by a large factor happens in halving steps so that fine detail is averaged properly instead of being dropped, which is what keeps text in screenshots readable at half size.
+
+## Adjustments and compare
+
+The adjustment sliders map to the standard canvas filters: brightness, contrast and saturation as percentages, hue rotation in degrees, grayscale and sepia as a mix, and a blur radius in pixels. They apply to the exported image exactly as they appear in the preview. Hold the Compare button to see the image without them, and double-click any slider to return it to neutral.
+
+## Related tasks
+
+If you only need to make files smaller, the [Image Compressor](/tools/image/image-compressor/) processes several at once. To change formats in bulk, use the [Image Converter](/tools/image/image-converter/), and for a plain resize without cropping the [Image Resizer](/tools/image/image-resizer/) is faster.

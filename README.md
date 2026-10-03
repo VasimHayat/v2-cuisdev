@@ -24,6 +24,10 @@ The JSON Editor island (`src/islands/json-editor/`) wraps the open-source [vanil
 
 Both islands share `src/islands/shared/CodeEditor.tsx` (a CodeMirror 6 wrapper that follows the design tokens) and `src/islands/shared/controls.tsx` (segmented control, chip toggle, header button). The Code Formatter (`src/islands/code-formatter/`) lazy-loads Prettier, terser, csso and sql-formatter on first use; the Text Diff Checker (`src/islands/text-diff/`) renders jsdiff output as side-by-side or inline rows with collapsed unchanged regions. Their logic lives in pure `logic.ts` modules with Vitest tests next to them.
 
+## Image Editor
+
+`src/islands/image-editor/` is non-destructive: `logic.ts` holds the EditState (rotation, flips, crop, resize, adjustments) and pure geometry such as `dragRect` and `rotateState`; `canvas.ts` decodes files (EXIF orientation via `createImageBitmap`), renders the pipeline with progressive downscaling and canvas filters, and encodes PNG, JPG or WebP. The island keeps undo and redo as a stack of states and renders the preview and the export from the original bitmap.
+
 ## Add a tool
 
 1. Add an entry to `src/data/tools.ts`. Keep `status: 'soon'` until the island is done.
