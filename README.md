@@ -32,6 +32,10 @@ Both islands share `src/islands/shared/CodeEditor.tsx` (a CodeMirror 6 wrapper t
 
 `src/islands/pdf-converter/` combines images and PDFs into one PDF with [pdf-lib](https://pdf-lib.js.org/) (MIT), loaded on first use. `logic.ts` holds page geometry (fit-to-image or named sizes with margins and orientation), page-range parsing and naming; `pdf.ts` reads page counts, converts non-embeddable image formats on a canvas (PNG when transparent, JPEG otherwise) and builds the document. JPEG and PNG sources are embedded byte for byte by default.
 
+## Data converters
+
+`src/islands/converter/` is one island serving several pages: the registry passes `islandProps: { from, to }` (JSON, CSV or YAML) and the user can swap direction in the toolbar. `logic.ts` wraps papaparse and yaml with positioned errors; `src/islands/shared/json-errors.ts` holds the JSON scanner that locates errors when V8's message carries no position (also used by the Code Formatter).
+
 ## Add a tool
 
 1. Add an entry to `src/data/tools.ts`. Keep `status: 'soon'` until the island is done.

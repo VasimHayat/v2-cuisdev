@@ -9,6 +9,7 @@
 import type * as CssoModule from 'csso';
 import type * as TerserModule from 'terser';
 import type * as SqlModule from 'sql-formatter';
+import { scanJsonError } from '../shared/json-errors';
 
 export type LanguageId = 'html' | 'css' | 'scss' | 'javascript' | 'typescript' | 'json' | 'sql';
 export type Mode = 'beautify' | 'minify';
@@ -399,10 +400,18 @@ export function minifyJsonText(source: string): string {
     return JSON.stringify(JSON.parse(text));
   } catch (err) {
     const raw = err instanceof Error ? err.message : String(err);
-    const offset = parseErrorOffset(raw, text);
-    if (offset === undefined) throw new CodeFormatError(`JSON syntax error: ${cleanJson(raw)}`);
+    let offset = parseErrorOffset(raw, text);
+    let detail = cleanJson(raw);
+    if (offset === undefined) {
+      const scanned = scanJsonError(text);
+      if (scanned) {
+        offset = scanned.offset;
+        detail = scanned.message;
+      }
+    }
+    if (offset === undefined) throw new CodeFormatError(`JSON syntax error: ${detail}`);
     const { line, column } = offsetToLineColumn(text, offset);
-    throw new CodeFormatError(`JSON syntax error: ${cleanJson(raw)} (line ${line}, column ${column})`, { line, column, offset });
+    throw new CodeFormatError(`JSON syntax error: ${detail} (line ${line}, column ${column})`, { line, column, offset });
   }
 }
 

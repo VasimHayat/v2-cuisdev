@@ -1,0 +1,46 @@
+---
+slug: yaml-to-json
+updated: 2026-10-03
+howTo:
+  - Paste YAML into the left pane, drop a .yaml or .yml file onto it, or press Sample. The JSON appears on the right as you type.
+  - Choose 2 or 4 space indentation, or tick Minify for a single-line result.
+  - If the status line reports an indentation or syntax error, the exact spot is underlined in the editor. Fix it and the output updates.
+  - Press the swap button to convert JSON back to YAML.
+  - Copy the result or download it as a .json file.
+features:
+  - Converts YAML 1.2 to JSON and back, live as you type
+  - Pinpoints indentation and syntax errors with line and column, underlined in the editor
+  - Resolves anchors, aliases and merge keys so the JSON is fully expanded
+  - Multi-document streams separated by --- become a JSON array
+  - Pretty output with 2 or 4 spaces, or minified on one line
+  - Detects the format of a pasted file and switches direction for you
+  - "Core schema typing: numbers, booleans and null are converted, dates stay strings"
+  - Runs entirely in your browser; nothing is uploaded
+faq:
+  - q: Why does my YAML fail to convert?
+    a: "Almost always indentation: a tab instead of spaces, a list item indented differently from its siblings, or a nested key one space off. The status line names the line and column of the first problem and the editor underlines it. Fix that spot and the next error, if any, appears."
+  - q: What happens to anchors, aliases and merge keys?
+    a: "They are resolved. An alias is replaced by a copy of the anchored value and merge keys (<<) are applied, so the JSON contains the fully expanded data. JSON has no way to express references, so this is the only faithful conversion."
+  - q: How are multiple documents handled?
+    a: "A stream with documents separated by --- becomes a JSON array with one element per document, and the status line tells you how many were found. Kubernetes manifests that bundle several resources in one file convert this way."
+  - q: Will 1.0, yes or 2024-01-31 change type?
+    a: "The converter follows the YAML 1.2 core schema. 1.0 becomes the number 1, true and false become booleans, null and ~ become null. Unlike YAML 1.1, yes and no stay strings, and so do dates such as 2024-01-31. Quote a value in the YAML if you need it to remain a string."
+  - q: Can I convert JSON to YAML on this page too?
+    a: "Yes. Press the swap button in the toolbar. The current output becomes the new input, so you can round-trip a document to check that nothing was lost."
+  - q: Is my data uploaded anywhere?
+    a: "No. The conversion runs entirely in your browser using the open-source yaml library bundled with the page. You can go offline after the page has loaded and it keeps working, so configuration files containing credentials are safe to convert here."
+---
+
+## YAML in, JSON out
+
+YAML is pleasant to write and easy to get wrong. A single stray space changes the structure, and the error messages from most tools point somewhere vague. Converting to JSON is a reliable way to see what a YAML file really says: the braces and brackets make nesting explicit, and the conversion fails loudly, at a precise line and column, when the YAML is malformed.
+
+That makes this page useful as a validator as much as a converter. Paste a Kubernetes manifest, a GitHub Actions workflow or a Docker Compose file and you either get clean JSON or a pointer to the exact mistake.
+
+## What the conversion keeps and drops
+
+Comments are dropped, because JSON has nowhere to put them. Anchors and aliases are expanded, merge keys are applied, and multi-line block scalars become ordinary strings with their line breaks preserved. Types follow the YAML 1.2 core schema, so plain numbers, booleans and nulls convert and everything else, including dates and the words yes and no, stays a string.
+
+## Related tasks
+
+Use [JSON to YAML](/tools/converters/json-to-yaml/) for the opposite direction with its own options, and the [JSON Formatter](/tools/developer/json-formatter/) to reformat or sort the result.

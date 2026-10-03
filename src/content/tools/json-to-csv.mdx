@@ -1,0 +1,50 @@
+---
+slug: json-to-csv
+updated: 2026-10-03
+howTo:
+  - Paste a JSON array of objects into the left pane, drop a .json file onto it, or press Sample. The CSV appears on the right as you type.
+  - Pick the delimiter (comma, semicolon, tab or pipe) and whether to write a header row or quote every field.
+  - "Nested objects become dot-notation columns such as address.city; arrays are written as JSON text in one cell so nothing is lost."
+  - Press the swap button to go the other way. Paste CSV, let the delimiter auto-detect, and choose whether the first row is a header and whether numbers should be typed.
+  - Copy the result or download it as a .csv or .json file.
+features:
+  - Converts a JSON array of objects to CSV and CSV back to JSON, live as you type
+  - Flattens nested objects into dot-notation columns and keeps arrays as JSON text
+  - Comma, semicolon, tab and pipe delimiters, with auto-detection when reading CSV
+  - Header row on or off, quote-all option, and optional number and boolean typing
+  - "Finds the array inside an API envelope such as {\"data\": [...]} automatically"
+  - Reports JSON and CSV syntax errors with the line and column, underlined in the editor
+  - Warns about ragged rows and renamed duplicate headers instead of silently dropping data
+  - Handles files up to 25 MB entirely in your browser
+faq:
+  - q: What shape does my JSON need to be?
+    a: "An array of objects, one object per row, such as [{\"name\": \"Ada\"}, {\"name\": \"Linus\"}]. If an API wrapped the array in an envelope such as {\"data\": [...]}, the converter finds the first array of objects inside and uses it. A single object can be converted by wrapping it in square brackets, and an array of plain values becomes a one-column table."
+  - q: How are nested objects and arrays converted to CSV?
+    a: "Nested objects are flattened into dot-notation columns, so {\"address\": {\"city\": \"London\"}} becomes a column named address.city. Arrays are written as JSON text inside a single quoted cell, because CSV has no way to represent a list in one column. Null values become empty cells. Columns appear in the order they are first seen across all rows."
+  - q: Can I convert CSV to JSON without a header row?
+    a: "Yes. Switch the direction, untick First row is header, and every line becomes an array of strings, giving you a JSON array of arrays. Tick it again and each row becomes an object keyed by the column names, with duplicate names renamed and reported."
+  - q: Why are numbers in quotes in the JSON output?
+    a: "CSV has no types, so by default every value stays a string to avoid changing your data, for example turning the ZIP code 02134 into 2134. Tick Detect numbers to convert values that look like numbers or true and false into JSON numbers and booleans."
+  - q: Which delimiters are supported and how is one detected?
+    a: "Comma, semicolon, tab and pipe. When reading CSV with the delimiter set to Auto-detect, the parser samples the first rows and picks the character that produces a consistent number of fields. If detection fails you get a note and a comma is assumed; choose the delimiter explicitly to override it. Excel in many European locales exports with semicolons."
+  - q: Is my data uploaded anywhere?
+    a: "No. Conversion runs in your browser using the open-source papaparse library bundled with the page. You can go offline after the page has loaded and the tool keeps working, so customer exports and financial data are safe here."
+---
+
+## From API response to spreadsheet
+
+JSON is how APIs talk; CSV is how spreadsheets and databases import. Converting between them is a daily chore that usually involves a script and some surprises around nested fields. This converter does the flattening for you: each object becomes a row, each key becomes a column, and nested objects contribute columns named by their path, so `address.city` and `address.country` sit beside `name` as you would want them in a sheet.
+
+Columns are ordered by first appearance. If the third record has a field the first two lack, it becomes a new column at the end and the earlier rows get empty cells, which is the behaviour spreadsheets expect.
+
+## Going back from CSV
+
+The same page converts CSV to JSON. Delimiter detection handles comma, semicolon, tab and pipe files, so an export from a European Excel installation works without changing a setting. Values stay strings unless you ask for typing, which protects leading zeros, phone numbers and identifiers. Rows with the wrong number of fields are reported as warnings with their line numbers, so you can fix the source instead of discovering a shifted column later.
+
+## Quoting rules
+
+Output follows RFC 4180: fields containing the delimiter, a quote or a line break are wrapped in double quotes, and quotes inside a field are doubled. Turn on Quote all when a downstream tool insists on quotes around every field, which some import wizards do.
+
+## Related tasks
+
+To convert JSON to a configuration format instead, use [JSON to YAML](/tools/converters/json-to-yaml/). To tidy or inspect the JSON before converting, open it in the [JSON Editor](/tools/developer/json-editor/) with its table view.

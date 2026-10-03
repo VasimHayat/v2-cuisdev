@@ -1,0 +1,46 @@
+---
+slug: json-to-yaml
+updated: 2026-10-03
+howTo:
+  - Paste JSON into the left pane, drop a .json file onto it, or press Sample. The YAML appears on the right as you type.
+  - Choose 2 or 4 space indentation to match your project's style.
+  - Fix any syntax error the status line reports; the exact spot is underlined in the editor.
+  - Press the swap button to convert YAML back to JSON, with pretty or minified output.
+  - Copy the result or download it as a .yaml file.
+features:
+  - Converts JSON to YAML 1.2 and back, live as you type
+  - Quotes strings that YAML would otherwise read as numbers, booleans or null
+  - Never folds long strings, so values stay on one line and remain searchable
+  - 2 or 4 space indentation for YAML, pretty or minified JSON on the way back
+  - Multi-document YAML streams become a JSON array, one element per document
+  - Syntax errors are reported with line and column and underlined in the editor
+  - Detects the format of a pasted file and switches direction for you
+  - Runs entirely in your browser; nothing is uploaded
+faq:
+  - q: Is YAML a superset of JSON?
+    a: "Mostly. YAML 1.2 was designed so that any JSON document is also valid YAML, which is why you can paste JSON into a YAML file and it parses. The reverse is not true: YAML adds comments, anchors, multi-line strings and multiple documents that JSON cannot express. This tool resolves anchors and drops comments when converting to JSON."
+  - q: Why are some strings quoted in the YAML output?
+    a: "YAML infers types from unquoted text. A value like 123, true, null, 1.0 or one containing a colon and a space would be read back as a number, boolean, null or a nested map, so the converter quotes those strings to keep them as strings. Everything else is left unquoted for readability."
+  - q: Do comments survive the conversion?
+    a: "No. JSON has no comment syntax, so YAML comments are removed when converting to JSON. Going the other way there is nothing to preserve, because JSON cannot contain comments in the first place."
+  - q: Can I convert a Kubernetes or Docker Compose file with several documents?
+    a: "Yes. A YAML stream with documents separated by --- is converted to a JSON array containing one element per document, and the status line tells you how many were found. A single document produces a single JSON value."
+  - q: How are dates and special numbers handled?
+    a: "The converter uses the YAML 1.2 core schema, so 2024-01-31 stays a string rather than becoming a date. Values that JSON cannot represent, such as .inf or .nan, become null, which is what JSON.stringify does as well."
+  - q: Is my data uploaded anywhere?
+    a: "No. The conversion runs entirely in your browser using the open-source yaml library bundled with the page. You can go offline after the page has loaded and it keeps working, so configuration containing secrets is safe to convert here."
+---
+
+## Why convert JSON to YAML
+
+Configuration formats have settled on YAML: Kubernetes manifests, GitHub Actions workflows, Docker Compose files, OpenAPI specs and CI pipelines all read it. Data still arrives as JSON, from APIs, from exports and from code. Converting lets you take a JSON structure you already have and drop it into a YAML file without retyping it, and the result is usually easier to read, with no braces, fewer quotes and comments allowed once it is in place.
+
+The converter writes YAML the way a careful person would: block style for maps and lists, strings unquoted unless quoting is needed to preserve their type, and no line folding, so a long URL or token stays on one line where search and diff tools can find it.
+
+## Converting YAML back to JSON
+
+The swap button reverses the direction. YAML's extra features are resolved rather than rejected: anchors and aliases are expanded, merge keys are applied, and a stream of several documents becomes a JSON array. Indentation mistakes, the most common YAML problem, are reported with the exact line and column and underlined in the editor, which makes this a quick way to validate a manifest before committing it.
+
+## Related tasks
+
+To turn JSON into a table for a spreadsheet, use [JSON to CSV](/tools/converters/json-to-csv/). To check JSON structure before converting, the [JSON Validator](/tools/developer/json-validator/) gives a detailed error report.
