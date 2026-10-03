@@ -1,0 +1,46 @@
+---
+slug: graphql-formatter
+updated: 2026-10-03
+howTo:
+  - Paste a GraphQL query, mutation, fragment or schema into the Input pane, drop a .graphql or .gql file onto it, or press Sample.
+  - The formatted document appears on the right as you type. Choose 2 spaces, 4 spaces or tabs and a print width of 80, 100 or 120 columns.
+  - If the document has a syntax error, the status line names it and the editor underlines the line and column. Fix it and the output updates.
+  - Switch to Minify to compress a query onto one line for a request body or a URL parameter.
+  - Press Copy, or Download to save the result as a .graphql file.
+features:
+  - Formats queries, mutations, subscriptions, fragments, variables and directives
+  - Formats schema definition language, including types, interfaces, unions, enums, inputs and descriptions
+  - Uses Prettier's official GraphQL printer, the same output as running Prettier on your project
+  - Validates syntax and reports the line and column of the first error
+  - Minifies by removing comments, commas and whitespace while keeping strings and block strings intact
+  - Indentation and print width options
+  - Opens .graphql, .gql and .graphqls files by drag and drop
+  - Runs entirely in your browser; nothing is uploaded
+faq:
+  - q: Does this validate my query against a schema?
+    a: "No. It checks that the document is valid GraphQL syntax, which catches missing braces, stray commas and typos in keywords. It does not know your API's schema, so it cannot tell you that a field does not exist. Use your server's introspection or an IDE plugin for schema validation."
+  - q: Why are commas removed?
+    a: "Commas are optional in GraphQL. The specification treats them like whitespace, so a list of fields or arguments means the same with or without them. Prettier's style leaves them out between fields and keeps them only where they help readability in argument lists, and the minifier removes them entirely."
+  - q: Will my comments and descriptions survive?
+    a: "When formatting, yes. Line comments starting with # and descriptions written as strings or triple-quoted block strings are kept and indented with the code they describe. Minifying removes # comments, because they are not part of the document's meaning, but keeps descriptions because they are."
+  - q: Can I format a schema file as well as queries?
+    a: "Yes. Schema definition language is supported: type, interface, union, enum, input, scalar, directive and schema definitions, plus extend statements and descriptions. Paste a whole schema file or drop it onto the editor."
+  - q: When should I minify a GraphQL query?
+    a: "When it has to travel inside something else, for example as the query field of a JSON request body, in a GET request's query string, or in a log line. Minified documents are shorter but identical in meaning, and the formatter turns them back into readable form whenever you need to edit them."
+  - q: Is my query uploaded anywhere?
+    a: "No. Formatting runs in your browser with Prettier's JavaScript build. Queries that reveal your API's shape or contain variables never leave your computer."
+---
+
+## Why format GraphQL
+
+GraphQL documents nest quickly: a query asks for a customer, their orders, each order's lines and each line's product, and every level adds a pair of braces. Written by hand or copied from network logs, those documents end up on one line or with indentation that no longer matches the nesting. Formatting restores one field per line and one level of indentation per selection set, so you can see exactly which fields are requested at each level.
+
+This formatter uses Prettier's own GraphQL printer, so the output is the same as your project's Prettier setup would produce, which keeps diffs clean when the query lives in your codebase.
+
+## Queries and schemas
+
+Both halves of GraphQL are supported. Operations, meaning queries, mutations and subscriptions with their variables, directives and fragments, are formatted the way client code uses them. Schema definition language is formatted the way a server defines its API, with descriptions kept above the fields they document. Syntax errors in either are reported with their position, which makes the tool a quick check before pasting a query into a client or committing a schema change.
+
+## Related tasks
+
+To format the JSON responses your API returns, use the [JSON Formatter](/tools/developer/json-formatter/). To send the query to a real endpoint and inspect the response, try the [API Request Tester](/tools/developer/api-request-tester/).

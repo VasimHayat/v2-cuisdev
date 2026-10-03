@@ -1,0 +1,46 @@
+---
+slug: sql-formatter
+updated: 2026-10-03
+howTo:
+  - Paste a query into the Input pane, drop a .sql file onto it, or press Sample. The formatted SQL appears on the right as you type.
+  - Pick your database from the Dialect menu so its keywords, operators and quoting rules are recognised.
+  - Choose keyword case (UPPERCASE, lowercase or preserve) and indentation of 2 spaces, 4 spaces or tabs.
+  - Switch to Minify to collapse a query onto one line for logs, code strings or a URL. Comments are removed and string literals are left untouched.
+  - Press Copy, or Download to save the result as a .sql file.
+features:
+  - Formats SELECT, INSERT, UPDATE, DELETE, CTEs, joins, subqueries, window functions and DDL
+  - Thirteen dialects including MySQL, MariaDB, PostgreSQL, SQLite, SQL Server, Oracle PL/SQL, BigQuery, Snowflake and Spark
+  - Keyword case control and 2 space, 4 space or tab indentation
+  - Several statements in one input, separated by a blank line in the output
+  - Minify mode that strips comments and whitespace but never touches quoted strings or identifiers
+  - Parse errors reported with the line and column, underlined in the editor
+  - Formatting starts as you type, with no submit button
+  - Runs entirely in your browser; queries are never uploaded
+faq:
+  - q: Which SQL dialects are supported?
+    a: "Standard SQL, MySQL, MariaDB, PostgreSQL, SQLite, SQL Server (T-SQL), Oracle PL/SQL, IBM Db2, BigQuery, Snowflake, Spark SQL, Hive and Trino. Choosing the right dialect matters for things such as backtick or bracket quoted identifiers, PostgreSQL's :: casts and dollar-quoted strings, and vendor keywords that would otherwise be treated as names."
+  - q: Will formatting change what my query does?
+    a: "No. Only whitespace and, if you choose, the case of keywords change. Table names, column names, string literals and comments are kept exactly. Keyword case is purely cosmetic because SQL keywords are case-insensitive in every major database."
+  - q: Why do some people write SQL keywords in uppercase?
+    a: "It makes the structure of a query easy to scan: SELECT, FROM, WHERE and JOIN stand out from table and column names. It is a convention rather than a requirement, and many PostgreSQL teams prefer lowercase. Pick whatever your codebase already uses."
+  - q: What does Minify do to comments?
+    a: "It removes both -- line comments and /* block */ comments, then collapses whitespace outside quoted strings and identifiers. Use it when a query has to fit on one line, for example inside a JSON payload or a log message. Keep the formatted version as the source of truth."
+  - q: Why does formatting fail on my query?
+    a: "Usually the dialect is wrong, for example PostgreSQL syntax with Standard SQL selected, or the query contains templating such as {{ variable }} from a reporting tool. The error names the line and column. Pick the matching dialect, or replace template placeholders with sample values while formatting."
+  - q: Is my SQL sent to a server?
+    a: "No. The formatter is a JavaScript library that runs in your browser tab. Queries containing table names, customer data or credentials never leave your computer, and the tool keeps working offline once loaded."
+---
+
+## Readable queries
+
+A query that has grown over months of edits, or one copied from a log on a single line, is hard to review. Formatting puts every clause on its own line, indents joins and subqueries under the statement they belong to, and lines up column lists, so you can see the shape of the query at a glance and spot the missing join condition or the filter in the wrong place.
+
+The formatter understands the grammar of each dialect rather than just breaking lines at keywords. Common table expressions, window functions with PARTITION BY and ORDER BY, CASE expressions and nested subqueries all get consistent indentation, and several statements in one paste are formatted one after another.
+
+## Consistent style for a team
+
+Formatting everyone's SQL the same way removes noise from code review. With a fixed keyword case and indentation, a diff shows the change to the logic rather than someone's personal spacing. If your repository stores migrations or analytics queries as .sql files, format them here before committing, or use the same settings in your editor's SQL formatter.
+
+## Related tasks
+
+To format application code alongside your queries, open the full [Code Formatter](/tools/developer/code-formatter/), which detects the language automatically. For query results exported as JSON, the [JSON to CSV](/tools/converters/json-to-csv/) converter turns them into a spreadsheet.

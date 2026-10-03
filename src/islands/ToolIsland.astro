@@ -46,6 +46,11 @@ import LoanCalculator from './loan-emi-calculator/LoanCalculator';
 import DateCalculator from './date-calculator/DateCalculator';
 import ColorConverter from './color-converter/ColorConverter';
 import NumberBaseConverter from './number-base-converter/NumberBaseConverter';
+import MockJsonGenerator from './mock-json-generator/MockJsonGenerator';
+import ApiRequestTester from './api-request-tester/ApiRequestTester';
+import PasswordGenerator from './password-generator/PasswordGenerator';
+import QrCodeGenerator from './qr-code-generator/QrCodeGenerator';
+import CompoundInterest from './compound-interest-calculator/CompoundInterest';
 
 interface Props {
   island: string;
@@ -93,6 +98,11 @@ const SIZES: Record<string, string> = {
   'date-calculator:difference': 'h-[958px] lg:h-[600px]',
   'color-converter': 'h-[1495px] lg:h-[780px]',
   'number-base-converter': 'h-[944px] lg:h-[600px]',
+  'mock-json-generator': 'h-[min(78vh,860px)] min-h-[560px]',
+  'api-request-tester': 'h-[min(82vh,900px)] min-h-[600px]',
+  'password-generator': 'h-[891px] lg:h-[600px]',
+  'qr-code-generator': 'h-[1197px] lg:h-[627px]',
+  'compound-interest-calculator': 'h-[1561px] lg:h-[803px]',
 };
 const kind = typeof props.kind === 'string' ? props.kind : '';
 const size = SIZES[`${island}:${kind}`] ?? SIZES[island] ?? 'min-h-[560px]';
@@ -133,6 +143,11 @@ const size = SIZES[`${island}:${kind}`] ?? SIZES[island] ?? 'min-h-[560px]';
 {island === 'date-calculator' && <DateCalculator client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></DateCalculator>}
 {island === 'color-converter' && <ColorConverter client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></ColorConverter>}
 {island === 'number-base-converter' && <NumberBaseConverter client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></NumberBaseConverter>}
+{island === 'mock-json-generator' && <MockJsonGenerator client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></MockJsonGenerator>}
+{island === 'api-request-tester' && <ApiRequestTester client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></ApiRequestTester>}
+{island === 'password-generator' && <PasswordGenerator client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></PasswordGenerator>}
+{island === 'qr-code-generator' && <QrCodeGenerator client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></QrCodeGenerator>}
+{island === 'compound-interest-calculator' && <CompoundInterest client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></CompoundInterest>}
 
 <style is:global>
   .tool-skeleton {

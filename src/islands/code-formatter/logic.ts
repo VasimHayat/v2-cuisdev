@@ -12,7 +12,7 @@ import type * as SqlModule from 'sql-formatter';
 import { scanJsonError } from '../shared/json-errors';
 import { XML_SAMPLE, XmlSyntaxError, formatXml, minifyXml } from './xml';
 
-export type LanguageId = 'html' | 'css' | 'scss' | 'javascript' | 'typescript' | 'json' | 'sql' | 'xml';
+export type LanguageId = 'html' | 'css' | 'scss' | 'javascript' | 'typescript' | 'json' | 'sql' | 'xml' | 'graphql';
 export type Mode = 'beautify' | 'minify';
 export type IndentOption = 2 | 4 | 'tab';
 export type PrintWidth = 80 | 100 | 120;
@@ -40,7 +40,7 @@ export interface LanguageInfo {
   extension: string;
   mime: string;
   /** How this language is minified, or null when it cannot be. */
-  minifier: 'terser' | 'csso' | 'html' | 'json' | 'sql' | 'xml' | null;
+  minifier: 'terser' | 'csso' | 'html' | 'json' | 'sql' | 'xml' | 'graphql' | null;
   /** Whether the quote / semicolon / trailing-comma options apply. */
   script: boolean;
 }
@@ -54,6 +54,7 @@ export const LANGUAGES: Record<LanguageId, LanguageInfo> = {
   json: { id: 'json', label: 'JSON', parser: 'json', extension: 'json', mime: 'application/json', minifier: 'json', script: false },
   sql: { id: 'sql', label: 'SQL', parser: null, extension: 'sql', mime: 'application/sql', minifier: 'sql', script: false },
   xml: { id: 'xml', label: 'XML', parser: null, extension: 'xml', mime: 'application/xml', minifier: 'xml', script: false },
+  graphql: { id: 'graphql', label: 'GraphQL', parser: 'graphql', extension: 'graphql', mime: 'application/graphql', minifier: 'graphql', script: false },
 };
 
 export const LANGUAGE_IDS = Object.keys(LANGUAGES) as LanguageId[];
@@ -109,6 +110,7 @@ export function languageFromFileName(name: string): LanguageId | undefined {
     css: 'css', scss: 'scss', json: 'json', jsonc: 'json', json5: 'json', webmanifest: 'json',
     sql: 'sql', ddl: 'sql', dml: 'sql',
     xml: 'xml', xsd: 'xml', xsl: 'xml', xslt: 'xml', svg: 'xml', rss: 'xml', atom: 'xml', plist: 'xml', csproj: 'xml', pom: 'xml', wsdl: 'xml', xaml: 'xml',
+    graphql: 'graphql', gql: 'graphql', graphqls: 'graphql',
   };
   return map[ext];
 }
@@ -206,6 +208,11 @@ const TS_SYNTAX =
 /** Tags that only make sense in HTML; a tag soup without any of them is treated as XML. */
 const HTML_TAGS = /<(html|head|body|div|span|p|a|img|script|style|link|meta|ul|ol|li|table|tr|td|th|h[1-6]|br|hr|form|input|button|nav|header|footer|section|article|main)\b/i;
 
+/** Keywords that only start a GraphQL document (operations and schema definitions). */
+const GRAPHQL_START = /^(#[^\n]*\n\s*)*(query|mutation|subscription|fragment)\b[\s\w$(:!,\[\]=)]*\{|^(#[^\n]*\n\s*)*(schema|scalar|directive|extend|input|union)\s+[@\w{]/;
+/** GraphQL's built-in scalars, used to tell `type Foo { id: ID! }` from TypeScript. */
+const GRAPHQL_SCALARS = /\b(ID|String|Int|Float|Boolean)!?\b|!\s*$/m;
+
 export function detectLanguage(source: string): LanguageId {
   const text = normalizeSource(source).trim();
   if (!text) return 'javascript';
@@ -217,6 +224,9 @@ export function detectLanguage(source: string): LanguageId {
       return 'json';
     } catch {}
   }
+  if (GRAPHQL_START.test(head)) return 'graphql';
+  if (/^(type|interface|enum)\s+\w+[^=;]*\{/.test(head) && !/;/.test(head) && GRAPHQL_SCALARS.test(head)) return 'graphql';
+  if (/^\{\s*[A-Za-z_]\w*(\s*\(|\s*\{|\s+[A-Za-z_])/.test(head) && !/["';]/.test(head.slice(0, 200))) return 'graphql';
   if (/^<\?xml[\s?]/i.test(head)) return 'xml';
   if (/^<!doctype\s+html|^<html/i.test(head)) return 'html';
   if (/^<[a-z_:][\w.:-]*(\s|>|\/)/i.test(head) && /<\/?[a-z_:][\w.:-]*[^>]*>/i.test(head)) {
@@ -224,7 +234,7 @@ export function detectLanguage(source: string): LanguageId {
   }
   if (/^\s*(--[^\n]*\n|\/\*[\s\S]*?\*\/\s*)*\s*(select|insert|update|delete|create|alter|drop|with|merge|truncate|grant|explain|begin|declare|use)\b/i.test(head)) return 'sql';
 
-  const looksLikeCss = /(^|[\s;}])[.#]?[\w-]+\s*(,\s*[.#:\w-]+\s*)*\{[^}]*:[^}]*(;|})/m.test(head) && !/\b(function|=>|const |let |var |return |import |export )\b/.test(head);
+  const looksLikeCss = /(^|[\s;}])[.#]?[\w-]+\s*(,\s*[.#:\w-]+\s*)*\{[^}]*:[^}]*(;|})/m.test(head) && !/\b(function|=>|const |let |var |return |import |export )\b/.test(head) && !/^\s*(type|interface|enum|declare)\s+\w+/m.test(head);
   if (looksLikeCss) {
     if (/\$[\w-]+\s*:|@mixin|@include|@use\b|@each\b|&[:.\w-]|#\{/.test(head)) return 'scss';
     return 'css';
@@ -234,6 +244,8 @@ export function detectLanguage(source: string): LanguageId {
     if (TS_SYNTAX.test(head)) return 'typescript';
     return 'javascript';
   }
+  // A bare TypeScript declaration has no JavaScript keyword but must not fall to CSS.
+  if (/^\s*(type|interface|enum|declare|namespace)\s+\w+/m.test(head)) return 'typescript';
   if (/\$[\w-]+\s*:|@mixin|@include/.test(head)) return 'scss';
   if (/\{[^}]*:[^}]*\}/.test(head) && !/[=;]\s*$/m.test(head.split('\n')[0] ?? '')) return 'css';
   return 'javascript';
@@ -326,6 +338,8 @@ async function loadPlugins(language: LanguageId): Promise<PrettierPlugin[]> {
         return [await import('prettier/plugins/postcss')];
       case 'typescript':
         return [await import('prettier/plugins/typescript'), await import('prettier/plugins/estree')];
+      case 'graphql':
+        return [await import('prettier/plugins/graphql')];
       default:
         return [await import('prettier/plugins/babel'), await import('prettier/plugins/estree')];
     }
@@ -392,6 +406,11 @@ export async function minify(source: string, language: LanguageId): Promise<stri
       } catch (err) {
         throw toFormatError(err, text, 'xml');
       }
+    case 'graphql': {
+      // Validate with Prettier's parser first so a broken query is reported, not mangled.
+      await beautify(text, 'graphql');
+      return minifyGraphql(text);
+    }
     case 'csso': {
       cssoPromise ??= import('csso');
       const csso = await cssoPromise;
@@ -696,7 +715,76 @@ export function toFormatError(err: unknown, source: string, language: LanguageId
 
 // --- samples -----------------------------------------------------------------
 
+/**
+ * Minify GraphQL: drop comments and insignificant commas, collapse whitespace and remove
+ * it around punctuation, leaving string and block-string contents untouched.
+ */
+export function minifyGraphql(source: string): string {
+  const src = normalizeSource(source);
+  const PUNCT = '{}()[]:=!@$|&,';
+  let out = '';
+  let pendingSpace = false;
+  let i = 0;
+  const emit = (chunk: string) => {
+    if (pendingSpace && out && !PUNCT.includes(out[out.length - 1]!) && !PUNCT.includes(chunk[0]!) && !chunk.startsWith('...')) out += ' ';
+    else if (pendingSpace && out && chunk.startsWith('...') && !PUNCT.includes(out[out.length - 1]!)) out += ' ';
+    pendingSpace = false;
+    out += chunk;
+  };
+  while (i < src.length) {
+    const ch = src[i]!;
+    if (src.startsWith('"""', i)) {
+      const end = src.indexOf('"""', i + 3);
+      const stop = end === -1 ? src.length : end + 3;
+      emit(src.slice(i, stop));
+      i = stop;
+      continue;
+    }
+    if (ch === '"') {
+      let j = i + 1;
+      while (j < src.length && src[j] !== '"' && src[j] !== '\n') j += src[j] === '\\' ? 2 : 1;
+      emit(src.slice(i, j + 1));
+      i = j + 1;
+      continue;
+    }
+    if (ch === '#') {
+      const nl = src.indexOf('\n', i);
+      i = nl === -1 ? src.length : nl;
+      pendingSpace = true;
+      continue;
+    }
+    if (/\s/.test(ch) || ch === ',') {
+      pendingSpace = true;
+      i++;
+      continue;
+    }
+    if (src.startsWith('...', i)) {
+      emit('...');
+      i += 3;
+      continue;
+    }
+    if (PUNCT.includes(ch)) {
+      pendingSpace = false;
+      out += ch;
+      i++;
+      continue;
+    }
+    let j = i;
+    while (j < src.length && !/\s/.test(src[j]!) && !PUNCT.includes(src[j]!) && src[j] !== '"' && src[j] !== '#' && !src.startsWith('...', j)) j++;
+    emit(src.slice(i, j));
+    i = j;
+  }
+  return out.trim();
+}
+
 export const SAMPLES: Record<LanguageId, string> = {
+  graphql: `# Orders for the dashboard
+query RecentOrders($customerId: ID!, $first: Int = 10, $status: [OrderStatus!]) {
+  customer(id: $customerId) { id name email
+    orders(first: $first, status: $status, orderBy: {field: CREATED_AT, direction: DESC}) {
+      edges { node { ...OrderFields lines { sku quantity unitPrice } } }
+      pageInfo { hasNextPage endCursor } } } }
+fragment OrderFields on Order { id number total { amount currency } createdAt status }`,
   xml: XML_SAMPLE,
   html: `<!doctype html>
 <html lang="en"><head><meta charset="utf-8">

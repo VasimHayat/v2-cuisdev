@@ -66,6 +66,10 @@ Shared helpers: `src/islands/shared/pdfjs.ts` loads pdf.js and its worker lazily
 
 `unit-converter/` (14 categories with exact constants, mixed expressions like `5 ft 11 in`), `percentage-calculator/`, `tip-calculator/` and `bmi-calculator/` (sharing `calc-kit/`), `loan-emi-calculator/` (amortisation with prepayments, SVG charts, CSV), `date-calculator/` (Age and Date Difference via `islandProps.kind`, all arithmetic on UTC midnights), `color-converter/` (CSS Color 4 parsing and OKLab/OKLCH maths in pure TypeScript) and `number-base-converter/` (BigInt, two's complement, bit grid).
 
+## Advanced tools (wave 6)
+
+SQL Formatter and GraphQL Formatter are the Code Formatter island with the language locked (`islandProps: { language, lockLanguage: true }`); GraphQL uses Prettier's GraphQL plugin plus `minifyGraphql`. `mock-json-generator/` (template placeholders, 38 seeded generators, CSV export), `api-request-tester/` (fetch from the browser, cURL import and export, honest CORS explanation, auth kept in memory and stripped from history), `password-generator/` (rejection sampling over `crypto.getRandomValues`, own 2,370-word passphrase list, nothing generated is stored), `qr-code-generator/` (qrcode for the matrix, own SVG renderer with styles and a logo, PNG at three sizes) and `compound-interest-calculator/` (on calc-kit).
+
 ## Tool inputs never reach analytics
 
 Tools must not write their inputs into the address bar while someone edits: GA4's enhanced measurement turns history changes into page views that carry the full URL, and it treats `q`, `s`, `search`, `query` and `keyword` parameters as site searches. Keep state in localStorage and build share links on demand (see `calc-kit/kit.tsx` and `shareQuery` in the converters). `Analytics.astro` also reports a cleaned `page_location` (path plus campaign parameters only), so a visit through a shared link stays clean. Avoid those five parameter names in share links.

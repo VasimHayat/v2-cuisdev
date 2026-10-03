@@ -3,7 +3,7 @@
  * every live tool's `island` against this list at build time so a typo fails the build
  * instead of shipping an empty page.
  */
-export const ISLAND_KEYS = ['json-editor', 'code-formatter', 'text-diff', 'image-editor', 'pdf-converter', 'converter', 'codec', 'jwt-decoder', 'regex-tester', 'uuid-generator', 'hash-generator', 'timestamp-converter', 'cron-parser', 'word-counter', 'case-converter', 'slug-generator', 'lorem-ipsum-generator', 'markdown-preview', 'line-tools', 'find-and-replace', 'text-to-binary', 'image-batch', 'favicon-generator', 'color-picker-from-image', 'pdf-pages', 'pdf-to-image', 'pdf-compress', 'unit-converter', 'percentage-calculator', 'tip-calculator', 'bmi-calculator', 'loan-emi-calculator', 'date-calculator', 'color-converter', 'number-base-converter'] as const;
+export const ISLAND_KEYS = ['json-editor', 'code-formatter', 'text-diff', 'image-editor', 'pdf-converter', 'converter', 'codec', 'jwt-decoder', 'regex-tester', 'uuid-generator', 'hash-generator', 'timestamp-converter', 'cron-parser', 'word-counter', 'case-converter', 'slug-generator', 'lorem-ipsum-generator', 'markdown-preview', 'line-tools', 'find-and-replace', 'text-to-binary', 'image-batch', 'favicon-generator', 'color-picker-from-image', 'pdf-pages', 'pdf-to-image', 'pdf-compress', 'unit-converter', 'percentage-calculator', 'tip-calculator', 'bmi-calculator', 'loan-emi-calculator', 'date-calculator', 'color-converter', 'number-base-converter', 'mock-json-generator', 'api-request-tester', 'password-generator', 'qr-code-generator', 'compound-interest-calculator'] as const;
 
 export type IslandKey = (typeof ISLAND_KEYS)[number];
 

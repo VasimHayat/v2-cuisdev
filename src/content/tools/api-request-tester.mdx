@@ -1,0 +1,52 @@
+---
+slug: api-request-tester
+updated: 2026-10-03
+howTo:
+  - Pick a method, type the URL and press Send (or Ctrl+Enter). Press Sample to try a GET or a POST against a public test API.
+  - Add query parameters in the Params tab or type them in the URL; the two stay in sync. Add headers in the Headers tab.
+  - For POST, PUT and PATCH, choose a body in the Body tab, JSON with validation, a form, or raw text with your own Content-Type, and set a Bearer token or Basic credentials in the Auth tab.
+  - Read the status, time and size, then switch between the body (pretty, raw or preview) and the response headers. Copy or download the body.
+  - Use Import cURL to paste a command from your browser's dev tools or API docs, and Export to copy the request as cURL, JavaScript fetch or Python requests.
+features:
+  - GET, POST, PUT, PATCH, DELETE, HEAD and OPTIONS with a timeout and a Cancel button
+  - Query parameter and header tables with enable toggles, kept in sync with the URL
+  - JSON bodies with validation and formatting, urlencoded forms and raw bodies
+  - Bearer and Basic auth, kept in memory unless you choose to remember them
+  - Pretty JSON, highlighted HTML and XML, image previews and a sandboxed HTML preview
+  - Import from cURL, and export to cURL, fetch and Python requests
+  - Clear explanations when a browser blocks a response for CORS, with a cURL command to run instead
+  - A history of your last 20 requests that never stores tokens or passwords
+faq:
+  - q: Do my requests go through Cuisdev servers?
+    a: "No. The page calls the API with your browser's own fetch function, so the request goes straight from your computer to the server you typed. Cuisdev never sees the URL, headers, body or response. That is also why browser security rules such as CORS apply."
+  - q: Why does a request work in cURL or Postman but fail here?
+    a: "Browsers enforce CORS. A page may only read a response from another site if that site sends an Access-Control-Allow-Origin header that allows it. Many APIs, especially private or server-to-server ones, do not, so the browser blocks the response even though the server answered. The tool detects this, explains it, and gives you the equivalent cURL command, which is not subject to CORS."
+  - q: Why are some headers missing or ignored?
+    a: "Browsers do not let pages set certain headers, including Cookie, Host, Origin, Referer and anything starting with Sec- or Proxy-, so they are dropped from the request and the tool warns you. In the response, a page can only read the headers the server lists in Access-Control-Expose-Headers, so cURL may show more."
+  - q: Is it safe to enter an API token?
+    a: "The token is sent only to the API you call. By default it stays in memory and is forgotten when you close the tab, and it is never written to the request history. Tick Remember auth on this device only on a computer you trust; the value is then kept in this browser's local storage and nowhere else."
+  - q: Can I call an API running on my own computer?
+    a: "Yes, if it allows cross-origin requests. Type a URL such as localhost:3000/api; the tool adds http:// for local addresses. Your local server must reply with an Access-Control-Allow-Origin header that permits this page, which most development frameworks can enable with one setting."
+  - q: Which cURL options does Import understand?
+    a: "The method (-X), headers (-H), bodies (-d, --data-raw, --data-binary, --data-urlencode, --json), Basic credentials (-u), -G for query strings, -I for HEAD, user agent, referer and cookie flags, quoted arguments and backslash line continuations. Flags that only affect cURL itself, such as -s, -L or --compressed, are ignored. Multipart uploads with -F are not supported."
+---
+
+## A request builder in the browser
+
+Testing an API usually means opening a desktop client or writing a throwaway script. This tester does the everyday part in a browser tab: build a request, send it, and read the response with its status, timing, size and headers. JSON responses are formatted, HTML and XML are highlighted, images are shown, and HTML can be previewed in a sandboxed frame that cannot run scripts.
+
+Requests are made with the browser's own `fetch`, directly to the URL you type. Nothing is proxied, logged or stored by Cuisdev. Your recent requests are kept in this browser so you can re-run them, and tokens and passwords are stripped from that history.
+
+## CORS, honestly
+
+The trade-off of sending requests from a web page is that browsers apply CORS, the cross-origin resource sharing rules. A page on one site can only read a response from another site if that site opts in with an `Access-Control-Allow-Origin` header. Public APIs designed for front-end use usually do. Internal and server-to-server APIs often do not.
+
+When the browser blocks a response, it gives the page no details: the request may even have reached the server and succeeded, but the page is not allowed to see the result. The tester recognises this case, says so plainly instead of reporting a vague network error, and shows the same request as a cURL command. cURL runs outside the browser, so CORS does not apply to it. If you control the API, adding the right CORS headers makes it work here too.
+
+## From and to cURL
+
+Most API documentation, and the Copy as cURL option in every browser's developer tools, speak cURL. Import reads the method, URL, headers, body and credentials from a pasted command, including quoted arguments and multi-line commands. Export turns the request you built back into cURL, a JavaScript `fetch` call, or Python `requests` code you can paste into a project.
+
+## Related tasks
+
+To explore a large JSON response, paste it into the [JSON Editor](/tools/developer/json-editor/), which has tree and table views. If the API hands you a token, the [JWT Decoder](/tools/developer/jwt-decoder/) shows its claims and expiry.

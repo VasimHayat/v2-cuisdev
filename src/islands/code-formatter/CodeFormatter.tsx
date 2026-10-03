@@ -128,6 +128,9 @@ function languageExtension(language: LanguageId): Extension {
       return sql();
     case 'xml':
       return xml();
+    case 'graphql':
+      // No CodeMirror GraphQL grammar is installed; the editor shows plain text.
+      return [];
   }
 }
 

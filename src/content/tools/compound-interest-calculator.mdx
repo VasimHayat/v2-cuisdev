@@ -1,0 +1,67 @@
+---
+slug: compound-interest-calculator
+updated: 2026-10-03
+howTo:
+  - Enter your initial deposit and, if you will keep saving, a regular contribution and how often you make it (every month, quarter or year).
+  - Choose whether contributions are paid at the start or the end of each period. Paying at the start gives each deposit one extra period of growth.
+  - Enter the yearly interest rate and how often it compounds, from daily to continuously, then set the number of years with the box or the slider.
+  - "Optionally raise your contribution by a percentage each year, and add an inflation rate to see the final balance in today's money."
+  - Read the balance, total interest and time to double, check the growth chart, and download the year-by-year table as CSV. Copy link shares the exact calculation.
+features:
+  - Initial deposit plus monthly, quarterly or yearly contributions, paid at the start or end of each period
+  - Daily, monthly, quarterly, semi-annual, annual or continuous compounding
+  - Contributions that rise by a set percentage every year
+  - Final balance in today's money using an inflation rate you choose
+  - Effective yearly rate (APY) and time to double, both exact and by the rule of 72
+  - Stacked chart of money paid in against interest earned for every year
+  - Year-by-year table with contributions, interest and balance, downloadable as CSV
+  - Five currencies including Indian lakh and crore grouping; runs entirely in your browser
+faq:
+  - q: What is compound interest?
+    a: "Compound interest is interest earned on interest. Each period the interest is added to the balance, so the next period's interest is calculated on a larger amount. Over long periods this snowballs: at 7% a year a deposit roughly doubles every ten years, so it quadruples in twenty."
+  - q: How does compounding frequency change the result?
+    a: "More frequent compounding adds interest to the balance sooner, so it grows slightly faster. 7% compounded yearly is exactly 7% a year, while 7% compounded monthly is about 7.23%. The difference between monthly, daily and continuous compounding is small. The Effective yearly rate card shows the true yearly growth for your setting."
+  - q: Should contributions be at the start or end of each period?
+    a: "Choose whichever matches how you save. Money paid at the start of a period earns interest for that whole period, so the final balance is a little higher than when the same amount is paid at the end. Salary-funded savings usually land near the start of the month."
+  - q: How are contributions handled when they don't match the compounding frequency?
+    a: "The yearly rate is turned into an equivalent growth rate per month and the balance is grown month by month, with contributions added on their own schedule. A lump sum therefore grows exactly by the standard formula, and a deposit made partway through a compounding period earns interest for the part of the period it was invested. Some banks pay nothing until the period ends, which would give a slightly lower figure."
+  - q: What does the value in today's money mean?
+    a: "Prices tend to rise, so a future balance buys less than the same number would today. If you enter an inflation rate, the calculator divides each balance by the growth in prices up to that year. The result is what your savings would be worth in today's prices, a better guide to what they will actually buy."
+  - q: Are these results accurate for my bank account or investments?
+    a: "They are estimates for planning. Real savings accounts change their rates, investments rise and fall rather than growing at a steady rate, and taxes and fees reduce returns. Use the results to compare scenarios, not as a promise of a specific outcome. This is not financial advice."
+---
+
+## How compound interest works
+
+Simple interest pays the same amount every year because it is always calculated on the original deposit. Compound interest adds each period's interest to the balance, so the next period earns interest on a larger sum. The effect is small at first and large later: in the example below, the interest earned overtakes the total money paid in during year 16, and by year 20 it is about one and a half times as much.
+
+For a single deposit the formula is:
+
+**A = P(1 + r/n)^(nt)**
+
+where P is the deposit, r the yearly rate as a decimal, n the number of compounding periods per year and t the number of years. With continuous compounding it becomes A = Pe^(rt).
+
+Regular contributions add the future value of an annuity. For a payment C at the end of each period, with a rate i per contribution period and N payments:
+
+**FV = C × ((1 + i)^N − 1) / i**
+
+Paying at the start of each period multiplies that by (1 + i). When contributions and compounding run on different schedules, i is the effective rate for one contribution period. That is what this calculator does, by growing the balance month by month.
+
+## A worked example
+
+Start with 10,000, add 200 at the end of every month and earn 7% a year compounded monthly for 20 years.
+
+| | Amount |
+| --- | --- |
+| Initial deposit | 10,000.00 |
+| Contributions, 240 × 200 | 48,000.00 |
+| Interest earned | 86,572.72 |
+| Balance after 20 years | 144,572.72 |
+
+On its own the 10,000 grows to 40,387.39, and the contributions grow to the rest. The effective yearly rate is 7.23%, so money doubles in about 9.9 years, close to the rule of 72 estimate of 10.3. With 2.5% inflation the final balance is worth about 88,229 in today's money. Change any input above to see your own figures.
+
+These results are estimates for planning and comparison only and are not financial advice. Real returns vary, and taxes and fees are not included.
+
+## Related tasks
+
+To see the other side of interest, the [Loan & EMI Calculator](/tools/calculators/loan-emi-calculator/) shows how much a loan costs and how prepayments shorten it. For quick growth rates and percentage changes between two balances, use the [Percentage Calculator](/tools/calculators/percentage-calculator/).

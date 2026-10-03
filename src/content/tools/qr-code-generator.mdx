@@ -1,0 +1,46 @@
+---
+slug: qr-code-generator
+updated: 2026-10-03
+howTo:
+  - Pick what the code should hold, such as a website, Wi-Fi network, contact card, email, phone number, SMS, location or plain text.
+  - Fill in the fields. The preview updates as you type and the exact text being encoded is shown under it.
+  - "Adjust the look: error correction level, module style, colours, quiet zone, and an optional logo in the middle."
+  - Watch for warnings about low contrast or too much data, which can make a code hard to scan.
+  - Download the code as SVG for print or as a PNG at 512, 1024 or 2048 pixels, or copy the PNG to paste elsewhere.
+features:
+  - Website, text, Wi-Fi, email, phone, SMS, contact card (vCard) and map location codes
+  - Error correction levels L, M, Q and H, with H applied automatically when a logo is added
+  - Square, rounded and dot module styles that keep the corner markers easy to scan
+  - Custom colours with a contrast check and an inverted-colour warning
+  - Optional centre logo, capped at 22% of the width so the code stays readable
+  - Vector SVG download plus PNG at 512, 1024 and 2048 pixels, and copy to clipboard
+  - Shows the encoded text, QR version and size, and how close you are to the data limit
+  - Made in your browser; Wi-Fi passwords are never saved
+faq:
+  - q: Do these QR codes expire?
+    a: "No. The code contains your content directly, such as the website address or the Wi-Fi details, so it works for as long as that content is valid. There is no redirect service in between that could be switched off, track scans or show adverts. The trade-off is that you cannot change where a printed code points; make a new code instead."
+  - q: How does the Wi-Fi code work?
+    a: "Phones understand a standard format that holds the network name, security type and password. Scanning the code with the camera app offers to join the network without typing anything. Special characters such as semicolons in the name or password are escaped automatically. The password is kept only in this tab and is never saved."
+  - q: Which error correction level should I use?
+    a: "Error correction adds redundant data so a code still scans when part of it is dirty, damaged or covered. L recovers about 7%, M about 15%, Q about 25% and H about 30%. Higher levels make the code denser. M is a good default for screens and clean prints; use Q or H for codes that will be printed small, outdoors or with a logo on top, which forces H."
+  - q: Can I add my logo without breaking the code?
+    a: "Yes, within limits. The logo covers some modules, so the tool switches to error correction H and keeps the logo to at most 22% of the width, which leaves enough data to rebuild what it hides. Always test the finished code with a couple of phones, especially if you also change the colours."
+  - q: Why is my code hard to scan?
+    a: "The usual causes are low contrast between the two colours, light modules on a dark background, a missing quiet zone around the edge, or too much data for the printed size. The tool warns about each of these. Keep the foreground clearly darker, leave a margin of at least four modules, and print dense codes larger."
+  - q: SVG or PNG?
+    a: "SVG is a vector file that stays sharp at any size, so it is the best choice for print, signage and design tools. PNG is a pixel image that works everywhere, including documents and messaging apps; pick the largest size you might need, because scaling a small PNG up makes it blurry."
+---
+
+## What a QR code holds
+
+A QR code is a grid of dark and light squares, called modules, that encodes a short piece of text. Phones decide what to do from that text: a web address opens the browser, a `WIFI:` string offers to join a network, a `mailto:` link starts an email, and a vCard adds a contact. This generator builds the right text for each type, shows it to you, and then draws the code.
+
+Three large squares in the corners let a camera find and align the code, and the rest carries your data plus error correction. Larger content needs more modules, so the code moves up through versions from 21 by 21 modules to 177 by 177. Short content scans more reliably, which is why a short web address beats a long one with tracking parameters.
+
+## Styling without breaking it
+
+Colours, rounded or dotted modules and a centre logo can make a code fit a brand, but every change costs some reliability. The corner markers are always drawn as solid shapes so cameras can still lock on, a contrast check flags colours that are too close, and a logo automatically raises error correction and is size-capped. A plain dark code on a light background with a generous quiet zone remains the most dependable choice for anything printed.
+
+## Related tasks
+
+To shorten what goes into the code, build a clean address with the [Slug Generator](/tools/text/slug-generator/). For a site icon to match, create one with the [Favicon Generator](/tools/image/favicon-generator/).
