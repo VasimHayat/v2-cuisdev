@@ -4,6 +4,12 @@
  * imported statically in the .astro file, so every island is imported here and chosen
  * with a conditional. Add one import + one line per new island, and add its key to
  * ISLAND_KEYS in registry.ts so the build can verify the registry.
+ *
+ * Islands render client-only. Their first render depends on browser state (saved
+ * preferences, drafts, the user's time zone), and Preact's hydration does not correct
+ * attributes that differ from the server HTML, so server-rendering them showed stale
+ * options. A skeleton with each tool's own dimensions holds the space until the island
+ * mounts, so the page does not shift. The SEO content around the tool is still static.
  */
 import JsonEditor from './json-editor/JsonEditor';
 import CodeFormatter from './code-formatter/CodeFormatter';
@@ -13,19 +19,70 @@ import PdfConverter from './pdf-converter/PdfConverter';
 import Converter from './converter/Converter';
 import Codec from './codec/Codec';
 import JwtDecoder from './jwt-decoder/JwtDecoder';
+import RegexTester from './regex-tester/RegexTester';
+import UuidGenerator from './uuid-generator/UuidGenerator';
+import HashGenerator from './hash-generator/HashGenerator';
+import TimestampConverter from './timestamp-converter/TimestampConverter';
+import CronParser from './cron-parser/CronParser';
 
 interface Props {
   island: string;
   props?: Record<string, unknown>;
 }
 const { island, props = {} } = Astro.props;
+
+/** Height classes per island, copied from each island's root so the skeleton matches. */
+const SIZES: Record<string, string> = {
+  'json-editor': 'h-[min(82vh,960px)] min-h-[600px]',
+  'code-formatter': 'h-[min(78vh,860px)] min-h-[560px]',
+  'text-diff': 'h-[min(86vh,980px)] min-h-[640px]',
+  'image-editor': 'h-[min(82vh,900px)] min-h-[600px]',
+  'pdf-converter': 'h-[min(82vh,900px)] min-h-[600px]',
+  converter: 'h-[min(76vh,820px)] min-h-[540px]',
+  codec: 'h-[min(72vh,760px)] min-h-[520px]',
+  'jwt-decoder': 'h-[660px] lg:h-[400px]',
+  'regex-tester': 'h-[min(78vh,860px)] min-h-[560px]',
+  'uuid-generator': 'h-[930px] md:h-[min(78vh,820px)] md:min-h-[560px]',
+  'hash-generator': 'h-[925px] lg:h-[min(80vh,880px)] lg:min-h-[560px]',
+  'timestamp-converter': 'h-[1320px] lg:h-[760px]',
+  'cron-parser': 'h-[1160px] lg:h-[720px]',
+};
+const size = SIZES[island] ?? 'min-h-[560px]';
 ---
 
-{island === 'json-editor' && <JsonEditor client:load {...props} />}
-{island === 'code-formatter' && <CodeFormatter client:load {...props} />}
-{island === 'text-diff' && <TextDiff client:load {...props} />}
-{island === 'image-editor' && <ImageEditor client:load {...props} />}
-{island === 'pdf-converter' && <PdfConverter client:load {...props} />}
-{island === 'converter' && <Converter client:load {...props} />}
-{island === 'codec' && <Codec client:load {...props} />}
-{island === 'jwt-decoder' && <JwtDecoder client:load {...props} />}
+{island === 'json-editor' && <JsonEditor client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></JsonEditor>}
+{island === 'code-formatter' && <CodeFormatter client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></CodeFormatter>}
+{island === 'text-diff' && <TextDiff client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></TextDiff>}
+{island === 'image-editor' && <ImageEditor client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></ImageEditor>}
+{island === 'pdf-converter' && <PdfConverter client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></PdfConverter>}
+{island === 'converter' && <Converter client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></Converter>}
+{island === 'codec' && <Codec client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></Codec>}
+{island === 'jwt-decoder' && <JwtDecoder client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></JwtDecoder>}
+{island === 'regex-tester' && <RegexTester client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></RegexTester>}
+{island === 'uuid-generator' && <UuidGenerator client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></UuidGenerator>}
+{island === 'hash-generator' && <HashGenerator client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></HashGenerator>}
+{island === 'timestamp-converter' && <TimestampConverter client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></TimestampConverter>}
+{island === 'cron-parser' && <CronParser client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></CronParser>}
+
+<style is:global>
+  .tool-skeleton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--color-line-strong);
+    background: var(--color-surface-2);
+    color: var(--color-ink-3);
+    font-size: 0.875rem;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .tool-skeleton span {
+      animation: tool-skeleton-pulse 1.4s ease-in-out infinite;
+    }
+  }
+  @keyframes tool-skeleton-pulse {
+    50% {
+      opacity: 0.4;
+    }
+  }
+</style>

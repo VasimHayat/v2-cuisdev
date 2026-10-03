@@ -1,0 +1,46 @@
+---
+slug: regex-tester
+updated: 2026-10-03
+howTo:
+  - Type a regular expression between the slashes and toggle flags such as g, i, m, s, u and y with the chips beside it.
+  - Paste the text to search into the Test text pane, or press Sample to load a log excerpt with named groups.
+  - Matches are highlighted as you type. The Matches list shows each match with its position and every capture group, numbered or named.
+  - "Open Replace and type a replacement using $1, $<name>, $& and friends to see the replaced text live, then copy it."
+  - Use Copy matches (Ctrl+Shift+C) to copy every match, one per line, and open the Cheat sheet when you need a reminder of the syntax.
+features:
+  - Live highlighting of every match in the test text, with alternating colours for adjacent matches
+  - Capture groups listed per match, including named groups and the exact character ranges
+  - Live replace with $1, $<name>, $&, $` and $' exactly as JavaScript's String.replace does
+  - Flag toggles for global, ignore case, multiline, dotAll, Unicode and sticky
+  - Runs in a Web Worker and stops a runaway pattern after 1.5 seconds instead of freezing the page
+  - Clear error messages straight from the JavaScript engine for invalid patterns
+  - Built-in cheat sheet of the most used tokens
+  - Remembers your last pattern and text on this device; nothing is uploaded
+faq:
+  - q: Which regex flavour does this tester use?
+    a: "JavaScript (ECMAScript), the engine built into your browser. That is the same flavour used by Node.js, Deno, Bun and every browser, so a pattern that works here works in your JavaScript or TypeScript code. Most syntax is shared with PCRE, Python and Java, but some features differ, such as possessive quantifiers and atomic groups, which JavaScript does not support."
+  - q: What do the flags do?
+    a: "g finds every match instead of only the first. i ignores case. m makes ^ and $ match at the start and end of each line. s lets the dot match line breaks. u enables full Unicode matching and \\p{...} property escapes. y is sticky: each match must start exactly where the previous one ended."
+  - q: How do I use capture groups in the replacement?
+    a: "Write $1, $2 and so on for numbered groups, $<name> for a named group such as (?<year>\\d{4}), $& for the whole match, $` for the text before it and $' for the text after it. Write $$ for a literal dollar sign. The replacement updates live as you type."
+  - q: Why does the tester say my pattern took too long?
+    a: "Some patterns, typically nested quantifiers such as (a+)+ applied to text that almost matches, make the engine try an exponential number of combinations. This is called catastrophic backtracking. The tester runs matching in a separate worker and stops it after 1.5 seconds so the page stays responsive. Rewrite the pattern to avoid ambiguous repetition."
+  - q: Why are zero-length matches not highlighted?
+    a: "Patterns like ^ or \\b match a position, not characters, so there is nothing to colour. They still appear in the Matches list with their position, and the tester steps past them so a global search does not loop forever."
+  - q: Is my text uploaded anywhere?
+    a: "No. Matching happens in a Web Worker inside your browser tab. You can go offline after the page loads and the tester keeps working, so logs and data containing personal information are safe to test against."
+---
+
+## Why test regular expressions
+
+Regular expressions are compact and unforgiving. A missing escape, a greedy quantifier where a lazy one was meant, or a forgotten flag silently changes what matches, and the only way to be sure is to run the pattern against real text. This tester shows the result as you type: every match highlighted in place, every capture group listed with its value and position, and the outcome of a replacement before you put it in code.
+
+## How matching works here
+
+The tester uses your browser's own JavaScript engine, so behaviour is identical to what your code will do. Without the g flag only the first match is reported; with it the engine walks the whole text, and the tester caps the list at 2,000 matches so a pattern that matches every character does not flood the page. Group ranges come from the engine's match indices, which is why named and numbered groups show exact start and end offsets.
+
+Matching runs in a Web Worker. If a pattern backtracks catastrophically, the worker is terminated after 1.5 seconds and a fresh one is started, so you can fix the pattern without reloading the page.
+
+## Related tasks
+
+To compare the text before and after a replacement, paste both into the [Text Diff Checker](/tools/developer/text-diff-checker/). To tidy code that contains your pattern, use the [Code Formatter](/tools/developer/code-formatter/).

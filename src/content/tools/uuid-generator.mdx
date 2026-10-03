@@ -1,0 +1,48 @@
+---
+slug: uuid-generator
+updated: 2026-10-03
+howTo:
+  - Pick a version. v4 is the right default; choose v7 for database keys, v1 for legacy systems, or v5 and v3 to derive the same UUID from a name every time.
+  - Set how many you need, from 1 to 10,000, or use the quick buttons for 1, 10, 100 or 1,000.
+  - "Choose the format: uppercase, no hyphens, braces, quotes or the urn:uuid: prefix, and lay the list out one per line, comma separated or as a JSON array."
+  - For v5 and v3, pick a namespace (DNS, URL, OID, X.500 or your own UUID) and type the name to hash.
+  - Copy the list or download it as a text file. Paste any UUID into the inspector to see its version, variant and embedded timestamp.
+features:
+  - Generates v4, v7, v1, v5 and v3 UUIDs following RFC 9562, plus the nil and max UUIDs
+  - Up to 10,000 UUIDs at once using the browser's cryptographic random source
+  - v7 UUIDs are strictly increasing even within the same millisecond
+  - Name-based v5 and v3 with the standard DNS, URL, OID and X.500 namespaces or a custom one
+  - Uppercase, hyphen-free, braces, quotes and URN formats, as lines, comma lists or JSON arrays
+  - Inspector shows the version, variant and the timestamp hidden inside v1, v6 and v7 UUIDs
+  - Validates pasted UUIDs and explains exactly what is wrong with malformed ones
+  - Runs entirely in your browser; nothing is uploaded or logged
+faq:
+  - q: Which UUID version should I use?
+    a: "Use v4 when you just need a unique identifier: it is 122 random bits and is what most libraries produce. Use v7 for primary keys in databases, because it starts with a timestamp and sorts in creation order, which keeps B-tree indexes compact. Use v5 when the same input must always produce the same UUID. v1 and v3 exist for compatibility with older systems."
+  - q: Are these UUIDs really unique?
+    a: "For practical purposes, yes. A v4 UUID has 122 random bits from the Web Crypto API. You would need to generate about a billion UUIDs per second for 85 years to reach a 50 percent chance of a single collision. v7 adds a millisecond timestamp in front of 74 random bits, which makes collisions even less likely across time."
+  - q: Why is v7 better than v4 for database keys?
+    a: "Random v4 keys land in random places in an index, so every insert touches a different page and the index fragments. v7 keys start with the creation time, so new rows append to the end of the index like an auto-increment integer, while remaining globally unique and safe to generate on clients."
+  - q: How do v5 and v3 UUIDs work?
+    a: "They hash a namespace UUID together with a name: SHA-1 for v5, MD5 for v3. The same namespace and name always give the same UUID, which is useful for turning URLs, domain names or external IDs into stable identifiers. Prefer v5; v3 is kept for compatibility."
+  - q: Does a v1 UUID reveal my MAC address?
+    a: "Not here. Browsers cannot read the network card's address, so this generator uses a random node identifier with the multicast bit set, as RFC 9562 recommends. The timestamp is still embedded, so a v1 UUID reveals when it was created."
+  - q: Are the UUIDs sent to a server?
+    a: "No. They are generated in your browser with crypto.getRandomValues and the Web Crypto API. Nothing is uploaded, stored or logged, and the generator keeps working offline."
+---
+
+## What a UUID is
+
+A universally unique identifier is a 128-bit number written as 32 hex digits in five groups, such as `2ed6657d-e927-568b-95e1-2665a8aea6a2`. Any system can create one without asking a central server and be confident nobody else will create the same value. That property makes UUIDs the standard choice for database keys in distributed systems, request and trace IDs, file names, and identifiers created on the client before a record is saved.
+
+Four bits of every UUID give its version and two or three give its variant. The inspector on this page reads those bits, and for time-based versions it also recovers the moment the UUID was created.
+
+## Choosing v4 or v7
+
+Version 4 is pure randomness and the safe default. Version 7, standardised in RFC 9562 in 2024, puts a 48-bit Unix millisecond timestamp in front of the random bits. The result sorts by creation time, which databases reward with smaller, faster indexes, and you can read the creation time back from the key itself. This generator keeps a counter inside each millisecond, so a batch of v7 UUIDs is strictly increasing even when thousands are created at once.
+
+Name-based versions are different in kind: they are not random at all. A v5 UUID for the DNS namespace and `www.example.com` is the same on every machine, forever, which is exactly what you want when mapping an existing identifier to a UUID.
+
+## Related tasks
+
+To fingerprint data rather than identify it, use the [Hash Generator](/tools/developer/hash-generator/). UUIDs often appear as the `jti` or `sub` claim in tokens, which the [JWT Decoder](/tools/developer/jwt-decoder/) explains.

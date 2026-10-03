@@ -48,6 +48,14 @@ The XML Formatter page is the Code Formatter island with `islandProps: { languag
 
 `src/islands/converter/` is one island serving several pages: the registry passes `islandProps: { from, to }` (JSON, CSV or YAML) and the user can swap direction in the toolbar. `logic.ts` wraps papaparse and yaml with positioned errors; `src/islands/shared/json-errors.ts` holds the JSON scanner that locates errors when V8's message carries no position (also used by the Code Formatter).
 
+## Developer utilities (wave 2)
+
+Five more islands, one folder each with `logic.ts` and tests: `regex-tester/` (matching runs in a Web Worker with a timeout so catastrophic backtracking cannot freeze the page), `uuid-generator/` (v4, v7, v1, v5, v3 plus an inspector), `hash-generator/` (hash-wasm, loaded lazily, streams files, HMAC and compare), `timestamp-converter/` (units auto-detected, every format, zone-aware parsing, batch mode) and `cron-parser/` (cronstrue descriptions, croner next runs per time zone).
+
+## Islands render client-only
+
+`ToolIsland.astro` mounts every island with `client:only="preact"` and a skeleton sized like the tool. Islands read browser state on their first render (saved options, drafts, the user's zone), and Preact's hydration does not correct attributes that differ from the server HTML, so server rendering showed stale options. When adding an island, add its height classes to `SIZES` in `ToolIsland.astro`, and give any pane holding a CodeEditor a bounded height, otherwise the editor grows with its content.
+
 ## Add a tool
 
 1. Add an entry to `src/data/tools.ts`. Keep `status: 'soon'` until the island is done.

@@ -1,0 +1,52 @@
+---
+slug: timestamp-converter
+updated: 2026-10-03
+howTo:
+  - Type or paste a Unix timestamp, an ISO 8601 date, an RFC 2822 date or a shortcut such as now, today, +2h or -3d. The tool tells you how it read the input.
+  - Leave Numbers are on Auto-detect to have 10, 13, 16 and 19 digit values read as seconds, milliseconds, microseconds and nanoseconds, or pick the unit yourself.
+  - Choose a time zone from the list or a quick chip such as UTC, Local, New York or Kolkata. Every value updates for that zone, including its UTC offset on that date.
+  - Copy any row from the results table, or adjust the date and time pickers to move the instant in the chosen zone.
+  - Switch to Batch to convert many lines at once, then copy the results or download them as CSV.
+features:
+  - Reads Unix seconds, milliseconds, microseconds and nanoseconds with automatic unit detection
+  - Accepts ISO 8601, RFC 2822, plain YYYY-MM-DD HH:mm dates and shortcuts like now, +2h and -3d
+  - Shows ISO 8601 in UTC and in any IANA time zone, RFC 2822, RFC 3339 and a full human-readable date
+  - Adds day of week, day of year, ISO week, quarter and time relative to now
+  - Converts to Excel serial dates, .NET ticks, Windows FILETIME and Unix nanoseconds
+  - Daylight saving aware date and time pickers for any time zone
+  - Batch mode for hundreds of lines with per-line errors and CSV export
+  - Live clock with the current Unix time, UTC and local time one click away
+faq:
+  - q: What is a Unix timestamp?
+    a: "The number of seconds since 1 January 1970 at 00:00:00 UTC, called the Unix epoch. It ignores time zones and leap seconds, which makes it a convenient way for computers to store and compare moments. 1767225600, for example, is 1 January 2026 at midnight UTC."
+  - q: How do I know if a timestamp is in seconds or milliseconds?
+    a: "Count the digits. Present-day timestamps have 10 digits in seconds, 13 in milliseconds (JavaScript and Java), 16 in microseconds (Python and PostgreSQL) and 19 in nanoseconds (Go and many logging systems). Auto-detect uses exactly this rule; choose the unit explicitly if your value is from the distant past or future."
+  - q: Why does the same timestamp show different times in different zones?
+    a: "A timestamp marks one instant everywhere on Earth. What changes is the local clock reading at that instant. The converter shows the instant in UTC and in the zone you choose, with that zone's offset on that particular date, so daylight saving time is taken into account."
+  - q: What happens in 2038?
+    a: "Systems that store Unix time as a signed 32-bit integer overflow on 19 January 2038 at 03:14:07 UTC, after which the value wraps to 1901. Modern systems use 64-bit integers and are unaffected. This tool uses JavaScript numbers, which handle dates hundreds of thousands of years either side of 1970."
+  - q: How are dates without a time zone interpreted?
+    a: "Text such as 2026-01-01 09:30 or an ISO date without Z or an offset has no zone of its own, so it is read in the time zone selected in the tool, and the status line says so. Add Z for UTC or an offset such as +05:30 to be explicit."
+  - q: What are Excel serial dates, .NET ticks and FILETIME?
+    a: "Excel stores dates as days since 30 December 1899, with the time as a fraction. .NET counts 100-nanosecond ticks since 1 January 0001, and Windows FILETIME counts 100-nanosecond intervals since 1 January 1601. They appear when you export from spreadsheets, read .NET logs or inspect Windows file metadata."
+  - q: Is anything sent to a server?
+    a: "No. Parsing and formatting run in your browser using its built-in time zone database. The tool keeps working offline once the page has loaded."
+---
+
+## Timestamps in plain terms
+
+A Unix timestamp counts the seconds since 1 January 1970 UTC. It is the common language of logs, databases, APIs and tokens because it is a single number that means the same instant everywhere. The trouble starts when a person needs to read one, or when systems disagree on the unit: JavaScript speaks milliseconds, Python and PostgreSQL often microseconds, Go and observability tools nanoseconds.
+
+This converter reads all of them. Paste a value and it tells you which unit it assumed, then shows the instant in every format you are likely to need, from ISO 8601 for an API payload to an Excel serial date for a spreadsheet.
+
+## Seconds, milliseconds and the year 2038
+
+The number of digits gives the unit away for any date in the last few decades and the next few centuries: 10 for seconds, 13 for milliseconds, 16 for microseconds and 19 for nanoseconds. Mixing them up produces dates in 1970 or in the year 50,000, which is a quick tell when debugging. Systems that still store seconds in a signed 32-bit integer will overflow in January 2038; 64-bit storage, which this tool assumes, pushes that problem out by billions of years.
+
+## Time zones and daylight saving
+
+An instant has one Unix value but a different wall-clock reading in every zone, and that reading moves when a zone switches to or from daylight saving time. Pick any IANA zone and the converter shows its offset on that exact date, formats the time with that offset, and lets you edit the date and time as someone in that zone would see them.
+
+## Related tasks
+
+To see when a scheduled job will next run, use the [Cron Expression Parser](/tools/developer/cron-parser/). The exp, nbf and iat claims in tokens are Unix timestamps too; the [JWT Decoder](/tools/developer/jwt-decoder/) converts them automatically.

@@ -1,0 +1,56 @@
+---
+slug: cron-parser
+updated: 2026-10-03
+howTo:
+  - "Type or paste a cron expression into the box, for example */15 * * * * or 0 9 * * 1-5. Shorthands such as @daily and @hourly work too."
+  - "Read the schedule as a plain English sentence under the box. If something is wrong, the message names the field and that field turns red."
+  - "Move the caret through the expression to highlight the field you are editing. The Fields table explains every field and its allowed values."
+  - "Check the Next runs list. Pick a time zone (or the UTC and Local chips) and how many runs to show; each run shows the date, time and how far away it is."
+  - "Open Presets for common schedules, or toggle Seconds field to switch between 5-field cron and the 6-field form used by Quartz, Spring and node-cron."
+features:
+  - "Translates any cron expression into a plain English sentence"
+  - "Explains each field, including steps, ranges, lists, month and weekday names"
+  - "Supports L, W, nth weekday (FRI#2) and last weekday (5L) tokens"
+  - "Next 5, 10 or 20 run times in any time zone, with daylight saving applied"
+  - "Accepts 5, 6 (with seconds) and 7 (with year) field expressions and @daily style shorthands"
+  - "Points to the exact field that is invalid, with the allowed range"
+  - "Warns when day of month and day of week combine with OR"
+  - "Runs entirely in your browser; nothing is uploaded"
+faq:
+  - q: What are the five fields in a cron expression?
+    a: "In order: minute (0 to 59), hour (0 to 23), day of month (1 to 31), month (1 to 12 or JAN to DEC) and day of week (0 to 7 or SUN to SAT, where both 0 and 7 mean Sunday). An asterisk means every value. Some schedulers add a seconds field at the start or a year field at the end; this parser accepts both forms."
+  - q: What does */15 mean?
+    a: "A slash defines a step. */15 in the minute field means every 15 minutes starting from 0, so at minutes 0, 15, 30 and 45. A step can also follow a range or a start value: 10-50/20 means minutes 10, 30 and 50, and 5/10 means every 10 minutes starting at 5."
+  - q: Why does my job run on more days than I expected?
+    a: "When both day of month and day of week are restricted, classic cron runs the job on days that match either one, not both. 0 0 1 * 1 therefore runs on the 1st of every month and on every Monday. Put * in one of the two fields if you only want the other condition. The parser shows a warning when this applies."
+  - q: Which time zone does cron use?
+    a: "The time zone of the server or container running the scheduler, which is often UTC in the cloud. Choose that zone in the Next runs panel to see the exact times. Around daylight saving changes a job scheduled in the skipped hour may not run that day, and one in the repeated hour may run once; the list reflects the rules of the zone you select."
+  - q: What do L, W and # mean?
+    a: "They are extensions supported by Quartz and many modern schedulers. L in the day-of-month field means the last day of the month, 15W means the weekday nearest the 15th, FRI#2 in the day-of-week field means the second Friday of the month, and 5L means the last Friday. Standard Unix crontab does not support them, so check your scheduler before relying on them."
+  - q: Is my expression sent anywhere?
+    a: "No. Parsing, the English description and the run times are computed in your browser with the open-source cronstrue and croner libraries. You can go offline after the page loads and the tool keeps working."
+---
+
+## The five fields
+
+A cron expression is five values separated by spaces. Each one restricts when the job may run, and the job runs whenever all of them match the current time.
+
+| Field | Allowed values | Example | Meaning of the example |
+| --- | --- | --- | --- |
+| Minute | 0 to 59 | `*/15` | every 15 minutes |
+| Hour | 0 to 23 | `9-17` | from 09:00 to 17:00 |
+| Day of month | 1 to 31, L, W | `1` | on the 1st |
+| Month | 1 to 12, JAN to DEC | `JAN,JUL` | in January and July |
+| Day of week | 0 to 7, SUN to SAT | `1-5` | Monday to Friday |
+
+Each field accepts a single value, a list separated by commas, a range with a hyphen, and a step with a slash. Some schedulers, including Quartz, Spring and node-cron, put an extra seconds field first; a few accept a year field last. Toggle Seconds field to convert between the two forms.
+
+## Common gotchas
+
+The day-of-month and day-of-week fields are combined with OR when both are set, which surprises almost everyone the first time. If a job should run on the first Monday of the month, `0 9 1-7 * 1` does not do it: it runs on the 1st to 7th and on every Monday. Use `0 9 * * MON#1` on schedulers that support the hash syntax, or filter inside the job.
+
+Time zones are the other classic trap. A schedule written for 09:00 runs at 09:00 in the scheduler's zone, which on most cloud platforms is UTC. Daylight saving changes can skip or repeat a run between 01:00 and 03:00 local time. The Next runs list applies the rules of the zone you choose, so you can see exactly what will happen around a change.
+
+## Related tasks
+
+To turn a run time into a Unix timestamp or read one back, use the [Timestamp Converter](/tools/converters/timestamp-converter/). Scheduled jobs that call APIs often carry a token; the [JWT Decoder](/tools/developer/jwt-decoder/) shows when it expires.

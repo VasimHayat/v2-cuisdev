@@ -1,0 +1,48 @@
+---
+slug: hash-generator
+updated: 2026-10-03
+howTo:
+  - Choose Text or File. Type or paste text, or drop a file of any size up to 2 GB onto the drop zone.
+  - Pick the algorithms you need. MD5, SHA-1, SHA-256 and SHA-512 are on by default; All selects every algorithm.
+  - Digests appear as you type. Switch to uppercase or Base64 output, or enter an HMAC key to compute keyed hashes.
+  - To check a download, paste the published checksum into Compare. The matching algorithm turns green, or you are told that nothing matched.
+  - Copy a single digest with its button, or Copy all for one line per algorithm.
+features:
+  - MD5, SHA-1, SHA-256, SHA-384, SHA-512, SHA3-256, SHA3-512, BLAKE2b, BLAKE3, RIPEMD-160, CRC32 and xxHash64
+  - Every selected algorithm computed in a single pass over the input
+  - Files up to 2 GB hashed in streamed 4 MB chunks with a progress bar
+  - HMAC with a secret key for every cryptographic algorithm
+  - Hex in lower or upper case, or Base64 output
+  - Checksum comparison that accepts any case, Base64 and prefixes such as sha256
+  - "Security badges flag broken algorithms (MD5, SHA-1) and plain checksums (CRC32, xxHash)"
+  - Runs in your browser with WebAssembly; nothing is uploaded
+faq:
+  - q: What is a hash used for?
+    a: "A hash function turns any input into a short fixed-length fingerprint. The same input always gives the same digest, and changing a single bit changes it completely. Hashes are used to verify downloads, detect duplicate files, sign data, store password verifiers and build caches keyed by content."
+  - q: Which algorithm should I use?
+    a: "For anything security related use SHA-256 or stronger: SHA-512, SHA3 or BLAKE2b and BLAKE3. Use MD5 or SHA-1 only to match a checksum someone else published, because both have practical collision attacks. CRC32 and xxHash are fast error-detection checksums with no security at all."
+  - q: How do I verify a downloaded file?
+    a: "Switch to File, drop the download, then paste the checksum from the publisher's website into Compare. If the matching row turns green the file is intact. If nothing matches, the file was corrupted or altered, or the publisher used an algorithm you have not selected; tick All and compare again."
+  - q: What is HMAC and when do I need a key?
+    a: "HMAC mixes a secret key into the hash so only someone who knows the key can produce the same digest. Webhook providers such as Stripe and GitHub sign their payloads this way. Enter the shared secret in the HMAC key field and paste the raw payload to reproduce their signature. CRC32, xxHash and BLAKE3 do not support HMAC; their rows say Not available as HMAC."
+  - q: Should I hash passwords with this?
+    a: "No. Fast hashes like SHA-256 are the wrong tool for storing passwords because attackers can try billions of guesses per second. Use a slow, salted password hash such as Argon2, bcrypt or scrypt in your application instead."
+  - q: Is my file uploaded anywhere?
+    a: "No. Files are read in chunks and hashed by WebAssembly inside your browser tab. You can disconnect from the internet after the page has loaded and hashing keeps working, so private documents and large downloads never leave your computer."
+---
+
+## What a hash tells you
+
+A cryptographic hash is a fingerprint of data. Feed in a document, a disk image or a single word and you get a fixed-size digest, 64 hex characters for SHA-256. The same bytes always produce the same digest and any change produces a completely different one, which is why publishers print checksums next to their downloads and why version control systems name every file by its hash.
+
+This generator computes as many algorithms as you like in one pass. Text is hashed as UTF-8 as you type; files are streamed in 4 MB chunks so even multi-gigabyte images can be hashed without running out of memory, and the progress bar shows how far it has got.
+
+## Choosing an algorithm
+
+SHA-256 is the default choice for integrity and signatures. SHA-512 is often faster on 64-bit processors, SHA3 is a different design that is useful as a second opinion, and BLAKE2b and BLAKE3 are modern, fast and secure. MD5 and SHA-1 are broken for security purposes because collisions can be manufactured, but you still need them to check older checksums. CRC32 and xxHash64 detect accidental corruption quickly and are not meant to resist tampering, which the security badges make clear.
+
+HMAC turns any of the cryptographic hashes into a keyed signature. It is how webhook payloads are signed and how many APIs authenticate requests, and reproducing a signature here is a quick way to debug a mismatch.
+
+## Related tasks
+
+For random identifiers rather than fingerprints, use the [UUID Generator](/tools/developer/uuid-generator/). To move a binary digest between systems as text, the [Base64 Encoder](/tools/developer/base64-encode-decode/) converts it.
