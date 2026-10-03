@@ -16,8 +16,16 @@ RewriteRule ^(.*)$ /$1/ [L,R=301]
 Redirect 301 /jsoneditor/ /tools/developer/json-editor/
 Redirect 301 /jsoneditor /tools/developer/json-editor/
 
-# ---------- Custom 404 ----------
+# The old site's sitemap lived at /sitemap.xml; Astro writes sitemap-index.xml. Search
+# engines that still have /sitemap.xml on file are sent to the current one.
+RewriteRule ^sitemap\.xml$ /sitemap-index.xml [L,R=301]
+
+# Old-site pages with no equivalent: 410 Gone tells search engines they were removed on purpose.
+RewriteRule ^app[23](/.*)?$ - [G]
+
+# ---------- Custom error pages ----------
 ErrorDocument 404 /404.html
+ErrorDocument 410 /404.html
 
 # ---------- Compression ----------
 <IfModule mod_deflate.c>
