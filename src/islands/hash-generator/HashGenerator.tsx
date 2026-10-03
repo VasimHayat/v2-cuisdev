@@ -303,7 +303,7 @@ export default function HashGenerator() {
         </div>
       </div>
 
-      <div class="grid min-h-0 flex-1 gap-2 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:grid-rows-[minmax(0,1fr)]">
+      <div class="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)] gap-2 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:grid-rows-[minmax(0,1fr)]">
         {/* Input */}
         <section
           class={'flex h-[360px] min-h-[260px] flex-col overflow-hidden rounded-lg border bg-surface transition-colors lg:h-auto ' + (dragOver ? 'border-brand-500 ring-2 ring-brand-500/30' : 'border-line-strong')}

@@ -1,0 +1,46 @@
+---
+slug: find-and-replace
+updated: 2026-10-03
+howTo:
+  - Paste your text into the Text pane, or press Sample to load an example with ready-made rules.
+  - Type what to find and what to replace it with. Choose Plain text for a literal match, Whole word to skip matches inside longer words, or Regex for patterns with groups.
+  - Add more rules with Add rule. They run from top to bottom, each on the result of the one before, and the badge on each rule shows how many replacements it made.
+  - Check the Preview pane, then press Apply (or Ctrl+Enter) to keep the result, or Copy and Download it directly.
+  - Your rules are remembered on this device, so a cleanup you repeat every week is one paste away.
+features:
+  - Several find and replace rules applied in order, each with its own mode and options
+  - Plain text, whole word and regular expression modes
+  - Case-sensitive matching per rule, plus multiline and dot-all flags in regex mode
+  - Regex replacements with $1, $<name> and $& references
+  - Line breaks and tabs in plain replacements with \n and \t
+  - Live preview with a replacement count per rule and clear errors for invalid patterns
+  - Rules saved on your device, with reorder, disable and remove
+  - Runs entirely in your browser; nothing is uploaded
+faq:
+  - q: How is this different from find and replace in my editor?
+    a: "Editors usually run one replacement at a time. Here you build a list of rules that run in order, see the result and the count for each rule before committing, and keep the rules for next time. That suits repeated cleanups such as renaming a product across a document or reformatting dates in an export."
+  - q: What does Whole word do?
+    a: "It only matches the search text when it is not part of a longer word. Replacing cat with dog in Whole word mode changes 'the cat sat' but leaves 'category' and 'bobcat' alone. Letters with accents and digits count as part of a word."
+  - q: How do I use regular expressions?
+    a: "Set the rule's mode to Regex and type a JavaScript regular expression without slashes. Groups can be used in the replacement: (\\d{4})-(\\d{2})-(\\d{2}) with $3/$2/$1 turns 2026-10-03 into 03/10/2026, and named groups work with $<name>. If the pattern is invalid, the rule shows the browser's error message and is skipped."
+  - q: How do I insert a line break in the replacement?
+    a: "In Plain text and Whole word modes, type \\n for a line break and \\t for a tab while the option for them is on; turn it off to insert a literal backslash and n. In Regex mode, \\n in the pattern matches a line break, but the replacement is used as typed, so add a separate Plain text rule when you need to insert one."
+  - q: Why did a later rule not match anything?
+    a: "Rules run in sequence, each on the output of the rule above. If an earlier rule already changed the text a later rule was looking for, the later rule finds nothing. Reorder the rules with the arrows, or make the earlier rule more specific, for example by turning on Match case."
+  - q: Is my text uploaded?
+    a: "No. All replacements run in your browser tab. The text draft and the rules are stored only in this browser's local storage so they survive a reload."
+---
+
+## Many replacements, one pass
+
+Real cleanups rarely involve a single change. Renaming a company means its name, its email domain and its website. Tidying a data export means fixing date formats, removing a stray prefix and normalising separators. This tool lets you write each change as a rule, line them up, and watch the result update as you type, with a count beside each rule so you can see at a glance which ones did something.
+
+Rules run top to bottom, and each sees the text produced by the rules above it. Order matters when rules overlap, and the arrows let you rearrange them. A rule can be disabled without being deleted, which is useful while you work out a tricky sequence.
+
+## Plain text, whole words and patterns
+
+Plain text matches exactly what you type, with special characters treated literally, so a dot is just a dot. Whole word adds boundaries so that cat does not match inside category. Regex gives you the full power of JavaScript regular expressions with capture groups in the replacement. Invalid patterns are reported on the rule itself and skipped, so a typo never wipes your text.
+
+## Related tasks
+
+To build and debug a pattern with live highlighting first, use the [Regex Tester](/tools/developer/regex-tester/). To see exactly what your replacements changed, paste the before and after into the [Text Diff Checker](/tools/developer/text-diff-checker/).

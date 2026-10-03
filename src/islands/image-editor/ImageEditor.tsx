@@ -536,7 +536,7 @@ export default function ImageEditor() {
       </div>
 
       {/* Body */}
-      <div class="grid min-h-0 flex-1 gap-2 md:grid-cols-[minmax(0,1fr)_18rem]">
+      <div class="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)] gap-2 md:grid-cols-[minmax(0,1fr)_18rem]">
         {/* Stage */}
         <section
           ref={stageRef}

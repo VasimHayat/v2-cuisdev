@@ -24,6 +24,14 @@ import UuidGenerator from './uuid-generator/UuidGenerator';
 import HashGenerator from './hash-generator/HashGenerator';
 import TimestampConverter from './timestamp-converter/TimestampConverter';
 import CronParser from './cron-parser/CronParser';
+import WordCounter from './word-counter/WordCounter';
+import CaseConverter from './case-converter/CaseConverter';
+import SlugGenerator from './slug-generator/SlugGenerator';
+import LoremIpsum from './lorem-ipsum-generator/LoremIpsum';
+import MarkdownPreview from './markdown-preview/MarkdownPreview';
+import LineTools from './line-tools/LineTools';
+import FindReplace from './find-and-replace/FindReplace';
+import TextToBinary from './text-to-binary/TextToBinary';
 
 interface Props {
   island: string;
@@ -46,6 +54,14 @@ const SIZES: Record<string, string> = {
   'hash-generator': 'h-[925px] lg:h-[min(80vh,880px)] lg:min-h-[560px]',
   'timestamp-converter': 'h-[1320px] lg:h-[760px]',
   'cron-parser': 'h-[1160px] lg:h-[720px]',
+  'word-counter': 'h-[min(78vh,860px)] min-h-[560px]',
+  'case-converter': 'h-[min(78vh,860px)] min-h-[560px]',
+  'slug-generator': 'h-[min(78vh,860px)] min-h-[560px]',
+  'lorem-ipsum-generator': 'h-[min(78vh,860px)] min-h-[560px]',
+  'markdown-preview': 'h-[min(78vh,860px)] min-h-[560px]',
+  'line-tools': 'h-[min(78vh,860px)] min-h-[560px]',
+  'find-and-replace': 'h-[min(78vh,860px)] min-h-[560px]',
+  'text-to-binary': 'h-[min(78vh,860px)] min-h-[560px]',
 };
 const size = SIZES[island] ?? 'min-h-[560px]';
 ---
@@ -63,6 +79,14 @@ const size = SIZES[island] ?? 'min-h-[560px]';
 {island === 'hash-generator' && <HashGenerator client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></HashGenerator>}
 {island === 'timestamp-converter' && <TimestampConverter client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></TimestampConverter>}
 {island === 'cron-parser' && <CronParser client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></CronParser>}
+{island === 'word-counter' && <WordCounter client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></WordCounter>}
+{island === 'case-converter' && <CaseConverter client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></CaseConverter>}
+{island === 'slug-generator' && <SlugGenerator client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></SlugGenerator>}
+{island === 'lorem-ipsum-generator' && <LoremIpsum client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></LoremIpsum>}
+{island === 'markdown-preview' && <MarkdownPreview client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></MarkdownPreview>}
+{island === 'line-tools' && <LineTools client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></LineTools>}
+{island === 'find-and-replace' && <FindReplace client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></FindReplace>}
+{island === 'text-to-binary' && <TextToBinary client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></TextToBinary>}
 
 <style is:global>
   .tool-skeleton {

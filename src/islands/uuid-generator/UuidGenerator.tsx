@@ -189,7 +189,7 @@ export default function UuidGenerator() {
         </div>
       </div>
 
-      <div class="grid min-h-0 flex-1 gap-2 md:grid-cols-[18rem_minmax(0,1fr)] md:grid-rows-[minmax(0,1fr)]">
+      <div class="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)] gap-2 md:grid-cols-[18rem_minmax(0,1fr)] md:grid-rows-[minmax(0,1fr)]">
         {/* Controls */}
         <aside class="scrollbar-thin flex min-h-0 flex-col gap-4 overflow-y-auto rounded-lg border border-line-strong bg-surface p-3 text-sm" aria-label="Generator options">
           {nameBased ? (

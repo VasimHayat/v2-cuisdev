@@ -1,0 +1,46 @@
+---
+slug: case-converter
+updated: 2026-10-03
+howTo:
+  - Type or paste text into the Text pane. Every case appears at once on the right, each with its own copy button.
+  - Click a case name to load it into the Output editor, then copy it, download it, or send it back to the input with the arrow button.
+  - Leave Per line on to turn a list of names into a list of identifiers, one per line. Turn it off to join the whole text into a single identifier.
+  - For headlines, pick a Title style (Simple, AP or Chicago) and choose whether all-caps acronyms such as NASA stay as they are.
+  - Press Copy all to take every conversion with its label, or Ctrl+Shift+C to copy the selected output.
+features:
+  - Fourteen cases at once, from UPPER and Title Case to camelCase, snake_case, kebab-case and path/case
+  - Smart word splitting that understands camelCase, PascalCase, acronyms such as XMLHttpRequest, digits and every alphabet
+  - Title Case in Simple, AP or Chicago style, with acronyms kept intact if you want
+  - Sentence case that capitalises each sentence and each line
+  - Per-line conversion so a pasted list of field names becomes a list of identifiers
+  - Copy any single case, copy all of them, or download the selected one as a text file
+  - Remembers your options and your last text on this device
+  - Runs entirely in your browser; nothing is uploaded
+faq:
+  - q: How do I convert text to camelCase or snake_case?
+    a: "Paste the words into the Text pane and the camelCase and snake_case cards update immediately; click the copy button on the card you need. Separators, punctuation and existing capitalisation are all handled, so user ID, user-id and UserID all become userId and user_id."
+  - q: What is the difference between Title Case and Sentence case?
+    a: "Title Case capitalises every significant word, as in The Lord of the Rings, and leaves small words such as a, of and the in lower case unless they are first or last. Sentence case capitalises only the first word of each sentence and each line, the way ordinary prose is written."
+  - q: What do the AP and Chicago title styles change?
+    a: "They decide which small words stay lower case. AP lowercases articles, conjunctions and prepositions of three letters or fewer, so Through and With are capitalised. Chicago lowercases every preposition regardless of length, so through and with stay lower case. Simple uses a short list that suits most web headings."
+  - q: How does it handle acronyms like XMLHttpRequest?
+    a: "A run of capitals followed by a capitalised word is treated as one acronym, so XMLHttpRequest splits into XML, Http and Request and becomes xml_http_request in snake_case. In Title Case, Keep acronyms leaves words such as NASA and API untouched instead of turning them into Nasa and Api."
+  - q: Can I convert a whole list at once?
+    a: "Yes. With Per line on, the identifier cases convert each line separately, so a list of column names in means a list of identifiers out. The prose cases such as Title Case and Sentence case also work line by line."
+  - q: Is my text sent to a server?
+    a: "No. Every conversion runs in JavaScript in your browser. Nothing is uploaded, stored on a server or logged, and the tool keeps working with the network disconnected."
+---
+
+## Why convert case
+
+Text changes case more often than you would think. A heading pasted in capitals needs to become Title Case, a sentence written with Caps Lock on needs fixing, and a column name from a spreadsheet needs to become a variable name that follows your codebase's convention. Doing it by hand is slow and error-prone, especially for long lists.
+
+This converter shows every case side by side as you type. Pick the one you need, copy it, and move on. The programmer cases share one word splitter that understands existing camelCase, acronyms and digits, so converting between conventions is lossless: `lastUpdatedAt`, `last_updated_at` and `Last-Updated-At` all describe the same three words.
+
+## Prose cases and identifier cases
+
+Prose cases keep your punctuation and spacing and only change letters. That includes UPPER, lower, Title, Sentence, aLtErNaTiNg and InVeRsE, the last being the quickest fix for text typed with Caps Lock stuck on. Identifier cases throw punctuation away and join the words with a convention: no separator for camelCase and PascalCase, underscores for snake_case, hyphens for kebab-case and Train-Case, dots for dot.case and slashes for path/case.
+
+## Related tasks
+
+To turn titles into URL-friendly strings with transliteration and stop-word removal, use the [Slug Generator](/tools/text/slug-generator/). To check how a change affected a longer text, compare the two versions in the [Text Diff Checker](/tools/developer/text-diff-checker/).

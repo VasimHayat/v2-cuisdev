@@ -1,0 +1,46 @@
+---
+slug: slug-generator
+updated: 2026-10-03
+howTo:
+  - Paste one or more titles into the Titles pane, one per line. The slugs appear on the right as you type.
+  - Choose the separator (hyphen, underscore or dot) and whether to lowercase, transliterate accents and other scripts, remove stop words or keep numbers.
+  - Set a maximum length if your CMS has one. Slugs are trimmed at a word boundary so no word is cut in half.
+  - Edit the replacement rules, such as & to and or + to plus, or add your own as from=to.
+  - Check the full URL preview, then copy all slugs or download them as a text file.
+features:
+  - Converts any number of titles at once, one slug per line
+  - Transliterates accents and special letters, German umlauts, Cyrillic and Greek into readable ASCII
+  - Hyphen, underscore or dot separators, with optional lowercasing
+  - Optional English stop-word removal for shorter slugs
+  - Maximum length with trimming at word boundaries
+  - Custom replacement rules such as & to and, + to plus and @ to at
+  - Flags duplicate slugs so two pages never collide on the same URL
+  - Full URL preview with your own base address
+faq:
+  - q: What is a URL slug?
+    a: "The slug is the readable part of a URL that identifies a page, such as how-to-bake-bread in example.com/blog/how-to-bake-bread. A good slug is short, lower case, uses hyphens between words and contains only letters and digits, so it is easy to read, share and type."
+  - q: Should I use hyphens or underscores?
+    a: "Hyphens. Google treats a hyphen as a word separator and an underscore as a joiner, so bake-bread reads as two words and bake_bread as one. Underscores and dots are offered for file names, anchors and systems that require them."
+  - q: Should I remove stop words like the and of?
+    a: "Often, yes. Dropping words such as a, the, how and to makes slugs shorter without losing meaning, so how-to-write-a-great-title becomes write-great-title. The tool never removes every word: if a title is made only of stop words, they are kept."
+  - q: How are accents and non-Latin titles handled?
+    a: "With Transliterate on, accented letters lose their accents (crème becomes creme), letters such as ß, æ and ø become ss, ae and o, and Cyrillic and Greek are written in Latin letters, so Как дела becomes kak-dela. Tick the umlaut option to write ä, ö and ü as ae, oe and ue, as German readers expect. With Transliterate off, letters are kept as they are."
+  - q: How does the maximum length work?
+    a: "If a slug is longer than the limit, it is cut at the last separator that fits, so words are never split. Many CMSs and SEO guides suggest keeping slugs under about 60 characters; the header shows the length of the longest slug."
+  - q: Is my text uploaded anywhere?
+    a: "No. Slugs are generated in your browser with JavaScript, and your titles and settings are only saved on this device. The tool keeps working offline once the page has loaded."
+---
+
+## Good slugs in one step
+
+A slug turns a page title into the part of the address people see, share and type. Most CMSs generate one automatically, but the result is often too long, full of stop words, or broken by accents and symbols: `10-tips-%26-tricks` instead of `10-tips-and-tricks`. This generator gives you control over every rule and handles a whole list of titles at once, which is useful when migrating a site, planning a content calendar or naming files.
+
+Each title is cleaned in the same order: replacement rules first, so `&` becomes `and`, then transliteration, then splitting into words on anything that is not a letter or digit. Stop words and pure numbers are removed if you ask, the words are lower-cased and joined with your separator, and the result is trimmed to the maximum length at a word boundary.
+
+## Transliteration and international titles
+
+Accented Latin letters are stripped to their base letter with Unicode decomposition, and letters that do not decompose, such as ß, æ, ø and ł, use explicit mappings. Cyrillic and Greek follow common romanisation tables, so a Russian or Greek title still produces a readable ASCII slug. If your site supports Unicode URLs and you prefer to keep the original script, turn transliteration off.
+
+## Related tasks
+
+To convert titles into identifiers such as camelCase or snake_case instead, use the [Case Converter](/tools/text/case-converter/). To percent-encode a full URL that contains spaces or symbols, use the [URL Encoder](/tools/developer/url-encode-decode/).

@@ -1,0 +1,46 @@
+---
+slug: remove-duplicate-lines
+updated: 2026-10-03
+howTo:
+  - Paste your list into the Input pane, one item per line, or press Sample. The deduplicated list appears on the right as you type.
+  - Choose what to do with repeats. Remove duplicates keeps one copy of each line, Show only duplicates lists the values that repeat, and Count occurrences shows how often each line appears.
+  - Tick Ignore case to treat Apple and apple as the same, and Ignore surrounding spaces to treat " apple" and "apple" as the same. Choose whether to keep the first or the last copy.
+  - Open the Sort or Clean up panel to sort the result, drop empty lines, trim every line, or add a prefix and suffix such as quotes and commas.
+  - Copy the result, download it, or press the arrow to move it back into the input and keep working.
+features:
+  - Removes duplicate lines instantly while keeping the original order
+  - Case-insensitive and whitespace-insensitive comparison
+  - Keep the first or the last occurrence of each value
+  - Show only the lines that repeat, or count how often each line occurs
+  - Optional sorting, trimming, empty-line removal, numbering, prefix and suffix in the same pass
+  - Status line with lines in, lines out and duplicates removed
+  - Handles hundreds of thousands of lines in your browser
+  - Nothing is uploaded; your lists stay on your device
+faq:
+  - q: Does removing duplicates change the order of my list?
+    a: "No. The first copy of each line stays where it was and later copies are removed, so the order of first appearance is preserved. Choose Keep last to keep the final copy instead, which is useful when later lines are more up to date. Sorting only happens if you turn it on in the Sort panel."
+  - q: Why are some lines that look the same not removed?
+    a: "They differ in something invisible or in letter case. Turn on Ignore surrounding spaces to ignore leading and trailing spaces and tabs, and Ignore case to treat upper and lower case as equal. Spaces inside a line still count, so 'New  York' with two spaces is different from 'New York'."
+  - q: How do I find which lines are duplicated?
+    a: "Set the mode to Show only duplicates. The result lists each value that appears more than once, in order of first appearance. Count occurrences goes further and prints the number of times each line appears followed by a tab and the line, most frequent first, which pastes cleanly into a spreadsheet."
+  - q: Can I remove empty lines at the same time?
+    a: "Yes. Tick Remove empty lines in the Duplicates or Clean up panel. Lines that contain only spaces count as empty. The status line reports how many were removed separately from the duplicates."
+  - q: How large a list can I deduplicate?
+    a: "Lists of several hundred thousand lines work in a modern browser because the comparison uses a hash set, so each line is checked once. Very large files may make the editor slower to scroll, but the result is still computed in a fraction of a second."
+  - q: Is my data uploaded?
+    a: "No. The tool runs entirely in your browser tab. You can disconnect from the internet after the page loads and it keeps working, so email lists and customer data never leave your computer."
+---
+
+## Clean lists without a spreadsheet
+
+Duplicate lines creep into every list that is assembled from more than one place: email addresses exported from two systems, URLs collected from logs, keywords merged from several research tools, product codes copied from invoices. Spreadsheets can remove them, but only after importing, choosing a column and confirming a dialog. Here you paste the list and the unique version is already on the right.
+
+The comparison is exact by default and can be relaxed in two ways. Ignore case folds upper and lower case together, which is what you want for email addresses and tags. Ignore surrounding spaces ignores the padding that copy and paste tends to add. Both affect only the comparison: the copy that is kept is written exactly as it appeared.
+
+## Finding repeats instead of removing them
+
+Sometimes the duplicates are the interesting part. Show only duplicates lists every value that occurs more than once, which is the quickest way to find a double booking, a reused ID or a customer who signed up twice. Count occurrences turns the list into a frequency table, with the most common lines first, ready to paste into a spreadsheet as two columns.
+
+## Related tasks
+
+To put the cleaned list in order, use [Sort Lines](/tools/text/sort-lines/), which shares the same pipeline with sorting opened first. To change many values at once rather than remove them, use [Find and Replace](/tools/text/find-and-replace/).

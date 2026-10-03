@@ -1,0 +1,44 @@
+---
+slug: text-to-binary
+updated: 2026-10-03
+howTo:
+  - Choose Encode to turn text into numbers, or Decode to turn numbers back into text, then type or paste into the left pane.
+  - Pick the representation (binary, octal, decimal, hexadecimal or Unicode code points) and the text encoding, which is UTF-8 unless you need UTF-16, Latin-1 or ASCII.
+  - When encoding, set the separator, group several bytes per value, pad every byte to full width, and add 0b or 0x prefixes if your target expects them.
+  - When decoding, paste values with spaces, commas, new lines or no separators at all. Prefixes such as 0b, 0x and \x are accepted, and any invalid value is named with its position.
+  - Switch the output to Byte table to see each character with its code point and UTF-8 bytes, or press the swap button to reverse the direction.
+features:
+  - Converts text to binary, octal, decimal, hexadecimal or Unicode code points and back
+  - UTF-8, UTF-16 big and little endian, Latin-1 and 7-bit ASCII encodings
+  - Separator, byte grouping, padding, 0b and 0x prefixes and uppercase hex options
+  - Forgiving decoder that accepts any separators, prefixes and continuous digit runs
+  - Pinpoints invalid digits, oversized values and broken UTF-8 sequences with their position
+  - Byte table showing every character's code point and UTF-8 bytes in hex and binary
+  - Recognises a pasted binary or hex listing and switches to Decode automatically
+  - Runs entirely in your browser; nothing is uploaded
+faq:
+  - q: How is text converted to binary?
+    a: "Text is first turned into bytes by a character encoding, almost always UTF-8. Each byte is a number from 0 to 255, which is then written in base 2 as eight binary digits. The letter H is byte 72, written 01001000. The tool does both steps and lets you change either one."
+  - q: Why does one character produce several bytes?
+    a: "UTF-8 uses one byte for ASCII letters and digits, two bytes for most accented letters such as é, three for most other scripts and symbols, and four for emoji. The byte table shows exactly which bytes each character becomes."
+  - q: What is the difference between bytes and code points?
+    a: "A code point is the number Unicode assigns to a character, written like U+00E9 for é. Bytes are how that number is stored in a particular encoding. Code points are the same in every encoding; bytes are not. Choose Code points when you want the Unicode numbers rather than the stored bytes."
+  - q: When should I use UTF-16, Latin-1 or ASCII?
+    a: "UTF-16 is what Windows APIs, Java and JavaScript strings use internally, in big or little endian byte order. Latin-1 is a legacy single-byte encoding for Western European text found in old files and protocols. ASCII covers only 128 characters. The tool refuses characters an encoding cannot represent and tells you which one."
+  - q: Why does decoding say the bytes are not valid UTF-8?
+    a: "Not every byte sequence is valid UTF-8. A multi-byte character may have been cut off, or the bytes may come from a different encoding such as Latin-1. The message names the first bad byte. Try switching the encoding if the data came from an older system."
+  - q: Is my text uploaded anywhere?
+    a: "No. The conversion runs in your browser tab. You can go offline after the page loads and the tool keeps working."
+---
+
+## Text is stored as numbers
+
+Computers store text as bytes, and bytes are just numbers from 0 to 255. Seeing those numbers is useful when you debug an encoding problem, read a protocol dump, write a test fixture, or explain how text works. This converter shows the numbers in whichever base you need: binary for teaching and bit-level work, hexadecimal for debugging and protocols, octal for old escape sequences, decimal for byte arrays in code.
+
+## Encodings matter
+
+The same text produces different bytes in different encodings. In UTF-8, the word café is five bytes, because é needs two. In Latin-1 it is four. In UTF-16 every character takes at least two bytes. Picking the wrong encoding when decoding is the usual cause of mojibake, the garbled characters you see when a file is read with the wrong settings. Switch the encoding here to see the difference immediately, and use the byte table to inspect a single character.
+
+## Related tasks
+
+To represent binary data as compact text for transport, use the [Base64 Encoder](/tools/developer/base64-encode-decode/). To fingerprint text or check a download, the [Hash Generator](/tools/developer/hash-generator/) computes MD5, SHA-256 and more.

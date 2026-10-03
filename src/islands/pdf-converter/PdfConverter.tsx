@@ -297,7 +297,7 @@ export default function PdfConverter() {
         </button>
       </div>
 
-      <div class="grid min-h-0 flex-1 gap-2 md:grid-cols-[minmax(0,1fr)_18rem]">
+      <div class="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)] gap-2 md:grid-cols-[minmax(0,1fr)_18rem]">
         {/* File list */}
         <section
           class={

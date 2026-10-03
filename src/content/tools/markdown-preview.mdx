@@ -1,0 +1,46 @@
+---
+slug: markdown-preview
+updated: 2026-10-03
+howTo:
+  - Type or paste Markdown into the editor on the left, or drop a .md file onto it. The rendered document updates on the right as you type.
+  - Use the formatting buttons, or Ctrl+B, Ctrl+I and Ctrl+K, to make text bold, italic or a link. Buttons for headings, lists, task lists, quotes and code wrap the current selection.
+  - Switch the view between Split, Editor only, Preview only and HTML to see the generated markup. In Split view the preview scrolls with the editor.
+  - Tick Line breaks if you want single newlines rendered as line breaks, as in GitHub comments.
+  - Copy the HTML, or download the document as a .md file or as a standalone .html page.
+features:
+  - Live preview with GitHub Flavored Markdown, including tables, task lists, strikethrough and autolinks
+  - Formatting toolbar and keyboard shortcuts that wrap the selection
+  - Split, editor, preview and HTML source views with synced scrolling
+  - Output sanitised with DOMPurify, so pasted HTML cannot run scripts
+  - Links open in a new tab with rel noopener, and unsafe link schemes are removed
+  - Copy HTML, download Markdown, or download a standalone styled HTML page
+  - Word count, character count and reading time as you write
+  - Your draft is saved in this browser automatically; nothing is uploaded
+faq:
+  - q: Which Markdown syntax is supported?
+    a: "Standard CommonMark plus GitHub Flavored Markdown: headings, emphasis, lists, links, images, code spans and fenced code blocks, block quotes, tables, task lists with checkboxes, strikethrough with double tildes, and bare URLs that turn into links automatically."
+  - q: Is it safe to paste Markdown from somewhere else?
+    a: "Yes. Markdown can contain raw HTML, so the rendered output is passed through DOMPurify before it is shown. Scripts, inline event handlers, iframes, forms and style attributes are removed, and links using schemes such as javascript: or data: lose their address. The exported HTML is the same sanitised markup."
+  - q: Why do my single line breaks disappear?
+    a: "In standard Markdown a single newline inside a paragraph is treated as a space, and you need a blank line to start a new paragraph. GitHub comments are different and keep single line breaks. Tick Line breaks in the toolbar to render your text that way."
+  - q: Where is my draft stored?
+    a: "In your browser's local storage on this device, saved a moment after you stop typing. It is never sent to a server. Drafts larger than 200 KB are not saved, so download long documents as a .md file to keep them."
+  - q: What does the downloaded HTML file contain?
+    a: "A complete HTML document with the rendered, sanitised content, a title taken from your first heading, and a small inline stylesheet for readable typography, tables and code. It opens in any browser without an internet connection."
+  - q: Can I use this to write a README?
+    a: "Yes. The preview follows the same GitHub Flavored Markdown rules GitHub uses for README files, so tables, task lists and fenced code render the way they will on GitHub. Download the result as a .md file and commit it."
+---
+
+## Write Markdown, see the result
+
+Markdown is the plain-text format behind README files, documentation sites, chat messages and many note-taking apps. It is quick to write but easy to get slightly wrong: a missing blank line merges two paragraphs, a table separator row with the wrong number of cells breaks the whole table. A live preview catches those mistakes as you make them.
+
+The editor keeps your text on the left and the rendered page on the right. The toolbar wraps whatever you have selected, so formatting an existing sentence is one click, and pressing the same button again removes the formatting.
+
+## Safe by default
+
+Markdown allows raw HTML, which means a document pasted from an untrusted source can contain scripts. Everything this tool renders goes through DOMPurify, a widely used HTML sanitiser, before it reaches the page. Dangerous tags and attributes are stripped, unsafe link schemes are removed, and every remaining external link opens in a new tab without access to this page. The HTML you copy or download is the same cleaned markup.
+
+## Related tasks
+
+Count the words in a draft with the [Word Counter](/tools/text/word-counter/). To escape a code sample before embedding it in HTML, use the [HTML Entity Encoder](/tools/developer/html-entity-encoder/).

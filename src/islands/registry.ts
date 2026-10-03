@@ -3,7 +3,7 @@
  * every live tool's `island` against this list at build time so a typo fails the build
  * instead of shipping an empty page.
  */
-export const ISLAND_KEYS = ['json-editor', 'code-formatter', 'text-diff', 'image-editor', 'pdf-converter', 'converter', 'codec', 'jwt-decoder', 'regex-tester', 'uuid-generator', 'hash-generator', 'timestamp-converter', 'cron-parser'] as const;
+export const ISLAND_KEYS = ['json-editor', 'code-formatter', 'text-diff', 'image-editor', 'pdf-converter', 'converter', 'codec', 'jwt-decoder', 'regex-tester', 'uuid-generator', 'hash-generator', 'timestamp-converter', 'cron-parser', 'word-counter', 'case-converter', 'slug-generator', 'lorem-ipsum-generator', 'markdown-preview', 'line-tools', 'find-and-replace', 'text-to-binary'] as const;
 
 export type IslandKey = (typeof ISLAND_KEYS)[number];
 

@@ -1,0 +1,50 @@
+---
+slug: word-counter
+updated: 2026-10-03
+howTo:
+  - Type or paste your text into the left pane, drop a text file onto it, or press Sample. Every count updates as you type.
+  - Read the tiles on the right for words, characters with and without spaces, sentences, paragraphs, lines, reading and speaking time, average word length and the longest word.
+  - Check the length targets in the toolbar to see how much room is left for an X post, a meta description, an SEO title or an SMS.
+  - Switch the keyword density table between single words and two-word phrases, choose whether to skip common stop words, and set a minimum word length.
+  - Press Copy stats (Ctrl+Shift+C) to copy a summary, or download the density table as CSV.
+features:
+  - Live counts of words, characters, characters without spaces, sentences, paragraphs and lines
+  - Reading time at 238 words per minute and speaking time at 150 words per minute
+  - Accurate word counts in any language, including Chinese, Japanese and Thai, using the browser's Unicode segmentation
+  - Contractions and hyphenated words such as don't and state-of-the-art count as one word
+  - Emoji and accented letters count as a single character each
+  - Keyword density for single words and two-word phrases, with stop-word filtering and CSV export
+  - Length targets for X posts, meta descriptions, SEO titles and SMS messages
+  - Your text stays in this browser and is kept as a local draft between visits
+faq:
+  - q: How does the tool decide what counts as a word?
+    a: "Words are found with the browser's built-in Unicode word segmentation, the same rules used for double-click selection. Punctuation, symbols and emoji are not words, numbers are, and contractions or hyphenated compounds such as don't and well-known count as one word. Languages written without spaces, such as Chinese and Japanese, are split into dictionary words rather than counted as one long word."
+  - q: Why does the character count differ from other tools?
+    a: "Many counters count UTF-16 code units, so an emoji or a flag counts as two or more characters. This tool counts what a reader sees as one character, so a family emoji or an accented letter made of two code points counts once. The byte size shown under the character tile is the UTF-8 size, which is what some databases and APIs limit."
+  - q: How is reading time calculated?
+    a: "Reading time divides the word count by 238 words per minute, the average silent reading speed for adults reading non-fiction in English, measured in a 2019 meta-analysis of 190 studies. Speaking time uses 150 words per minute, a comfortable pace for presentations and podcasts. Both are estimates; technical text reads more slowly."
+  - q: What is keyword density and what is a good value?
+    a: "Keyword density is how often a word or phrase appears as a share of all words. It shows what a text is really about and catches accidental repetition. Search engines no longer reward a particular percentage, and repeating a phrase unnaturally can hurt, so use the table to check that your main topic is present and that no filler word dominates."
+  - q: Are the length targets exact?
+    a: "They count characters as described above. X counts most characters as one but some, such as CJK characters, as two, and shortens every link to 23 characters, so treat the X target as a guide. Search engines truncate titles and meta descriptions by pixel width rather than characters, so 60 and 155 to 160 characters are reliable rules of thumb, not hard limits."
+  - q: Is my text uploaded or stored?
+    a: "No text is uploaded. Counting runs in your browser, and the current text is saved only in this browser's local storage so it is still there when you come back. Press Clear to remove it."
+---
+
+## What the counts tell you
+
+A word count is the first constraint on most writing: an essay with a limit, a product description that has to fit a card, a talk with a time slot. This counter shows every figure that usually matters at once, so you can see the effect of an edit as you make it instead of pasting text into several tools.
+
+Words are counted the way a careful reader would count them. Contractions and hyphenated compounds count once, numbers count, punctuation and emoji do not, and languages written without spaces are segmented into real words. Characters are counted as the reader sees them, so an emoji or an accented letter is one character even when it is stored as several.
+
+## Reading time, speaking time and targets
+
+Reading time assumes 238 words per minute and speaking time 150, the commonly cited averages for adult readers and for presenters. The toolbar shows how much room is left against four everyday targets: an X post, a meta description, an SEO title and an SMS. A target turns red when the text is too long and amber when a meta description is shorter than the useful range.
+
+## Keyword density
+
+The density table lists the most frequent words or two-word phrases with their share of the text. Skipping stop words removes filler such as the, and and of, so the list shows what the text is actually about. Use it to confirm that the main topic appears, and to spot a word you have leaned on too often.
+
+## Related tasks
+
+To change the capitalisation of your text, use the [Case Converter](/tools/text/case-converter/). To clean up a list before counting it, run it through [Remove Duplicate Lines](/tools/text/remove-duplicate-lines/).

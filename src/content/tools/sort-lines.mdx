@@ -1,0 +1,46 @@
+---
+slug: sort-lines
+updated: 2026-10-03
+howTo:
+  - Paste your lines into the Input pane or press Sample. The sorted result appears on the right as you type.
+  - Pick an order. A to Z and Z to A sort alphabetically, Natural puts file2 before file10 and sorts numbers by value, Shortest first and Longest first sort by length, and Reverse and Shuffle reorder without comparing.
+  - Leave Language-aware on so accented letters sort where readers expect them, and Ignore case on so apple and Apple sit together.
+  - To sort a CSV or tab-separated list by one field, set By column to the column number and choose the delimiter.
+  - Open the Duplicates or Clean up panel to remove repeats, drop empty lines or number the result in the same pass, then Copy or Download.
+features:
+  - Alphabetical, reverse, natural, numeric, by length, reverse order and shuffle
+  - Natural sort that puts file2 before file10 and handles negative and decimal numbers
+  - Language-aware ordering with Intl.Collator, so accents and umlauts sort correctly
+  - Case-insensitive option and a stable sort that keeps equal lines in their original order
+  - Sort by a column of comma, semicolon, tab, pipe or space separated data
+  - Repeatable shuffle with a Reshuffle button
+  - Optional dedupe, trim, empty-line removal and numbering in the same pass
+  - Runs entirely in your browser; nothing is uploaded
+faq:
+  - q: Why does file10 come before file2 in a normal sort?
+    a: "Alphabetical sorting compares text character by character, and the character 1 comes before 2, so file10 sorts before file2. Natural sort reads runs of digits as numbers, which puts file2 before file10 the way a person would. Use Natural for file names, version numbers and anything with numbers inside the text."
+  - q: How do I sort a list of numbers?
+    a: "Choose Natural. Lines that are plain numbers, including negatives and decimals such as -3.5 or 0.25, are compared by value, so 9 comes before 10 and -3 comes before 2. Alphabetical order would put 10 before 9."
+  - q: What does Language-aware do?
+    a: "It uses your browser's collation rules for your language, so accented letters sort next to their base letter: Äpfel sits with the A words instead of after Z. Turn it off to sort strictly by character code, which is what most programming languages do by default."
+  - q: Is the sort stable?
+    a: "Yes. Lines that compare as equal, for example Apple and apple with Ignore case on, keep the order they had in the input. That makes it safe to sort by one column after another: sort by the secondary column first, then by the primary one."
+  - q: Can I sort CSV rows by a specific column?
+    a: "Set By column to the column number, counting from 1, and pick the delimiter. Each whole row is moved, only the chosen column is compared. Quoted fields that contain the delimiter are not parsed specially, so for complex CSV use the JSON to CSV tools instead."
+  - q: Is my data uploaded?
+    a: "No. Sorting runs in your browser tab with JavaScript. You can go offline after the page loads and the tool keeps working."
+---
+
+## Sorting the way people read
+
+A plain alphabetical sort compares characters by their code, which surprises people in three ways: capital letters sort before lowercase ones, accented letters end up after Z, and numbers inside text sort digit by digit so that version 10 lands before version 2. This tool fixes all three by default. Ignore case keeps apple and Apple together, Language-aware uses your browser's collation for your language, and Natural order reads numbers as numbers.
+
+Every sort is stable, so lines that compare as equal keep their original order. That property lets you sort by more than one key: sort by the secondary key first, press the arrow to feed the result back in, then sort by the primary key.
+
+## Columns, lengths and shuffles
+
+For delimited data, By column sorts whole rows by one field, such as a date in the third column of a CSV export. Shortest first is handy for finding stray fragments in a list of names or keywords. Shuffle produces a random order that stays the same until you press Reshuffle, which is useful for drawing winners or randomising a quiz.
+
+## Related tasks
+
+To remove repeated lines before or after sorting, use [Remove Duplicate Lines](/tools/text/remove-duplicate-lines/), which opens the same pipeline with deduplication first. To compare a sorted list with an older version, paste both into the [Text Diff Checker](/tools/developer/text-diff-checker/).

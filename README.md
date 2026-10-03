@@ -52,9 +52,13 @@ The XML Formatter page is the Code Formatter island with `islandProps: { languag
 
 Five more islands, one folder each with `logic.ts` and tests: `regex-tester/` (matching runs in a Web Worker with a timeout so catastrophic backtracking cannot freeze the page), `uuid-generator/` (v4, v7, v1, v5, v3 plus an inspector), `hash-generator/` (hash-wasm, loaded lazily, streams files, HMAC and compare), `timestamp-converter/` (units auto-detected, every format, zone-aware parsing, batch mode) and `cron-parser/` (cronstrue descriptions, croner next runs per time zone).
 
+## Text tools (wave 3)
+
+`word-counter/` (Intl.Segmenter counting, keyword density, length targets), `case-converter/` (14 cases with acronym-aware word splitting), `slug-generator/` (transliteration, stop words, replacements), `lorem-ipsum-generator/` (seeded, four vocabularies, text/HTML/Markdown), `markdown-preview/` (marked + DOMPurify, synced scroll, formatting buttons, HTML export), `line-tools/` (one island for Remove Duplicate Lines and Sort Lines via `islandProps.kind`, a trim, dedupe, sort, number pipeline), `find-and-replace/` (ordered rules, plain, whole word or regex) and `text-to-binary/` (binary, octal, decimal, hex or code points in UTF-8, UTF-16, Latin-1 or ASCII).
+
 ## Islands render client-only
 
-`ToolIsland.astro` mounts every island with `client:only="preact"` and a skeleton sized like the tool. Islands read browser state on their first render (saved options, drafts, the user's zone), and Preact's hydration does not correct attributes that differ from the server HTML, so server rendering showed stale options. When adding an island, add its height classes to `SIZES` in `ToolIsland.astro`, and give any pane holding a CodeEditor a bounded height, otherwise the editor grows with its content.
+`ToolIsland.astro` mounts every island with `client:only="preact"` and a skeleton sized like the tool. Islands read browser state on their first render (saved options, drafts, the user's zone), and Preact's hydration does not correct attributes that differ from the server HTML, so server rendering showed stale options. When adding an island, add its height classes to `SIZES` in `ToolIsland.astro`, and give any pane holding a CodeEditor a bounded height, otherwise the editor grows with its content. Give side-by-side grids a base `grid-cols-[minmax(0,1fr)]` so long unwrapped lines cannot widen the page on phones.
 
 ## Add a tool
 
