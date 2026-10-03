@@ -175,13 +175,16 @@
     @apply my-5 overflow-x-auto rounded-lg border border-line bg-surface-2 p-4 text-[13px] leading-6;
   }
   .prose-cuis pre code {
-    @apply bg-transparent p-0;
+    /* Inherit the code block's colour so plain-text blocks (no highlight tokens) stay readable. */
+    @apply bg-transparent p-0 text-inherit;
+    font-size: inherit;
   }
   .prose-cuis blockquote {
     @apply my-5 border-l-2 border-brand-500 pl-4 italic text-ink-2;
   }
   .prose-cuis table {
-    @apply my-5 w-full text-sm;
+    /* Block display lets a wide table scroll inside its own box instead of widening the page. */
+    @apply my-5 block w-full max-w-full overflow-x-auto text-sm;
   }
   .prose-cuis th {
     @apply border-b border-line-strong py-2 text-left font-semibold text-ink;
@@ -363,3 +366,21 @@
 .cuis-jse tr.cuis-diff-changed td { background: color-mix(in oklch, var(--color-warning) 22%, transparent); }
 .cuis-jse tr.cuis-diff-added td { background: color-mix(in oklch, var(--color-success) 20%, transparent); }
 .cuis-jse tr.cuis-diff-removed td { background: color-mix(in oklch, var(--color-danger) 18%, transparent); }
+
+/* ---------- Highlighted code blocks (Shiki dual themes) ---------- */
+/* Astro inlines the light theme's colours and exposes the dark theme as --shiki-dark
+   variables. Switch to them under the site's `.dark` class. */
+.dark .astro-code,
+.dark .astro-code span {
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg) !important;
+  font-style: var(--shiki-dark-font-style) !important;
+  font-weight: var(--shiki-dark-font-weight) !important;
+  text-decoration: var(--shiki-dark-text-decoration) !important;
+}
+.dark .astro-code span {
+  background-color: transparent !important;
+}
+.astro-code {
+  border: 1px solid var(--color-line);
+}

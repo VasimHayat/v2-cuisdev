@@ -47,8 +47,8 @@ const jsonLd = graph(
 >
   <div class="container-x pt-5">
     <Breadcrumbs crumbs={crumbs} />
-    <div class="mt-8 grid gap-12 lg:grid-cols-12">
-      <article class="lg:col-span-8">
+    <div class="mt-8 grid grid-cols-[minmax(0,1fr)] gap-12 lg:grid-cols-12">
+      <article class="min-w-0 lg:col-span-8">
         <header>
           <div class="flex flex-wrap gap-2">
             {tags.map((t) => <span class="badge border-line bg-surface-2 text-ink-2">{t}</span>)}

@@ -244,7 +244,7 @@ export default function RegexTester() {
           ))}
         </div>
         <span class="flex-1" />
-        <div class="flex items-center gap-1">
+        <div class="flex flex-wrap items-center gap-1">
           <button type="button" class={'btn-sm ' + (cheat ? 'btn-primary' : 'btn-secondary')} onClick={() => setCheat((c) => !c)} title="Show a regex cheat sheet" aria-pressed={cheat}>
             <Icon name="keyboard" size={14} /> Cheat sheet
           </button>

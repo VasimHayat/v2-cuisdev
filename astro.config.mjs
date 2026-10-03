@@ -13,6 +13,12 @@ export default defineConfig({
   markdown: {
     // Links to blog posts that are not published yet render as plain text until they are.
     rehypePlugins: [rehypeUnpublishedLinks],
+    // Code blocks follow the site theme: light colours inline, dark colours as CSS
+    // variables switched on by the `.dark` class (see global.css).
+    shikiConfig: {
+      themes: { light: 'github-light', dark: 'github-dark' },
+      wrap: false,
+    },
   },
   trailingSlash: 'always',
   build: {
