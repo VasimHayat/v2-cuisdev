@@ -26,3 +26,6 @@ Thumbs.db
 # logs
 npm-debug.log*
 *.log
+
+# packaged releases
+release/

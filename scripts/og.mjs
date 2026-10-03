@@ -116,4 +116,32 @@ for (const [size, name] of [[192, 'icon-192.png'], [512, 'icon-512.png'], [180, 
   await sharp(logo).resize(size, size).png().toFile(path.join(ROOT, 'public', name));
 }
 
-console.log(`og: generated ${count} social images and 3 app icons`);
+// favicon.ico (16, 32 and 48 px PNGs in an ICO container). Pages link favicon.svg, but
+// browsers and crawlers still request /favicon.ico by default.
+{
+  const sizes = [16, 32, 48];
+  const pngs = await Promise.all(sizes.map((s) => sharp(logo).resize(s, s).png().toBuffer()));
+  const header = Buffer.alloc(6);
+  header.writeUInt16LE(0, 0); // reserved
+  header.writeUInt16LE(1, 2); // type 1 = icon
+  header.writeUInt16LE(sizes.length, 4);
+  const entries = [];
+  let offset = 6 + 16 * sizes.length;
+  sizes.forEach((s, i) => {
+    const e = Buffer.alloc(16);
+    e.writeUInt8(s, 0); // width
+    e.writeUInt8(s, 1); // height
+    e.writeUInt8(0, 2); // palette colours
+    e.writeUInt8(0, 3); // reserved
+    e.writeUInt16LE(1, 4); // colour planes
+    e.writeUInt16LE(32, 6); // bits per pixel
+    e.writeUInt32LE(pngs[i].length, 8);
+    e.writeUInt32LE(offset, 12);
+    offset += pngs[i].length;
+    entries.push(e);
+  });
+  const { writeFile } = await import('node:fs/promises');
+  await writeFile(path.join(ROOT, 'public', 'favicon.ico'), Buffer.concat([header, ...entries, ...pngs]));
+}
+
+console.log(`og: generated ${count} social images, 3 app icons and favicon.ico`);
