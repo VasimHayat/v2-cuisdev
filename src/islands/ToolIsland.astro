@@ -38,6 +38,14 @@ import ColorPicker from './color-picker-from-image/ColorPicker';
 import PdfPages from './pdf-pages/PdfPages';
 import PdfToImage from './pdf-to-image/PdfToImage';
 import PdfCompress from './pdf-compress/PdfCompress';
+import UnitConverter from './unit-converter/UnitConverter';
+import PercentageCalculator from './percentage-calculator/PercentageCalculator';
+import TipCalculator from './tip-calculator/TipCalculator';
+import BmiCalculator from './bmi-calculator/BmiCalculator';
+import LoanCalculator from './loan-emi-calculator/LoanCalculator';
+import DateCalculator from './date-calculator/DateCalculator';
+import ColorConverter from './color-converter/ColorConverter';
+import NumberBaseConverter from './number-base-converter/NumberBaseConverter';
 
 interface Props {
   island: string;
@@ -74,8 +82,20 @@ const SIZES: Record<string, string> = {
   'pdf-pages': 'h-[min(82vh,900px)] min-h-[600px]',
   'pdf-to-image': 'h-[min(82vh,900px)] min-h-[600px]',
   'pdf-compress': 'h-[min(82vh,900px)] min-h-[600px]',
+  // Content-sized calculators: measured phone height, then desktop height. Keys with
+  // ':kind' cover islands whose height depends on islandProps.kind.
+  'unit-converter': 'h-[1120px] lg:h-[610px]',
+  'percentage-calculator': 'h-[1430px] lg:h-[666px]',
+  'tip-calculator': 'h-[1180px] lg:h-[630px]',
+  'bmi-calculator': 'h-[1215px] lg:h-[600px]',
+  'loan-emi-calculator': 'h-[1540px] lg:h-[782px]',
+  'date-calculator:age': 'h-[1295px] lg:h-[648px]',
+  'date-calculator:difference': 'h-[958px] lg:h-[600px]',
+  'color-converter': 'h-[1495px] lg:h-[780px]',
+  'number-base-converter': 'h-[944px] lg:h-[600px]',
 };
-const size = SIZES[island] ?? 'min-h-[560px]';
+const kind = typeof props.kind === 'string' ? props.kind : '';
+const size = SIZES[`${island}:${kind}`] ?? SIZES[island] ?? 'min-h-[560px]';
 ---
 
 {island === 'json-editor' && <JsonEditor client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></JsonEditor>}
@@ -105,6 +125,14 @@ const size = SIZES[island] ?? 'min-h-[560px]';
 {island === 'pdf-pages' && <PdfPages client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></PdfPages>}
 {island === 'pdf-to-image' && <PdfToImage client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></PdfToImage>}
 {island === 'pdf-compress' && <PdfCompress client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></PdfCompress>}
+{island === 'unit-converter' && <UnitConverter client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></UnitConverter>}
+{island === 'percentage-calculator' && <PercentageCalculator client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></PercentageCalculator>}
+{island === 'tip-calculator' && <TipCalculator client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></TipCalculator>}
+{island === 'bmi-calculator' && <BmiCalculator client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></BmiCalculator>}
+{island === 'loan-emi-calculator' && <LoanCalculator client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></LoanCalculator>}
+{island === 'date-calculator' && <DateCalculator client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></DateCalculator>}
+{island === 'color-converter' && <ColorConverter client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></ColorConverter>}
+{island === 'number-base-converter' && <NumberBaseConverter client:only="preact" {...props}><div slot="fallback" class:list={['tool-skeleton', size]} aria-busy="true"><span>Loading the tool…</span></div></NumberBaseConverter>}
 
 <style is:global>
   .tool-skeleton {

@@ -1,0 +1,48 @@
+---
+slug: loan-emi-calculator
+updated: 2026-10-03
+howTo:
+  - Enter the loan amount, the yearly interest rate and the term in years and months. Each figure has a slider and a box for exact values.
+  - Pick the month of the first payment and how often you pay. Monthly is the default; fortnightly and weekly payments are also supported.
+  - Read the instalment, total interest, total paid and payoff date at the top of the results, then look at the charts to see how each year splits between principal and interest.
+  - Add an extra amount each month or a one-off lump sum to see how much interest you save and how much sooner the loan ends.
+  - Switch the schedule between yearly totals and every payment, download it as CSV, or press Copy link to share the exact calculation.
+features:
+  - Instalment, total interest, total paid and payoff date update as you type
+  - Monthly, fortnightly and weekly payment schedules
+  - Extra monthly payments and a one-off lump sum, with interest and time saved
+  - Principal versus interest donut and a yearly chart with the remaining balance
+  - Full amortisation schedule by payment or by year, downloadable as CSV
+  - Exact maths with the last payment adjusted so the balance ends at zero
+  - US dollar, euro, pound, rupee (with lakh and crore grouping) and yen formatting
+  - Shareable links that reopen the same figures; everything runs in your browser
+faq:
+  - q: How is the EMI calculated?
+    a: "EMI = P × r × (1 + r)^n ÷ ((1 + r)^n − 1), where P is the amount borrowed, r is the interest rate per payment period (the yearly rate divided by 12 for monthly payments) and n is the number of payments. With a 0% rate the formula reduces to P ÷ n."
+  - q: Why does most of my early payment go to interest?
+    a: "Interest is charged on the balance still owed. At the start the balance is at its highest, so the interest share of each payment is largest. As the balance falls, the same instalment repays more principal each period. The yearly chart shows this shift clearly."
+  - q: How much do extra payments save?
+    a: "Every extra amount goes straight to principal, so all later interest is charged on a smaller balance. The tool runs the loan twice, with and without your prepayments, and shows the interest saved and how many months earlier the loan ends. Check with your lender whether prepayments carry a fee."
+  - q: Does paying fortnightly reduce interest?
+    a: "Paying every two weeks means 26 payments a year instead of 12, and the interest per period is the yearly rate divided by 26. The calculator applies that consistently. Real savings depend on how your lender credits payments, so compare its figures with these."
+  - q: Why might my lender's figures differ?
+    a: "These results are estimates for a fixed-rate loan. Lenders may add arrangement fees or insurance, round each payment differently, use a daily interest method or a different day count, or start interest from the disbursal date. Differences of a few units per payment are normal."
+  - q: Is my data stored anywhere?
+    a: "No. The calculation runs in your browser. Your figures are kept in this browser and in the page address so you can bookmark or share them, but nothing is sent to a server."
+---
+
+## How EMI works
+
+An equated monthly instalment, or EMI, is a fixed payment that clears a loan, interest included, over a set number of periods. Each payment first covers the interest that built up on the balance since the last payment, and the remainder reduces the balance. Because the balance shrinks, the interest part of each payment shrinks too and the principal part grows, while the payment itself stays the same.
+
+The formula is EMI = P × r × (1 + r)^n ÷ ((1 + r)^n − 1). P is the amount borrowed, r is the interest rate for one payment period and n is the number of payments. For monthly payments, r is the yearly rate divided by 12 and n is the term in months.
+
+## A worked example
+
+Borrow 250,000 at 7.5% a year for 20 years with monthly payments. The monthly rate is 7.5 ÷ 12 = 0.625%, or 0.00625, and there are 240 payments. Plugging those in gives an EMI of about 2,013.98. Over 240 payments you pay about 483,356 in total, so the interest is about 233,356, almost as much as the amount borrowed.
+
+Add 200 a month on top and the loan finishes 43 months earlier, with about 48,664 less interest. Enter those numbers above to see the schedule and the new payoff date. These results are estimates, and your lender's figures may differ because of fees, rounding and how interest is counted.
+
+## Related tasks
+
+To work out a rate rise or the share of a payment that goes to interest, the [Percentage Calculator](/tools/calculators/percentage-calculator/) shows each step. To count the exact days or months between two dates on a loan agreement, use the [Date Difference Calculator](/tools/calculators/date-difference-calculator/).

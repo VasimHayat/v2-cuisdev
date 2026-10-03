@@ -1,0 +1,50 @@
+---
+slug: date-difference-calculator
+updated: 2026-10-03
+howTo:
+  - Enter a start date and an end date. The span appears straight away as years, months and days, with totals in days, weeks, months, hours, minutes and seconds.
+  - Turn on Include end date when both days count, as for a holiday booking or a leave request. Turn on Use times to measure from one time of day to another.
+  - Read the business days (Monday to Friday) and weekend days. Open Holidays to skip and paste dates, one per line, to remove public holidays from the count.
+  - Switch to Add or subtract to find the date a number of years, months, weeks, days or business days before or after a start date.
+  - Press Copy link to share the calculation; the link opens with the same dates.
+features:
+  - Years, months and days between two dates, with totals from days to seconds
+  - Include-end-date option for bookings, leave and project schedules
+  - Optional times of day on both dates, with the remainder in hours and minutes
+  - Business day and weekend day counts, with your own list of holidays
+  - Add or subtract years, months, weeks, days and business days from any date
+  - Month-end aware arithmetic, so 31 January plus one month is 28 February
+  - Shareable links that keep the dates in the address
+  - Calculated on calendar dates, so daylight saving never adds or removes an hour
+faq:
+  - q: How many days are there between two dates?
+    a: "The calculator counts the days from the start date up to, but not including, the end date, the same way spreadsheets subtract dates. From 1 January to 31 January is 30 days. Turn on Include end date to count both days, which gives 31."
+  - q: How are business days counted?
+    a: "Every Monday to Friday in the span is counted, and Saturdays and Sundays are skipped. Public holidays differ by country and company, so paste your own list into Holidays to skip, one date per line in YYYY-MM-DD form, and those days are removed too."
+  - q: What is 31 January plus one month?
+    a: "28 February, or 29 February in a leap year. When the target month is shorter, the date is clamped to its last day rather than spilling into March. Subtracting works the same way, so 31 March minus one month is 28 or 29 February."
+  - q: Why is the difference shown as months and days rather than only days?
+    a: "Months have different lengths, so 30 days can be one month or slightly less. The years, months and days line counts calendar months from the start date and the days left over; the totals underneath give the exact number of days, weeks and smaller units if you need a single figure."
+  - q: Does daylight saving time affect the result?
+    a: "No. Dates are treated as calendar days, and times as wall-clock times, so a span across a clock change is never 23 or 25 hours per day. Every day counts as 24 hours."
+  - q: Are my dates and holidays sent anywhere?
+    a: "No. Everything is calculated in your browser. The dates and holiday list are remembered on this device, and the dates go into the address only when you copy the link yourself; holidays never do."
+---
+
+## Counting the days between dates
+
+Project plans, notice periods, warranties, rental agreements and countdowns all come down to the same question: how much time lies between two dates? This calculator gives the answer three ways at once. The headline counts calendar years, months and days, the way a contract describes a period. The totals give the same span as a single number of days, weeks, hours or seconds. The business-day count gives the working days a deadline really allows.
+
+Spans are measured from the start date up to the end date. That matches how spreadsheets and most programming languages subtract dates, and it is the right count for "how long until". When both the first and the last day are used, as for a hotel stay counted in days or a period of leave, switch on Include end date.
+
+## Working days and holidays
+
+Weekends are removed automatically. Public holidays vary by country, region and employer, so the calculator lets you paste your own list rather than guessing. The same list applies in Add or subtract mode, so you can find the date ten business days after an order while skipping Christmas and New Year.
+
+## Adding and subtracting time
+
+The Add or subtract mode answers questions such as "what date is 90 days from today" or "what was the date six months before the deadline". Years and months are added first, clamping to the end of a shorter month, then weeks and days, then business days. The result shows the weekday and how many calendar days it lies from the start.
+
+## Related tasks
+
+For someone's exact age or a birthday countdown, use the [Age Calculator](/tools/calculators/age-calculator/). For recurring schedules such as "every weekday at 09:00", the [Cron Expression Parser](/tools/developer/cron-parser/) lists the next run dates.

@@ -1,0 +1,48 @@
+---
+slug: number-base-converter
+updated: 2026-10-03
+howTo:
+  - Type a number into any field, Binary, Octal, Decimal, Hexadecimal or the custom base, and the other fields update as you type.
+  - Paste values with 0b, 0o or 0x prefixes, underscores or spaces between digits; they are understood. An invalid digit is highlighted with its position.
+  - Turn on Signed and choose a width from 8 to 128 bits to see negative numbers as two's complement, or to read a hex pattern such as FF as -1.
+  - Click bits in the bit grid to flip them and watch every base change.
+  - Switch Group, Uppercase and Prefixes to match the style you need, then copy a field or press Copy link to share the number.
+features:
+  - Binary, octal, decimal, hexadecimal and any base from 2 to 36, all editable and kept in sync
+  - Exact for numbers of any size using arbitrary-precision integers
+  - Two's complement at 8, 16, 32, 64 and 128 bits for signed values and bit patterns
+  - Clickable bit grid of up to 64 bits with bit numbers and the sign bit marked
+  - Exact fractions with repeating digits shown in parentheses, such as 0.1 as 0.0(0011)
+  - Accepts prefixes, underscores and spaces, and pinpoints invalid digits
+  - Digit grouping, uppercase hex and 0b, 0o and 0x prefixes on output
+  - Bit length, byte length and the range of the chosen width
+faq:
+  - q: How do I convert decimal to binary?
+    a: "Type the decimal number in the Decimal field and read the Binary field. For example 255 becomes 1111 1111 with grouping on. The conversion is exact for numbers of any size, so a 40-digit decimal number converts without rounding."
+  - q: What is two's complement?
+    a: "It is how computers store negative integers. In an 8-bit byte, -1 is stored as 1111 1111 and -128 as 1000 0000; the highest bit acts as the sign. Turn on Signed and choose the width your language or hardware uses, and negative numbers appear as their stored bit pattern, while typing a pattern such as FF in the hex field shows -1 in decimal."
+  - q: Why does 0.1 become a repeating binary number?
+    a: "Only fractions whose denominator is a power of two have a finite binary form. One tenth is not, so in binary it is 0.000110011 repeating, written here as 0.0(0011). Floating-point numbers have to cut that off, which is why 0.1 + 0.2 is not exactly 0.3 in most programming languages."
+  - q: Which bases are supported?
+    a: "Any base from 2 to 36. Bases above 10 use the letters a to z as digits, so base 36 uses all ten digits and twenty-six letters. Pick the base for the custom field from its menu."
+  - q: Can I paste numbers with prefixes or separators?
+    a: "Yes. 0b, 0o and 0x prefixes are accepted in their matching fields, and underscores and spaces between digits are ignored, as are commas in the decimal field. That means you can paste 0xDEAD_BEEF or 1,234,567 directly."
+  - q: Is anything uploaded?
+    a: "No. All conversion happens in your browser. The number is stored in the page address so a bookmark or shared link reopens it, but nothing is sent to a server."
+---
+
+## Bases in everyday programming
+
+Computers store everything in binary, but people read decimal, and programmers read hexadecimal because each hex digit maps to exactly four bits. Octal survives in Unix file permissions. Converting between them comes up constantly: reading a memory address, decoding a flags field, checking a colour channel, or working out why a bitmask does not match. This converter keeps all the bases side by side, so you can type in whichever one you have.
+
+Values are held exactly with arbitrary-precision integers, so there is no rounding at 2 to the power 53 as there is with ordinary JavaScript numbers. A 256-bit hash in hex converts to decimal and back without losing a digit.
+
+## Signed numbers and bits
+
+Turn on Signed to work with two's complement, the representation almost every processor uses for negative integers. The width matters: FF is -1 as a signed 8-bit value but 255 as a 16-bit one. The bit grid shows the pattern for the chosen width with the sign bit first, and clicking a bit flips it, which is a fast way to build or check a bitmask.
+
+Fractions are exact too. Type 0.1 in the decimal field and the binary field shows 0.0(0011), with the repeating block in parentheses. That one line explains most floating-point surprises.
+
+## Related tasks
+
+To turn text into bytes in binary or hex, use [Text to Binary](/tools/converters/text-to-binary/). For colours written as hex codes, the [Color Converter](/tools/converters/color-converter/) converts them to RGB, HSL and OKLCH.

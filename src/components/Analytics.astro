@@ -22,7 +22,19 @@ const enabled = import.meta.env.PROD && !!GA_ID;
         analytics_storage: 'granted',
       });
       gtag('js', new Date());
-      gtag('config', GA_ID, { anonymize_ip: true, send_page_view: true });
+
+      // Tools keep their inputs in the query string or hash so results can be shared
+      // (a loan amount, a date of birth, a JSON document id). Analytics must never see
+      // them, including on GA4's automatic history-change page views, so every hit
+      // reports the path plus campaign parameters only.
+      var KEEP = /^(utm_[a-z_]+|gclid|gbraid|wbraid|fbclid|msclkid|ref)$/i;
+      function cleanLocation() {
+        var kept = new URLSearchParams();
+        new URLSearchParams(location.search).forEach(function (v, k) { if (KEEP.test(k)) kept.append(k, v); });
+        var q = kept.toString();
+        return location.origin + location.pathname + (q ? '?' + q : '');
+      }
+      gtag('config', GA_ID, { anonymize_ip: true, send_page_view: true, page_location: cleanLocation() });
 
       function loadGA() {
         var s = document.createElement('script');
@@ -36,7 +48,9 @@ const enabled = import.meta.env.PROD && !!GA_ID;
       // Page views on client-side View Transitions.
       document.addEventListener('astro:page-load', function () {
         if (!window.__gaFirstLoad) { window.__gaFirstLoad = true; return; }
-        gtag('event', 'page_view', { page_location: location.href, page_title: document.title });
+        var loc = cleanLocation();
+        gtag('set', { page_location: loc });
+        gtag('event', 'page_view', { page_location: loc, page_title: document.title });
       });
 
       // Tool usage events bubbled from islands: window.dispatchEvent(new CustomEvent('cuis:track', {detail:{name, params}}))

@@ -62,9 +62,17 @@ Five more islands, one folder each with `logic.ts` and tests: `regex-tester/` (m
 
 Shared helpers: `src/islands/shared/pdfjs.ts` loads pdf.js and its worker lazily (`loadPdf`, `renderPage`, `renderThumbnail`), and `src/islands/shared/zip.ts` builds zips with fflate. The pdf.js worker ships as `.mjs`, so `public/.htaccess` maps that extension to `text/javascript`.
 
+## Converters and calculators (wave 5)
+
+`unit-converter/` (14 categories with exact constants, mixed expressions like `5 ft 11 in`), `percentage-calculator/`, `tip-calculator/` and `bmi-calculator/` (sharing `calc-kit/`), `loan-emi-calculator/` (amortisation with prepayments, SVG charts, CSV), `date-calculator/` (Age and Date Difference via `islandProps.kind`, all arithmetic on UTC midnights), `color-converter/` (CSS Color 4 parsing and OKLab/OKLCH maths in pure TypeScript) and `number-base-converter/` (BigInt, two's complement, bit grid).
+
+## Tool inputs never reach analytics
+
+Tools must not write their inputs into the address bar while someone edits: GA4's enhanced measurement turns history changes into page views that carry the full URL, and it treats `q`, `s`, `search`, `query` and `keyword` parameters as site searches. Keep state in localStorage and build share links on demand (see `calc-kit/kit.tsx` and `shareQuery` in the converters). `Analytics.astro` also reports a cleaned `page_location` (path plus campaign parameters only), so a visit through a shared link stays clean. Avoid those five parameter names in share links.
+
 ## Islands render client-only
 
-`ToolIsland.astro` mounts every island with `client:only="preact"` and a skeleton sized like the tool. Islands read browser state on their first render (saved options, drafts, the user's zone), and Preact's hydration does not correct attributes that differ from the server HTML, so server rendering showed stale options. When adding an island, add its height classes to `SIZES` in `ToolIsland.astro`, and give any pane holding a CodeEditor a bounded height, otherwise the editor grows with its content. Give side-by-side grids a base `grid-cols-[minmax(0,1fr)]` so long unwrapped lines cannot widen the page on phones.
+`ToolIsland.astro` mounts every island with `client:only="preact"` and a skeleton sized like the tool. Islands read browser state on their first render (saved options, drafts, the user's zone), and Preact's hydration does not correct attributes that differ from the server HTML, so server rendering showed stale options. When adding an island, add its height classes to `SIZES` in `ToolIsland.astro` (use `island:kind` keys when the height depends on `islandProps.kind`, and phone then desktop heights for content-sized tools), and give any pane holding a CodeEditor a bounded height, otherwise the editor grows with its content. Give side-by-side grids a base `grid-cols-[minmax(0,1fr)]` so long unwrapped lines cannot widen the page on phones.
 
 ## Add a tool
 

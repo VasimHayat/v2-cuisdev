@@ -1,0 +1,48 @@
+---
+slug: color-converter
+updated: 2026-10-03
+howTo:
+  - Type or paste a colour in any CSS syntax, such as a hex code, rgb(), hsl(), hwb(), lab(), lch(), oklab(), oklch() or a name like rebeccapurple. The swatch and every format update as you type.
+  - Copy any format with its copy button, or press Copy all to take the whole list.
+  - Adjust the colour with sliders in RGB, HSL or OKLCH, and set the alpha. OKLCH keeps the perceived lightness steady while you change hue.
+  - Check readability by entering a second colour under Contrast. The ratio and WCAG AA and AAA results update live.
+  - Click any tint, shade or harmony swatch to make it the current colour, then press Copy link to share exactly what you see.
+features:
+  - Reads every CSS colour syntax, including the modern space-separated forms and slash alpha
+  - Converts to HEX, HEX8, RGB, HSL, HWB, HSV, CMYK, Lab, LCH, OKLab and OKLCH, plus a Tailwind arbitrary value
+  - Colour maths follows CSS Color 4, with correct sRGB transfer, D50 Lab and the OKLab matrices
+  - Flags colours outside the sRGB gamut and shows the CSS gamut-mapped fallback
+  - Live sliders in RGB, HSL or OKLCH with an alpha slider
+  - WCAG 2 contrast checker with AA, AAA and large-text results
+  - Ten tints and shades in OKLCH lightness, plus complementary, analogous, triadic and split harmonies
+  - Shareable links that reopen the same colour, comparison colour and slider model
+faq:
+  - q: Which colour formats can I paste?
+    a: "Any colour CSS understands: hex with 3, 4, 6 or 8 digits, rgb() and rgba() in comma or space syntax with an optional / alpha, hsl(), hwb(), lab(), lch(), oklab(), oklch(), the 148 named colours and transparent. Bare hex without # and a bare list such as 255, 128, 0 work too."
+  - q: What is OKLCH and why use it?
+    a: "OKLCH describes a colour by lightness, chroma and hue in a space designed so that equal steps look equally different to the eye. Changing the hue keeps the perceived lightness, which HSL does not do. That makes OKLCH the best choice for building colour scales and accessible palettes, and every modern browser supports it in CSS."
+  - q: What does out of gamut mean?
+    a: "Lab, LCH and OKLCH can describe colours more vivid than an sRGB screen can show. When that happens the tool keeps the exact Lab and OKLCH values but shows the closest displayable colour for HEX, RGB, HSL and the swatch, using the gamut mapping method from CSS Color 4: it lowers chroma until the colour fits, so hue and lightness stay close."
+  - q: How is the contrast ratio calculated?
+    a: "With the WCAG 2 formula: the relative luminance of the lighter colour plus 0.05, divided by that of the darker plus 0.05. Normal text needs 4.5:1 for AA and 7:1 for AAA; large text needs 3:1 and 4.5:1. Transparency is ignored, so check the colour as it appears on its real background."
+  - q: Why does CMYK not match my printer?
+    a: "The CMYK shown is the simple mathematical conversion from RGB. Real printing depends on the paper, ink and colour profile, so treat it as a starting point and use your print shop's profile for final artwork."
+  - q: Is anything uploaded?
+    a: "No. Every conversion runs in your browser with plain JavaScript. The colour lives in the page address so you can bookmark or share it, and nothing is sent to a server."
+---
+
+## One colour, every format
+
+Designers hand over hex codes, design tools export HSL, older stylesheets use rgba() with commas, and modern CSS increasingly uses OKLCH. Moving a colour between them by hand is tedious and easy to get wrong. Paste a colour in whatever form you have and this converter shows it in every format at once, each ready to copy, with the swatch, its nearest CSS name and a Tailwind arbitrary value.
+
+The maths follows the CSS Color 4 specification rather than approximations. sRGB values are linearised with the proper transfer function, Lab and LCH use the D50 white point with Bradford adaptation as CSS requires, and OKLab uses Björn Ottosson's published matrices. Pure red comes out as oklch(62.8% 0.2577 29.23), the same value browsers use.
+
+## Building palettes
+
+The OKLCH sliders are the most useful way to adjust a colour. Lightness changes how light the colour looks without shifting its hue, and chroma controls how vivid it is. The tints and shades row steps lightness from almost white to almost black while keeping the hue, which is a quick way to build a 50 to 950 scale for a design system. The harmonies use OKLCH hue too, so a complementary pair has balanced perceived brightness.
+
+Before you settle on text colours, use the contrast panel. It compares the current colour with a second one, white by default, and shows whether the pair passes WCAG AA and AAA for normal and large text.
+
+## Related tasks
+
+To pick colours from a photo or screenshot instead, use the [Color Picker from Image](/tools/image/color-picker-from-image/). For converting numbers between hexadecimal and other bases, the [Number Base Converter](/tools/converters/number-base-converter/) handles values of any size.
