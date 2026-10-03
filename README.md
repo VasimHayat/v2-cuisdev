@@ -36,6 +36,10 @@ Both islands share `src/islands/shared/CodeEditor.tsx` (a CodeMirror 6 wrapper t
 
 The XML Formatter page is the Code Formatter island with `islandProps: { language: 'xml', lockLanguage: true }`. XML support lives in `src/islands/code-formatter/xml.ts` (tokenizer, pretty printer, minifier, well-formedness check with offsets). A SQL Formatter page can be added the same way with `language: 'sql'`. Locked pages do not overwrite the language preference of the general formatter.
 
+## Encoders and decoders
+
+`src/islands/codec/` is one island for the Base64, URL and HTML entity pages, selected with `islandProps: { kind }`. Each codec is a pure module (`base64.ts`, `url.ts`, `entities.ts`) with tests; `Codec.tsx` adds the Encode/Decode shell, file encoding and binary download for Base64, the URL breakdown, and paste detection that switches to Decode when encoded text lands in an empty editor (the editor reports `wasEmpty` to `onPaste`).
+
 ## Data converters
 
 `src/islands/converter/` is one island serving several pages: the registry passes `islandProps: { from, to }` (JSON, CSV or YAML) and the user can swap direction in the toolbar. `logic.ts` wraps papaparse and yaml with positioned errors; `src/islands/shared/json-errors.ts` holds the JSON scanner that locates errors when V8's message carries no position (also used by the Code Formatter).

@@ -42,8 +42,8 @@ export interface CodeEditorProps {
   error?: EditorError | null;
   ariaLabel: string;
   class?: string;
-  /** Called with the pasted text after CodeMirror has inserted it. */
-  onPaste?: (text: string) => void;
+  /** Called with the pasted text after CodeMirror has inserted it; `wasEmpty` says whether the editor held nothing before. */
+  onPaste?: (text: string, info: { wasEmpty: boolean }) => void;
   /** Called when a file is dropped on the editor; the drop is then handled by the caller. */
   onDropFile?: (file: File) => void;
 }
@@ -106,9 +106,10 @@ export function CodeEditor(p: CodeEditorProps) {
           handlers.current.onChange?.(text);
         }),
         EditorView.domEventHandlers({
-          paste: (e) => {
+          paste: (e, view) => {
             const text = e.clipboardData?.getData('text/plain');
-            if (text && handlers.current.onPaste) setTimeout(() => handlers.current.onPaste?.(text), 0);
+            const wasEmpty = view.state.doc.length === 0;
+            if (text && handlers.current.onPaste) setTimeout(() => handlers.current.onPaste?.(text, { wasEmpty }), 0);
             return false;
           },
           drop: (e) => {

@@ -158,9 +158,9 @@ export default function Converter({ from: initialFrom = 'json', to: initialTo = 
     track('tool_action', { tool, action: 'open_file' });
   };
 
-  const onPaste = (text: string) => {
+  const onPaste = (text: string, info: { wasEmpty: boolean }) => {
     const detected = detectFormat(text);
-    if (detected && detected !== from && detected === to && canFlip && input.trim() === '') {
+    if (detected && detected !== from && detected === to && canFlip && info.wasEmpty) {
       // Pasted the other format into an empty input: flip so it converts the right way.
       setFrom(to);
       setTo(from);

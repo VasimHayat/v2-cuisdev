@@ -1,0 +1,48 @@
+---
+slug: html-entity-encoder
+updated: 2026-10-03
+howTo:
+  - Choose Encode to escape text for HTML or Decode to turn entities back into characters, then paste into the left pane.
+  - "For encoding, pick how much to escape: only the five characters that break markup, also every non-ASCII character using named entities where they exist, or everything as decimal or hex references."
+  - For decoding, paste HTML containing named entities such as &amp;copy;, numeric ones such as &amp;#169; or &amp;#xA9;, or legacy forms without a semicolon. The status line lists any unknown entities that were left alone.
+  - Press the swap button to reverse the direction and reuse the output.
+  - Copy the result or download it as a text file.
+features:
+  - Escapes the five characters that matter for safe HTML, or every non-ASCII character, or every character
+  - Uses named entities such as &amp;copy; and &amp;mdash; where they exist, numeric references otherwise
+  - Decodes all HTML 4 named entities plus common HTML5 names, decimal and hex references
+  - Accepts legacy entities without a semicolon the way browsers do, and applies the Windows-1252 remap for &amp;#128; to &amp;#159;
+  - Leaves literal ampersands and unknown entities untouched so text survives a round trip
+  - Reports how many entities were written or decoded and lists unknown ones
+  - Recognises pasted entity-laden text and switches to Decode automatically
+  - Runs entirely in your browser; nothing is uploaded
+faq:
+  - q: Which characters must be escaped in HTML?
+    a: "In text content, the ampersand and the less-than sign. Inside attribute values, also the quote character that delimits the value. The default Essential mode escapes &, <, >, double and single quotes, which is safe everywhere and is what templating engines do to prevent cross-site scripting."
+  - q: Should I use named or numeric entities?
+    a: "For the five essential characters, named entities (&amp;amp;, &amp;lt;) are universal. For everything else, numeric references work in every parser including XML, while names such as &amp;mdash; are easier to read but are only guaranteed in HTML. The Non-ASCII mode uses a name where one exists and falls back to a decimal reference."
+  - q: Do I need to escape accented letters and emoji?
+    a: "Not if your page declares UTF-8, which every modern page should. Escaping them is useful when a system mangles non-ASCII characters, for example an old email template engine or a database column with a limited character set. That is what the Non-ASCII and Decimal modes are for."
+  - q: Why is &amp;copy2024 decoded but &amp;foo; is not?
+    a: "Browsers accept a small set of legacy entities without a semicolon, so &amp;copy2024 renders as ©2024. This decoder matches that behaviour. &amp;foo; is not a real entity, so it is left exactly as written and reported in the status line, which also keeps literal ampersands such as Tom & Jerry intact."
+  - q: Why does &amp;#150; decode to a dash instead of a control character?
+    a: "The HTML specification requires numeric references in the range 128 to 159 to be interpreted as Windows-1252 characters, because that is how legacy pages used them. &amp;#150; therefore becomes an en dash, as it would in any browser."
+  - q: Is my text uploaded anywhere?
+    a: "No. Encoding and decoding run in your browser tab with a built-in entity table. You can go offline after the page loads and the tool keeps working."
+---
+
+## Why escape HTML
+
+If user input or data from another system is placed into HTML unchanged, a stray `<script>` or a quote that closes an attribute early can break the page or run code. Escaping replaces the handful of characters that have meaning in markup with entities that render as literal characters. The reverse operation, decoding, is what you need when an API or a database hands you text that was already escaped and you want the real characters back.
+
+## Choosing an escape mode
+
+Essential is the right default and matches what template engines do automatically. Non-ASCII is for environments that cannot carry UTF-8 reliably: it writes accented letters, symbols and emoji as entities, using the familiar names such as `&eacute;` and `&euro;` where they exist. Decimal and Hex escape every character, which is occasionally useful for obfuscating an email address in markup or for testing a parser.
+
+## Decoding safely
+
+The decoder knows every named entity from HTML 4 plus the common HTML5 additions, decimal and hex numeric references, and the legacy forms browsers accept without a semicolon. Anything it does not recognise is left exactly as it was, so a plain ampersand in prose is never damaged, and the status line tells you which names it skipped.
+
+## Related tasks
+
+To escape text for a URL instead of a page, use the [URL Encoder](/tools/developer/url-encode-decode/). For formatting the markup itself, the [Code Formatter](/tools/developer/code-formatter/) handles HTML and the [XML Formatter](/tools/developer/xml-formatter/) handles XHTML and SVG.

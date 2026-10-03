@@ -1,0 +1,46 @@
+---
+slug: url-encode-decode
+updated: 2026-10-03
+howTo:
+  - Choose Encode or Decode and paste your text, URL or query value into the left pane. The result appears on the right as you type.
+  - "Pick the mode: Component for a single value or path segment, Whole URL to keep slashes, question marks and ampersands, or Form data for application/x-www-form-urlencoded with plus signs for spaces."
+  - When decoding, leave Decode repeatedly on to strip several layers of double encoding at once; the status line says how many passes were needed.
+  - If the input is an absolute URL, the breakdown under the panes shows protocol, host, path, fragment and each query parameter decoded.
+  - Press the swap button to reverse the direction, then Copy or Download the result.
+features:
+  - Percent-encodes with encodeURIComponent, encodeURI or form-data rules
+  - Decodes repeatedly to remove double and triple encoding, reporting the number of passes
+  - Pinpoints malformed escapes such as %2G with their offset, underlined in the editor
+  - Detects percent-escapes that do not form valid UTF-8 and explains the likely cause
+  - Breaks an absolute URL into protocol, host, port, path, fragment and decoded query parameters
+  - Handles accents, emoji and every Unicode character correctly as UTF-8
+  - Recognises pasted encoded text and switches to Decode automatically
+  - Runs entirely in your browser; nothing is uploaded
+faq:
+  - q: When should I use encodeURIComponent versus encodeURI?
+    a: "Use Component (encodeURIComponent) for one value that goes inside a URL, such as a query parameter or a path segment; it escapes everything that has a meaning in URLs, including slashes and ampersands. Use Whole URL (encodeURI) when you have a complete URL with spaces or accents and want it to stay a working URL: it leaves the delimiters alone."
+  - q: Why does my space become a plus sign in some tools and %20 in others?
+    a: "Both are valid, in different places. In the path and most of the URL a space must be %20. In the body of an HTML form submission (application/x-www-form-urlencoded), and therefore often in query strings produced by forms, a space is written as +. The Form data mode follows the form rules; the other two modes use %20."
+  - q: What is double encoding and how do I undo it?
+    a: "Double encoding happens when already encoded text is encoded again, so %20 becomes %2520. It usually comes from passing a URL through two systems that each encode it. With Decode repeatedly on, the tool keeps decoding until the text stops changing and tells you how many layers it removed."
+  - q: Why does decoding fail with a malformed escape?
+    a: "A percent sign must be followed by exactly two hexadecimal digits. Something like 50%off or %2G is not a valid escape. The error names the offset and the editor underlines it. If the percent sign is meant literally, encode it as %25."
+  - q: Are non-ASCII characters handled correctly?
+    a: "Yes. Characters outside ASCII are encoded as UTF-8 bytes, each written as a percent escape, which is what every modern browser and server expects. Decoding reassembles the bytes and validates them as UTF-8; if the input was encoded in another character set, you get a clear message instead of garbled text."
+  - q: Is my data uploaded anywhere?
+    a: "No. Encoding and decoding run in your browser tab using JavaScript. You can go offline after the page loads and the tool keeps working, so URLs containing tokens or personal data are safe here."
+---
+
+## What percent-encoding does
+
+URLs can only contain a limited set of characters. Spaces, accents, emoji and characters with special meaning such as `&`, `=`, `?` and `/` have to be written as `%` followed by two hex digits for each byte of their UTF-8 representation. Getting this right by hand is tedious, and getting it wrong produces broken links, 400 errors or query parameters that quietly lose their values.
+
+This encoder follows the same rules as browsers and the JavaScript standard library. Component mode escapes aggressively so a value can be dropped anywhere in a URL. Whole URL mode encodes only what must be encoded so a complete address remains clickable. Form data mode produces what a submitted HTML form produces.
+
+## Reading a URL
+
+Paste an absolute URL and the breakdown shows each part decoded: the host and port, the path with its segments readable again, the fragment, and every query parameter as a key and value. It is often the quickest way to see what a long tracking link or an OAuth redirect actually contains.
+
+## Related tasks
+
+Encoded tokens inside a URL are often Base64; the [Base64 Encoder](/tools/developer/base64-encode-decode/) decodes those. To escape text for an HTML page rather than a URL, use the [HTML Entity Encoder](/tools/developer/html-entity-encoder/).
